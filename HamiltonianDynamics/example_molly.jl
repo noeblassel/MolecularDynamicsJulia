@@ -11,8 +11,5 @@ L = 7.0u"nm"#nm
 Δt = 0.001u"ps"
 tfin=0.05u"ns"
 obs = [("positions", 1)]
-sys=sim_argon(N_per_side,ρ,T,Δt,tfin,VelocityVerlet,obs)
-
-
-println(first(sys.loggers["positions"].coords))
-scatter(first(sys.loggers["positions"].coords))
+sys=sim_argon(N_per_side,ρ,T,Δt,tfin,SymplecticEulerB,obs)
+println(sys.loggers["positions"])

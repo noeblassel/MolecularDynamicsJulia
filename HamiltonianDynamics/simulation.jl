@@ -1,6 +1,6 @@
 using Molly
 
-#include("SymplecticEuler.jl")
+include("SymplecticEuler.jl")
 include("PressureLogger.jl")
 
 const m = 39.948u"u"
@@ -23,7 +23,6 @@ function sim_argon(N_per_dim, ρ, T, Δt, sim_duration,integrator, observables)
 
     velocities = [velocity(m, T) for i in 1:N]
     interactions = (LennardJones(cutoff = DistanceCutoff(r_c)),)
-
 
     loggers = Dict()
     for (ob, n) = observables
