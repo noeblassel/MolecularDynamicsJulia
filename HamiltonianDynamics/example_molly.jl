@@ -10,6 +10,6 @@ L = 7.0u"nm"#nm
 ρ = (N_per_side^3 * m) / (L^3)
 Δt = 0.001u"ps"
 tfin=0.05u"ns"
-obs = [("positions", 1)]
+obs = [("pressure", 1)]
 sys=sim_argon(N_per_side,ρ,T,Δt,tfin,SymplecticEulerB,obs)
-println(sys.loggers["positions"])
+println(sys.loggers["pressure"])
