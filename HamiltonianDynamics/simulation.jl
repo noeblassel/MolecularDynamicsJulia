@@ -2,12 +2,11 @@ using Molly
 
 include("SymplecticEuler.jl")
 include("PressureLogger.jl")
+include("ReducedUnits.jl")
 
-const m = 39.948u"u"
-const σ = 0.3405u"nm"
-const ϵ = 1.0u"kJ * mol^-1"
+
 const r_c=3σ
-const log_dict = Dict("positions" => CoordinateLogger, "pressure" => PressureLogger, "temperature" => TemperatureLogger, "hamiltonian" => TotalEnergyLogger,"kinetic_energy"=>KineticEnergyLogger,"potential_energy"=>PotentialEnergyLogger)
+const log_dict = Dict("positions" => n->CoordinateLogger(Float64,n), "pressure" => n->PressureLogger(Float64,n), "temperature" => n->TemperatureLogger(Float64,n), "hamiltonian" => n->TotalEnergyLogger(Float64,n),"kinetic_energy"=>n->KineticEnergyLogger(Float64,n),"potential_energy"=>n->PotentialEnergyLogger(Float64,n))
 
 
 function sim_argon(N_per_dim, ρ, T, Δt, sim_duration,integrator, observables)
@@ -22,13 +21,13 @@ function sim_argon(N_per_dim, ρ, T, Δt, sim_duration,integrator, observables)
     coords = reshape(coords, N)
 
     velocities = [velocity(m, T) for i in 1:N]
-    interactions = (LennardJones(cutoff = DistanceCutoff(r_c)),)
+    interactions = (LennardJones(cutoff = DistanceCutoff(r_c),force_units=NoUnits,energy_units=NoUnits),)
 
     loggers = Dict()
     for (ob, n) = observables
         loggers[ob] = log_dict[ob](n)
     end
-    sys = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, loggers = loggers)
+    sys = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, loggers = loggers,energy_units=NoUnits,force_units=NoUnits)
     simulator = integrator(dt = Δt)
     simulate!(sys, simulator, steps)
     return sys

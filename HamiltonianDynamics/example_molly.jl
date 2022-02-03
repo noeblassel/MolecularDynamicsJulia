@@ -5,11 +5,11 @@ include("simulation.jl")
 include("animation.jl")
 
 N_per_side = 6
-T = 300u"K"#K
-L = 7.0u"nm"#nm
+T = 300
+L = 7.0
 ρ = (N_per_side^3 * m) / (L^3)
-Δt = 0.001u"ps"
-tfin=0.05u"ns"
-obs = [("pressure", 1)]
+Δt = 0.001
+tfin=0.05
+obs = [("positions", 1)]
 sys=sim_argon(N_per_side,ρ,T,Δt,tfin,SymplecticEulerB,obs)
-println(sys.loggers["pressure"])
+println(typeof(first(sys.loggers["positions"].coords)))
