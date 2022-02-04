@@ -15,6 +15,6 @@ end
 
 function Molly.log_property!(logger::PressureLogger, s::System, neighbors=nothing, step_n::Integer=0)
     if step_n % logger.n_steps == 0
-        push!(logger.pressures,1.0)
+        
     end
 end
