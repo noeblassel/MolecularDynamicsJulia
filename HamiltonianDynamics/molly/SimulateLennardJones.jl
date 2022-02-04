@@ -2,26 +2,35 @@ using Molly
 
 include("SymplecticEuler.jl")
 include("PressureLogger.jl")
-include("ReducedUnits.jl")
+include("HamiltonianLogger.jl")
+include("KineticEnergyLoggerNoDims.jl")
+include("../ReducedUnits.jl")
+include("PlaceAtoms.jl")
+
+const log_dict = Dict(:position => n->CoordinateLogger(Float64,n), :pressure => n->PressureLogger(Float64,n), :temperature => n->TemperatureLogger(Float64,n), :hamiltonian => n->HamiltonianLogger(Float64,n),:kinetic_energy=>n->KineticEnergyLoggerNoDims(Float64,n),:potential_energy=>n->PotentialEnergyLogger(Float64,n))
 
 
-const r_c=3σ
-const log_dict = Dict("positions" => n->CoordinateLogger(Float64,n), "pressure" => n->PressureLogger(Float64,n), "temperature" => n->TemperatureLogger(Float64,n), "hamiltonian" => n->TotalEnergyLogger(Float64,n),"kinetic_energy"=>n->KineticEnergyLogger(Float64,n),"potential_energy"=>n->PotentialEnergyLogger(Float64,n))
+"""
+Runs a simulation for the Lennard-Jones fluid of the given species, with N_per_dim^3 particles at density ρ and temperature T.
+If T and ρ are of a Real subtype, they must respectively be given in K and in nm^-3 (number of particles per nanometer).
+Alternatively, they can be specified in physical (Unitful) units.
+The parameter Δt is dimensionless.
+"""
 
+function sim_lennard_jones_fluid(species,N_per_dim, ρ, T, Δt, steps,integrator, observables)
+    
+    ρʳ=get_reduced_density(species,ρ)
+    Tʳ=get_reduced_temperature(species,T)
 
-function sim_argon(N_per_dim, ρ, T, Δt, sim_duration,integrator, observables)
-    steps = Int32(ceil(sim_duration / Δt))
     N = N_per_dim^3
-    atoms = [Atom(mass = m, σ = σ, ϵ = ϵ) for i in 1:N]
-    L = (N * m / ρ)^(1 // 3)
-    l = L / N_per_dim
+    atoms = [Atom(mass = 1.0, σ = 1.0, ϵ = 1.0) for i in 1:N]
+    L = (N/ ρʳ)^(1 // 3)
+
     domain = SVector(L, L, L)
 
-    coords = [SVector(i * l, j * l, k * l) for i = 1:N_per_dim, j = 1:N_per_dim, k = 1:N_per_dim]#arrange atoms on an orhogonal lattice
-    coords = reshape(coords, N)
-
-    velocities = [velocity(m, T) for i in 1:N]
-    interactions = (LennardJones(cutoff = DistanceCutoff(r_c),force_units=NoUnits,energy_units=NoUnits),)
+    coords=place_atoms_on_lattice(N_per_dim,domain)
+    velocities = [velocity(1.0, Tʳ) for i in 1:N]
+    interactions = (LennardJones(cutoff = ShiftedPotentialCutoff(2.5),force_units=NoUnits,energy_units=NoUnits),)
 
     loggers = Dict()
     for (ob, n) = observables
