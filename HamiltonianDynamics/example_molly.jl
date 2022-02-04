@@ -16,4 +16,4 @@ sys=sim_lennard_jones_fluid(N_per_side,ρ,T,Δt,n_steps,VelocityVerlet,obs)
 
 include("animate.jl")
 
-animate(sys,"lj_test.gif")
+animate_trajectories(sys,"lj_test.gif")
