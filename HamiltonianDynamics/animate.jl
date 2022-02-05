@@ -58,6 +58,6 @@ function animate_trajectories(sys,filename)
         end
     
     end
-    mp4(anim,filename,fps=30)
+    gif(anim,filename,fps=30)
 
 end
