@@ -1,12 +1,12 @@
 using Unitful
 
-const kᵦ= 1.380649e-23 #Boltzmann's constant (J * K^-1)
+const kᵦ= ustrip(Unitful.k) #Boltzmann's constant (J * K^-1)
 
 
 #Physical units of reference
 
 const uₘ=u"u" #mass
-const uₗ=u"nm" #length
+const uₗ=u"nm" #length  
 const uₑ=u"eV"  #energy
 const uₖ=u"J * K^-1"   #Boltzmann's constant
 
