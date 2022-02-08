@@ -1,20 +1,23 @@
 using Molly
-using Unitful
-using LaTeXStrings
+using Unitful,UnitfulRecipes
+using Statistics
+using Plots
+
+
 
 include("molly/SimulateLennardJones.jl")
 include("ReducedUnits.jl")
-
-N_per_side = 10
-T=0.5
-ρ=0.5
-Δt = 0.02
-n_steps=2500
-obs = [(:position,1)]
-
-sys=sim_lennard_jones_fluid(N_per_side,ρ,T,Δt,n_steps,SymplecticEulerA,obs)
-
 include("animate.jl")
 
-animate_trajectories(sys,"lj_test_symplecticEulerA_big_dt.gif")
-#savefig(plot(sys.loggers[:temperature].temperatures),"kinetic_temperature.png")
+N_per_side = 10
+T=0.1
+ρ=0.9
+Δt = 0.005
+n_steps=2000
+obs = [(:position,1),(:pressure,50),(:temperature,50),(:kinetic_energy,50),(:potential_energy,50)]
+sys=sim_lennard_jones_fluid(N_per_side,ρ,T,Δt,n_steps,VelocityVerlet,obs)
+
+(bins,densities)=rdf(sys.coords,sys.box_size)
+savefig(plot(bins,densities),"test_rdf.png")
+
+

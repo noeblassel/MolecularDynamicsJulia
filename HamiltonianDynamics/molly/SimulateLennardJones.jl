@@ -7,7 +7,7 @@ include("KineticEnergyLoggerNoDims.jl")
 include("../ReducedUnits.jl")
 include("PlaceAtoms.jl")
 
-const log_dict = Dict(:position => n->CoordinateLogger(Float64,n), :pressure => n->PressureLogger(Float64,n), :temperature => n->TemperatureLogger(Float64,n), :hamiltonian => n->HamiltonianLogger(Float64,n),:kinetic_energy=>n->KineticEnergyLoggerNoDims(Float64,n),:potential_energy=>n->PotentialEnergyLogger(Float64,n),:velocity=>n->VelocityLogger(Float64,n))
+const log_dict = Dict(:position => n->CoordinateLogger(Float64,n), :pressure => n->PressureLoggerLJ(Float64,n), :temperature => n->TemperatureLogger(Float64,n), :hamiltonian => n->HamiltonianLogger(Float64,n),:kinetic_energy=>n->KineticEnergyLoggerNoDims(Float64,n),:potential_energy=>n->PotentialEnergyLogger(Float64,n),:velocity=>n->VelocityLogger(Float64,n))
 
 
 """
