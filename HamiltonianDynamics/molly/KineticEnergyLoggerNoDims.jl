@@ -1,5 +1,3 @@
-using Molly
-
 struct KineticEnergyLoggerNoDims{T}
     n_steps::Int
     energies::Vector{T}

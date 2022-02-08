@@ -1,6 +1,3 @@
-using Molly
-using LinearAlgebra
-
 struct PressureLoggerLJ{T}
     n_steps::Int
     pressures::Vector{T}

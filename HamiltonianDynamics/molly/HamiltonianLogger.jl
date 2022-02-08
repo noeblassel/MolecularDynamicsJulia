@@ -1,5 +1,3 @@
-using Molly
-
 struct HamiltonianLogger{T}
     n_steps::Int
     energies::Vector{T}

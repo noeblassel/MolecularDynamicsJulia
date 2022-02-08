@@ -1,4 +1,5 @@
 using Molly
+using ProgressMeter
 using Unitful,UnitfulRecipes
 using Statistics
 using Plots
@@ -6,8 +7,8 @@ using Plots
 
 
 include("molly/SimulateLennardJones.jl")
-include("ReducedUnits.jl")
-include("animate.jl")
+include("utils/ReducedUnits.jl")
+include("utils/animate.jl")   
 
 N_per_side = 10
 T=0.1

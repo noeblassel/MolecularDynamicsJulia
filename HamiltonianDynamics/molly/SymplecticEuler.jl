@@ -1,5 +1,3 @@
-using ProgressMeter
-
 struct SymplecticEulerA{T,C}
     dt::T
     coupling::C
