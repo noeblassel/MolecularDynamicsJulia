@@ -13,11 +13,11 @@ end
 SymplecticEulerB(; dt, coupling=NoCoupling()) = SymplecticEulerB(dt, coupling)
 
 
-function Molly.simulate!(sys::System{D, S,false},
+function Molly.simulate!(sys::System,
     sim::SymplecticEulerA,
     n_steps::Integer;
 
-    parallel::Bool=true) where {D, S}
+    parallel::Bool=true)
 
 if any(inter -> !inter.nl_only, values(sys.general_inters))
 neighbors_all = Molly.all_neighbors(length(sys))
@@ -26,12 +26,15 @@ neighbors_all = nothing
 end
 neighbors =find_neighbors(sys, sys.neighbor_finder)
 
+accels=zero(sys.velocities)
+
 @showprogress for step_n in 1:n_steps
 run_loggers!(sys, neighbors, step_n)
 
 sys.coords += sys.velocities .* sim.dt
 sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
-sys.velocities += Molly.remove_molar.(accelerations(sys, sys.coords, sys.atoms, neighbors, neighbors_all)) .* sim.dt
+accels=Molly.remove_molar.(accelerations(sys, sys.coords, sys.atoms, neighbors, neighbors_all))
+sys.velocities +=  accels .* sim.dt
 
 if step_n != n_steps
 neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n)
@@ -52,11 +55,11 @@ else
 neighbors_all = nothing
 end
 neighbors = find_neighbors(sys, sys.neighbor_finder)
-
+accels=zero(sys.velocities)
 @showprogress for step_n in 1:n_steps
 run_loggers!(sys, neighbors, step_n)
-
-sys.velocities += Molly.remove_molar.(accelerations(sys,sys.coords,sys.atoms,neighbors,neighbors_all))*sim.dt
+accels=Molly.remove_molar.(accelerations(sys,sys.coords,sys.atoms,neighbors,neighbors_all))
+sys.velocities += accels*sim.dt
 sys.coords+=sys.velocities .* sim.dt
 sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
 

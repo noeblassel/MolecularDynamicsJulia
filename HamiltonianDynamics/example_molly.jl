@@ -10,15 +10,13 @@ include("molly/SimulateLennardJones.jl")
 include("utils/ReducedUnits.jl")
 include("utils/animate.jl")   
 
-N_per_side = 10
-T=0.1
-ρ=0.9
-Δt = 0.005
-n_steps=2000
-obs = [(:position,1),(:pressure,50),(:temperature,50),(:kinetic_energy,50),(:potential_energy,50)]
-sys=sim_lennard_jones_fluid(N_per_side,ρ,T,Δt,n_steps,VelocityVerlet,obs)
+N_per_side = 8
+T=0.71
+ρ=0.844
+max_n=10000
+Δt=0.005
+obs=[(:temperature,1),(:potential_energy,1),(:pressure,1)]
+sys=sim_lennard_jones_fluid(N_per_side,ρ,T,Δt,max_n,VelocityVerlet,obs,3.0,equilibration_steps=10000)
 
-(bins,densities)=rdf(sys.coords,sys.box_size)
-savefig(plot(bins,densities),"test_rdf.png")
-
-
+(bins,dens)=Molly.rdf(sys.coords,sys.box_size)
+plot(bins,dens)
