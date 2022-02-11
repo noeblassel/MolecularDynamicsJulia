@@ -33,9 +33,9 @@ get_reduced_temperature(species::Symbol,T::Θ) where {Θ<:Unitful.Quantity}=get_
 get_reduced_pressure(species::Symbol,p::P) where {P<:Unitful.Quantity}=get_reduced_pressure(species,ustrip(uₚ,p))
 get_reduced_density(species::Symbol,ρ::R) where {R<:Unitful.Quantity}=get_reduced_density(species,ustrip(uᵣ,ρ))
 
-get_physical_length(species::Symbol,l::Real)=l*lj_params[species].σ*uₗ
-get_physical_energy(species::Symbol,e::Real)=e*lj_params[species].ϵ*uₑ
-get_physical_time(species::Symbol,t::Real)=t*sqrt((lj_params[species].m*lj_params[species].σ^2)/lj_params[species].ϵ)*uₜ
-get_physical_temperature(species::Symbol,T::Real)=T*(lj_params[species].ϵ/kᵦ)*u_T
-get_physical_pressure(species::Symbol,p::Real)=p*(lj_params[species].ϵ/lj_params[species].σ^3)*uₚ
-get_physical_density(species::Symbol,ρ::Real)=(ρ/lj_params[species].σ^3)*uᵣ
+get_physical_length(species::Symbol,l::Real)=uconvert(u"nm",l*lj_params[species].σ*uₗ)
+get_physical_energy(species::Symbol,e::Real)=uconvert(u"J",e*lj_params[species].ϵ*uₑ)
+get_physical_time(species::Symbol,t::Real)=uconvert(u"ns",t*sqrt((lj_params[species].m*lj_params[species].σ^2)/lj_params[species].ϵ)*uₜ)
+get_physical_temperature(species::Symbol,T::Real)=uconvert(u"K",T*(lj_params[species].ϵ/kᵦ)*u_T)
+get_physical_pressure(species::Symbol,p::Real)=uconvert(u"MPa",p*(lj_params[species].ϵ/lj_params[species].σ^3)*uₚ)
+get_physical_density(species::Symbol,ρ::Real)=uconvert(u"mol * m^-3",(ρ/lj_params[species].σ^3)*uᵣ/Unitful.Na)

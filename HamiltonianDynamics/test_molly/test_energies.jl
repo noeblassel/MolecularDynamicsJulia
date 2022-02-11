@@ -7,7 +7,7 @@ include("../molly/custom_simulators.jl")
 include("../molly/custom_loggers.jl")
 include("../molly/io.jl")
 
-initial_system=read_reduced_lj_state("HamiltonianDynamics/test_molly/equilibrium.out")
+initial_system=read_reduced_lj_state("starting_states/T(0.51)rho(0.91).out")
 
 loggers=Dict(:hamiltonian=>TotalEnergyLogger(Float64,1))
 initial_system.loggers=loggers
@@ -17,7 +17,7 @@ stds=[]
 N=length(initial_system)
 
 energy_plot=plot(xlabel="time step",ylabel="H(t)/N")
-dt_range=[0.0001,0.0002,0.0004,0.0008,0.0016,0.0032,0.0064]
+dt_range=[0.0001,0.0004,0.0008,0.0016,0.0032,0.005,0.0064]
 
 for dt in dt_range
     sys=deepcopy(initial_system)

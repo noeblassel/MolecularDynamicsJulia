@@ -68,24 +68,24 @@ end"""
 
 ###virial logger
 
-struct Viriallogger{T}
+struct VirialLogger{T}
     n_steps::Int
-    virials::Vector{T}
+    energies::Vector{T}
 end
 
-Viriallogger(T, n_steps::Integer, ρ) = Viriallogger(n_steps, T[], 2.5)
-Viriallogger(n_steps::Integer, ρ) = Viriallogger(n_steps, Float64[], 2.5)
-Viriallogger(n_steps::Integer, r_c::Real, ρ) = Viriallogger(n_steps, Float64[], r_c)
+VirialLogger(T, n_steps::Integer) = VirialLogger{T}(n_steps, T[])
+VirialLogger(n_steps::Integer) = VirialLogger(n_steps, Float64[])
 
 
-function Molly.log_property!(logger::Viriallogger, s::System, neighbors = nothing, step_n::Integer = 0)
+function Molly.log_property!(logger::VirialLogger, s::System, neighbors = nothing, step_n::Integer = 0)
     if step_n % logger.n_steps == 0
-        push!(logger.virials, virial(s,neighbors))
+        push!(logger.energies, virial(s,neighbors))
     end
 end
 
 
 function virial(s::System,neighbors=nothing)
+    r_c2=s.general_inters[1].cutoff.sqdist_cutoff
     N = length(s)
     W = 0
     for i = 1:N
@@ -100,17 +100,17 @@ function virial(s::System,neighbors=nothing)
 end
 
 ###pressure logger
-struct PressureLoggerJL{T}
+struct PressureLoggerReduced{T}
     n_steps::Int
     pressures::Vector{T}
 end
 
-PressureLoggerJL(T, n_steps::Integer) = PressureLoggerJL(n_steps, T[])
-PressureLoggerJL(n_steps::Integer) = PressureLoggerJL(n_steps, Float64[])
-PressureLoggerJL(n_steps::Integer) = PressureLoggerJL(n_steps, Float64[])
+PressureLoggerReduced(T, n_steps::Integer) = PressureLoggerReduced(n_steps, T[])
+PressureLoggerReduced(n_steps::Integer) = PressureLoggerReduced(n_steps, Float64[])
+PressureLoggerReduced(n_steps::Integer) = PressureLoggerReduced(n_steps, Float64[])
 
 
-function Molly.log_property!(logger::PressureLoggerJL, s::System, neighbors = nothing, step_n::Integer = 0)
+function Molly.log_property!(logger::PressureLoggerReduced, s::System, neighbors = nothing, step_n::Integer = 0)
     if step_n % logger.n_steps == 0
         N = length(s)
         l1,l2,l3=s.box_size
