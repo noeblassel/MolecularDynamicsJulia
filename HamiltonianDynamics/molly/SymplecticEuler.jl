@@ -13,7 +13,7 @@ end
 SymplecticEulerB(; dt, coupling = NoCoupling()) = SymplecticEulerB(dt, coupling)
 
 
-function Molly.simulate!(sys::System{D,false},
+function Molly.simulate!(sys::System{D,S,false},
     sim::SymplecticEulerA,
     n_steps::Integer; parallel::Bool = true) where {D,S}
 
@@ -47,7 +47,7 @@ function Molly.simulate!(sys::System{D,false},
 end
 
 
-function Molly.simulate!(sys::System{D,false},
+function Molly.simulate!(sys::System{D,S,false},
     sim::SymplecticEulerB,
     n_steps::Integer;
     parallel::Bool = true) where {D,S}
@@ -84,7 +84,7 @@ end
 
 ExplicitEuler(; dt, coupling = NoCoupling()) = ExplicitEuler(dt, coupling)
 
-function Molly.simulate!(sys::System{D,false},
+function Molly.simulate!(sys::System{D,S,false},
     sim::ExplicitEuler,
     n_steps::Integer;
     parallel::Bool = true) where {D,S}

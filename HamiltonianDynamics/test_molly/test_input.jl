@@ -22,8 +22,8 @@ for i=1:length(sys)
     @test sys.velocities[i]==sys2.velocities[i]
 end
 
-simulate!(sys,VelocityVerlet(dt=0.005),1000)
-simulate!(sys2,VelocityVerlet(dt=0.005),1000)
+simulate!(sys,SymplecticEulerA(dt=0.005),1000)
+simulate!(sys2,SymplecticEulerA(dt=0.005),1000)
 
 for i=1:length(sys)
     @test sys.coords[i]==sys2.coords[i]
