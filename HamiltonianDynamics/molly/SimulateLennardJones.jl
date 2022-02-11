@@ -4,6 +4,7 @@ include("SymplecticEuler.jl")
 include("KineticEnergyLoggerNoDims.jl")
 include("PressureLogger.jl")
 include("ReducedTemperatureLogger.jl")
+include("StateLogger.jl")
 
 include("HamiltonianLogger.jl")
 include("../utils/PlaceAtoms.jl")
@@ -37,14 +38,16 @@ function sim_lennard_jones_fluid(N_per_dim, ρ, T, Δt, steps, integrator, obser
 
     coords = place_atoms_on_lattice(N_per_dim, domain)
     velocities = [reduced_velocity_lj(Tʳ) for i in 1:N]
-    interactions = (LennardJones(cutoff = DistanceCutoff(r_c), force_units = NoUnits, energy_units = NoUnits),)
+    interactions = (LennardJones(cutoff = ShiftedPotentialCutoff(r_c), force_units = NoUnits, energy_units = NoUnits),)
 
     loggers = Dict()
-    for (ob, n) = observables
-        if ob != :pressure
-            loggers[ob] = log_dict[ob](n)
+    for (ob, n...) = observables
+        if ob == :pressure
+            loggers[ob] = PressureLoggerLJ(first(n), r_c, ρ)
+        elseif ob== :state
+            loggers[ob] = StateLogger(n...)
         else
-            loggers[ob] = PressureLoggerLJ(n, r_c, ρ)
+            loggers[ob]=log_dict[ob](first(n))
         end
     end
 
