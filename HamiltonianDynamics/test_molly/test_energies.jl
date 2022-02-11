@@ -3,9 +3,9 @@ using Molly
 using ProgressMeter
 using Statistics
 
-include("../molly/input.jl")
-include("../molly/KineticEnergyLoggerNoDims.jl")
-include("../molly/SymplecticEuler.jl")
+include("../molly/custom_simulators.jl")
+include("../molly/custom_loggers.jl")
+include("../molly/io.jl")
 
 initial_system=read_reduced_lj_state("HamiltonianDynamics/test_molly/equilibrium.out")
 
