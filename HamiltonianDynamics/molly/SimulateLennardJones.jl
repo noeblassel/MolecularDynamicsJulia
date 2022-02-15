@@ -32,6 +32,9 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
     coords = place_atoms_on_lattice(N_per_dim, domain)
     velocities = [reduced_velocity_lj(T) for i in 1:N]
     interactions = (LennardJones(cutoff = ShiftedPotentialCutoff(r_c), force_units = NoUnits, energy_units = NoUnits),)
+    nb_mat = trues(N, N)
+    mat_14 = falses(N, N)
+    nf = NoNeighborFinder()
 
     loggers = Dict()
     for (ob, n...) = observables
@@ -42,13 +45,13 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
         end
     end
 
-    if equilibration_steps>0
+    if equilibration_steps > 0
         simulator = integrator(dt = Δt, coupling = RescaleThermostat(T))
-        sys_eq = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits)
+        sys_eq = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
         simulate!(sys_eq, simulator, equilibration_steps)
-        sys = System(atoms = atoms, general_inters = interactions, coords = sys_eq.coords, velocities = sys_eq.velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits)
+        sys = System(atoms = atoms, general_inters = interactions, coords = sys_eq.coords, velocities = sys_eq.velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
     else
-        sys=System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits)
+        sys = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
     end
 
     simulator = integrator(dt = Δt)
@@ -57,9 +60,9 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
 end
 
 
-function sim_lennard_jones_fluid!(sys::System,Δt::Real,steps::Integer,integrator)
-    simulator=integrator(dt=Δt)
-    @time simulate!(sys,simulator,steps)
+function sim_lennard_jones_fluid!(sys::System, Δt::Real, steps::Integer, integrator)
+    simulator = integrator(dt = Δt)
+    @time simulate!(sys, simulator, steps)
     return sys
 end
 
