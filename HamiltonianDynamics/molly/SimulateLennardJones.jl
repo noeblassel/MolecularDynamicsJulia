@@ -2,7 +2,16 @@
 include("custom_loggers.jl")
 include("../utils/PlaceAtoms.jl")
 
-log_dict = Dict(:position => n -> CoordinateLogger(Float64, n), :temperature => n -> ReducedTemperatureLogger(Float64, n), :hamiltonian => n -> HamiltonianLogger(Float64, n), :kinetic_energy => n -> KineticEnergyLoggerNoDims(Float64, n), :potential_energy => n -> PotentialEnergyLogger(Float64, n), :velocity => n -> VelocityLogger(Float64, n), :temperature_original => n -> TemperatureLogger(Float64, n))
+log_dict = Dict(
+    :position => n -> CoordinateLogger(Float64, n),
+    :temperature => n -> TemperatureLogger(Float64, n),
+    :hamiltonian => n -> HamiltonianLogger(Float64, n),
+    :kinetic_energy => n -> KineticEnergyLoggerNoDims(Float64, n),
+    :potential_energy => n -> PotentialEnergyLogger(Float64, n),
+    :velocity => n -> VelocityLogger(Float64, n),
+    :pressure => n -> PressureLoggerReduced(Float64, n),
+    :virial => n -> VirialLogger(Float64, n)
+)
 
 
 """
@@ -35,17 +44,15 @@ function sim_lennard_jones_fluid(N_per_dim, ρ, T, Δt, steps, integrator, obser
 
     loggers = Dict()
     for (ob, n...) = observables
-        if ob == :pressure
-            loggers[ob] = PressureLoggerLJ(first(n), r_c, ρ)
-        elseif ob== :state
+        if ob == :state
             loggers[ob] = StateLogger(n...)
         else
-            loggers[ob]=log_dict[ob](first(n))
+            loggers[ob] = log_dict[ob](first(n))
         end
     end
 
     simulator = integrator(dt = Δt, coupling = RescaleThermostat(T))
-    sys_eq = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain,neighbor_finder=TreeNeighborFinder(dist_cut), energy_units = NoUnits, force_units = NoUnits)
+    sys_eq = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits)
     simulate!(sys_eq, simulator, equilibration_steps)
     sys = System(atoms = atoms, general_inters = interactions, coords = sys_eq.coords, velocities = sys_eq.velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits)
     simulator = integrator(dt = Δt)
@@ -53,4 +60,4 @@ function sim_lennard_jones_fluid(N_per_dim, ρ, T, Δt, steps, integrator, obser
     return sys
 end
 
-reduced_velocity_lj(T) = sqrt(T) * (@SVector randn(3))
+reduced_velocity_lj(T::Real) = sqrt(T::Real) * (@SVector randn(3))

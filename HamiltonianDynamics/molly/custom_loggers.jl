@@ -92,7 +92,7 @@ function virial(s::System,neighbors=nothing)
         for j = 1:i-1
             r_ij2 = Molly.square_distance(i, j, s.coords, s.box_size)
             if r_ij2 < r_c2
-                W -= Molly.force_divr_nocutoff(s.general_inters[1], r_ij2, inv(r_ij2), (1.0, 1.0)) * r_ij2 #force_divr_nocutoff(LJ,r2,1/r2,(σ,ϵ))=-LJ'(r)/r
+                W += Molly.force_divr_cutoff(s.general_inters[1].cutoff, r_ij2, s.general_inters[1], (1.0, 1.0)) * r_ij2 #force_divr_nocutoff(LJ,r2,1/r2,(σ,ϵ))=-LJ'(r)/r
             end
         end
     end
@@ -117,7 +117,7 @@ function Molly.log_property!(logger::PressureLoggerReduced, s::System, neighbors
         V=l1*l2*l3
         K = Molly.kinetic_energy_noconvert(s)
         W=virial(s,neighbors)
-        P=(2K-W)/3V
+        P=(2K+W)/3V
         push!(logger.pressures, P)
     end
 end
