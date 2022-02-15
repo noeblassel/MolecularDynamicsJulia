@@ -3,7 +3,8 @@ using Test,ProgressMeter
 
 include("../utils/ReducedUnits.jl")
 include("../molly/SimulateLennardJones.jl")
-include("../molly/input.jl")
+include("../molly/io.jl")
+include("../molly/custom_simulators.jl")
 
 
 

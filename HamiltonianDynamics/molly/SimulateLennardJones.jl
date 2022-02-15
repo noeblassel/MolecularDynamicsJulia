@@ -21,25 +21,16 @@ Alternatively, they can be specified in physical (Unitful) units,or in reduced u
 The parameter Δt is always dimensionless.
 """
 
-function sim_lennard_jones_fluid(N_per_dim, ρ, T, Δt, steps, integrator, observables, r_c; equilibration_steps = 5000, species = nothing, reduced_units = true)
-
-    if reduced_units
-        ρʳ = ρ
-        Tʳ = T
-    else
-        @assert species !== nothing "cannot compute reduced units for unspecified species"
-        ρʳ = get_reduced_density(species, ρ)
-        Tʳ = get_reduced_temperature(species, T)
-    end
+function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Real, steps::Integer, integrator, observables, r_c::Real; equilibration_steps = 0)
 
     N = N_per_dim^3
     atoms = [Atom(mass = 1.0, σ = 1.0, ϵ = 1.0) for i in 1:N]#in reduced units
-    L = (N / ρʳ)^(1 // 3)
+    L = (N / ρ)^(1 // 3)
 
     domain = SVector(L, L, L)
 
     coords = place_atoms_on_lattice(N_per_dim, domain)
-    velocities = [reduced_velocity_lj(Tʳ) for i in 1:N]
+    velocities = [reduced_velocity_lj(T) for i in 1:N]
     interactions = (LennardJones(cutoff = ShiftedPotentialCutoff(r_c), force_units = NoUnits, energy_units = NoUnits),)
 
     loggers = Dict()
@@ -51,12 +42,24 @@ function sim_lennard_jones_fluid(N_per_dim, ρ, T, Δt, steps, integrator, obser
         end
     end
 
-    simulator = integrator(dt = Δt, coupling = RescaleThermostat(T))
-    sys_eq = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits)
-    simulate!(sys_eq, simulator, equilibration_steps)
-    sys = System(atoms = atoms, general_inters = interactions, coords = sys_eq.coords, velocities = sys_eq.velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits)
+    if equilibration_steps>0
+        simulator = integrator(dt = Δt, coupling = RescaleThermostat(T))
+        sys_eq = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits)
+        simulate!(sys_eq, simulator, equilibration_steps)
+        sys = System(atoms = atoms, general_inters = interactions, coords = sys_eq.coords, velocities = sys_eq.velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits)
+    else
+        sys=System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits)
+    end
+
     simulator = integrator(dt = Δt)
     @time simulate!(sys, simulator, steps)
+    return sys
+end
+
+
+function sim_lennard_jones_fluid!(sys::System,Δt::Real,steps::Integer,integrator)
+    simulator=integrator(dt=Δt)
+    @time simulate!(sys,simulator,steps)
     return sys
 end
 
