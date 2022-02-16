@@ -1,5 +1,3 @@
-#!/libre/blasseln/julia-1.7.2/bin/julia
-
 using Pkg
 
 Pkg.add("Molly")
