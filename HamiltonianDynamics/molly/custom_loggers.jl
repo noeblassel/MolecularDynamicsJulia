@@ -99,6 +99,11 @@ function virial(s::System,neighbors=nothing)
     return W
 end
 
+function potential_energy_exact(s::System,neighbors=nothing)
+    
+end
+
+
 ###pressure logger
 struct PressureLoggerReduced{T}
     n_steps::Int
@@ -121,3 +126,4 @@ function Molly.log_property!(logger::PressureLoggerReduced, s::System, neighbors
         push!(logger.pressures, P)
     end
 end
+
