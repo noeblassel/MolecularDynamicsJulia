@@ -7,6 +7,7 @@ include("../molly/custom_loggers.jl")
 times_no_nf = []
 times_nf_tree = []
 times_nf_dist = []
+times_nf_cell=[]
 
 ρ = 0.2
 T = 0.5
@@ -43,4 +44,4 @@ end
 plot(N_range, times_no_nf, xlabel = "N", ylabel = "runtime", label = "none", title = "Effects of neighbor finders on runtime")
 plot!(N_range, times_nf_tree, label = "tree")
 plot!(N_range,times_nf_dist,label="distance")
-#plot!(N_range,times_nf_cell,label="cell")
+plot!(N_range,times_nf_cell,label="cell")
