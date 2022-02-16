@@ -17,7 +17,7 @@ include("../molly/custom_loggers.jl")
 include("../molly/io.jl")
 include("../utils/animate.jl")
 
-N=length(sys)
+
 ρ=0.01
 Ts=[]
 Ps=[]
