@@ -8,7 +8,7 @@ times_no_nf = []
 times_nf_tree = []
 times_nf_dist = []
 
-ρ = 0.5
+ρ = 0.2
 T = 0.5
 r_c = 3.0
 initial_configs = []
