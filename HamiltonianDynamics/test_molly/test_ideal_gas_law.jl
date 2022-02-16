@@ -1,5 +1,13 @@
 #!/libre/blasseln/julia-1.7.2/bin/julia
 
+using Pkg
+
+Pkg.add("Molly")
+Pkg.add("Plots")
+Pkg.add("ProgressMeter")
+Pkg.add("Statistics")
+Pkg.add("StaticArrays")
+
 using Molly
 using Plots
 using ProgressMeter
