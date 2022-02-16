@@ -8,12 +8,12 @@ times_no_nf = []
 times_nf_tree = []
 times_nf_dist = []
 
-ρ = 0.1
+ρ = 0.5
 T = 0.5
 r_c = 3.0
 initial_configs = []
 max_n = 8
-Npd_range = 1:8
+Npd_range = 4:15
 N_range = Npd_range .^ 3
 
 for Npd in Npd_range
