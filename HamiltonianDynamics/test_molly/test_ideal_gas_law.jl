@@ -1,3 +1,5 @@
+#!/libre/blasseln/julia-1.7.2/bin/julia
+
 using Molly
 using Plots
 using ProgressMeter
