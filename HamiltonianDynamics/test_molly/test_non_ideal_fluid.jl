@@ -18,16 +18,16 @@ include("../molly/SimulateLennardJones.jl")
 include("../utils/PlaceAtoms.jl")
 include("../utils/ReducedUnits.jl")
 
-Npd=10
+Npd=12
 
 Ts=[]
 Ps=[]
-ρ=0.8
+ρ=0.7
 
-T_range=0.8:0.01:1.2
+T_range=0.5:0.01:1.6
 
 for T in T_range
-    sys=sim_lennard_jones_fluid(Npd,ρ,T,5e-3,10000,VelocityVerlet,[],4.0)
+    sys=sim_lennard_jones_fluid(Npd,ρ,T,5e-3,5000,VelocityVerlet,[],4.0)
     sys.loggers=Dict(:pressure=>PressureLoggerReduced(Float64,1),:temperature=>TemperatureLogger(Float64,1))
     simulate!(sys,VelocityVerlet(dt=0.005),10000)
     push!(Ts,mean(sys.loggers[:temperature].temperatures))
