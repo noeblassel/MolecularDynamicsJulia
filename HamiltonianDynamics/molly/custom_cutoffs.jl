@@ -1,5 +1,3 @@
-"""The spline cutoff, yielding a continuously differentiable intepolation between the true potential at radius activation_dist and zero at distance dist_cutoff
-"""
 struct CubicSplineCutoff{D,S,I}
 
     dist_cutoff::D
@@ -36,10 +34,10 @@ Molly.cutoff_points(::Type{CubicSplineCutoff{D,S,I}}) where {D,S,I} = 2
     rs = cutoff.activation_dist_true
     t = (r - rs) / cutoff.delta
 
-    ps = Molly.potential(inter, cutoff.activation_dist, cutoff.inv_activation_dist, params)
-    fs = -Molly.force_divr_nocutoff(inter, cutoff.activation_dist, cutoff.inv_activation_dist, params) * rs
+    Vs = Molly.potential(inter, cutoff.activation_dist, cutoff.inv_activation_dist, params)
+    dVs = -Molly.force_divr_nocutoff(inter, cutoff.activation_dist, cutoff.inv_activation_dist, params) * rs
     ##cubic spline interpolation derivative
-    return (6t^2 - 6t) * ps / cutoff.delta + (3t^2 - 4t + 1) * fs
+    return -((6t^2 - 6t) * Vs / cutoff.delta + (3t^2 - 4t + 1) * dVs)/r
 
 end
 
@@ -48,43 +46,39 @@ end
     rs = cutoff.activation_dist_true
     t = (r - rs) / cutoff.delta
 
-    ps = Molly.potential(inter, cutoff.activation_dist, cutoff.inv_activation_dist, params)
-    fs = -Molly.force_divr_nocutoff(inter, cutoff.activation_dist, cutoff.inv_activation_dist, params) * rs
+    Vps = Molly.potential(inter, cutoff.activation_dist, cutoff.inv_activation_dist, params)
+    dVs = -Molly.force_divr_nocutoff(inter, cutoff.activation_dist, cutoff.inv_activation_dist, params) * rs
     ##cubic spline interpolation
-    return (2t^3 - 3t^2 + 1) * ps + (t^3 - 2t^2 + t) * cutoff.delta * fs
+    return (2t^3 - 3t^2 + 1) * Vs + (t^3 - 2t^2 + t) * cutoff.delta * dVs
 end
 
 
-#Shifted force cutoff is broken
-
-"""
-    ShiftedForceCutoff_(dist_cutoff)
-
-Cutoff that shifts the force to be continuous at a specified cutoff point.
-"""
-struct ShiftedForceCutoff_{D, S, I}
+#ShiftedForceCutoff is broken
+struct ShiftedForceCutoff_fixed{D,S,I}
     dist_cutoff::D
     sqdist_cutoff::S
     inv_sqdist_cutoff::I
 end
 
-function Molly.ShiftedForceCutoff_(dist_cutoff)
-    return ShiftedForceCutoff_(dist_cutoff, dist_cutoff ^ 2, inv(dist_cutoff ^ 2))
+function ShiftedForceCutoff_fixed(dist_cutoff)
+    (D, S, I) = typeof.([dist_cutoff, dist_cutoff^2, inv(dist_cutoff^2)])
+    return ShiftedForceCutoff_fixed{D,S,I}(dist_cutoff, dist_cutoff^2, inv(dist_cutoff^2))
 end
 
-Molly.cutoff_points(::Type{ShiftedForceCutoff_{D, S, I}}) where {D, S, I} = 1
 
-function Molly.force_divr_cutoff(cutoff::ShiftedForceCutoff_, r2, inter, params)
+Molly.cutoff_points(::Type{ShiftedForceCutoff_fixed{D,S,I}}) where {D,S,I} = 1
+
+function Molly.force_divr_cutoff(cutoff::ShiftedForceCutoff_fixed, r2, inter, params)#this was correct
     return Molly.force_divr_nocutoff(inter, r2, inv(r2), params) - Molly.force_divr_nocutoff(
-                                inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params)
+        inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params)
 end
 
-@fastmath function Molly.potential_cutoff(cutoff::ShiftedForceCutoff_, r2, inter, params)
+@fastmath function Molly.potential_cutoff(cutoff::ShiftedForceCutoff_fixed, r2, inter, params)
     invr2 = inv(r2)
     r = √r2
     rc = cutoff.dist_cutoff
-    fc = Molly.force_divr_nocutoff(inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params) * r
+    dVc = -Molly.force_divr_nocutoff(inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params) * r #sign error was here
 
-    Moly.potential(inter, r2, invr2, params) - (r - rc) * fc -
-        Molly.potential(inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params)
+    Molly.potential(inter, r2, invr2, params) - (r - rc) * dVc -
+    Molly.potential(inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params)
 end
