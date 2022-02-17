@@ -34,8 +34,14 @@ for T in T_range
     push!(Ps,mean(sys.loggers[:pressure].pressures))
 end
 
-Ts=get_physical_temperature.(:Ar,Ts)
-Ps=get_physical_pressure.(:Ar,Ps)
+Ts_p=get_physical_temperature.(:Ar,Ts)
+Ps_p=get_physical_pressure.(:Ar,Ps)
 
-scatter(Ts,Ps,label="",xlabel="T",ylabel="P",title="Non-ideal regime, ρ=$(round(typeof(1.0u"mol * m^-3"),get_physical_density(:Ar,ρ)))",dpi=300)
+scatter(Ts_p,Ps_p,label="",xlabel="T",ylabel="P",title="Non-ideal regime, ρ=$(round(typeof(1.0u"mol * m^-3"),get_physical_density(:Ar,ρ)))",dpi=300)
 savefig("non_ideal_gas.png")
+
+file=open("series_data.out","w")
+for t in Ts:print(file,"$(t) ")
+println(file)
+for p in Ps:print(file,"$(p) ")
+close(file)
