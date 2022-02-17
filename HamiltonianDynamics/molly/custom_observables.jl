@@ -47,7 +47,7 @@ function pair_virial(s::System, neighbors = nothing)
             for ni = 1:neighbors.n
                 i, j, _ = neighbors.list[ni]
                 σ = inter.lorentz_mixing ? (s.atoms[i].σ + s.atoms[j].σ) / 2 : sqrt(s.atoms[i].σ * s.atoms[j].σ)
-                ϵ = sqrt(atom_i.ϵ * atom_j.ϵ)
+                ϵ = sqrt(s.atoms[i].ϵ * s.atoms[j].ϵ)
 
                 r2 = Molly.square_distance(i, j, s.coords, s.box_size)
 
