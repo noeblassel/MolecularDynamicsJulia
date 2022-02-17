@@ -1,6 +1,6 @@
 log_dict = Dict(
     :position => n -> CoordinateLogger(Float64, n),
-    :temperature => n -> TemperatureLogger(Float64, n),
+    :temperature => n -> TemperatureLoggerReduced(Float64, n),
     :hamiltonian => n -> HamiltonianLogger(Float64, n),
     :kinetic_energy => n -> KineticEnergyLoggerNoDims(Float64, n),
     :potential_energy => n -> PotentialEnergyLogger(Float64, n),

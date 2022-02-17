@@ -46,25 +46,25 @@ function Molly.log_property!(logger::StateLogger, s::System, neighbors = nothing
     end
 end
 
-###redundant (TemperatureLogger is fixed-- GH version is not up to date )
+###redundant (TemperatureLogger is fixed-- GH version is not up to date )###
 
-"""###reduced temperature logger (kb=1)
-struct ReducedTemperatureLogger{T}
+###reduced temperature logger (kb=1)
+struct TemperatureLoggerReduced{T}
     n_steps::Int
     temperatures::Vector{T}
 end
 
-ReducedTemperatureLogger(T, n_steps::Integer)=ReducedTemperatureLogger(n_steps,T[])
-ReducedTemperatureLogger(n_steps::Integer)=ReducedTemperatureLogger(Float64, n_steps)
+TemperatureLoggerReduced(T, n_steps::Integer)=TemperatureLoggerReduced(n_steps,T[])
+TemperatureLoggerReduced(n_steps::Integer)=TemperatureLoggerReduced(Float64, n_steps)
 
-function Molly.log_property!(logger::ReducedTemperatureLogger, s::System, neighbors=nothing, step_n::Integer=0)
+function Molly.log_property!(logger::TemperatureLoggerReduced, s::System, neighbors=nothing, step_n::Integer=0)
     if step_n % logger.n_steps == 0
         N=length(s)
         ke=Molly.kinetic_energy_noconvert(s)
-        T=2ke/(3N)
+        T=2ke/(3N-3)
         push!(logger.temperatures,T)
     end
-end"""
+end
 
 ###virial logger
 
