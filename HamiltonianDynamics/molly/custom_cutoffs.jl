@@ -68,7 +68,7 @@ end
 
 Molly.cutoff_points(::Type{ShiftedForceCutoff_fixed{D,S,I}}) where {D,S,I} = 1
 
-function Molly.force_divr_cutoff(cutoff::ShiftedForceCutoff_fixed, r2, inter, params)#this was correct
+function Molly.force_divr_cutoff(cutoff::ShiftedForceCutoff_fixed, r2, inter, params)#OK
     return Molly.force_divr_nocutoff(inter, r2, inv(r2), params) - Molly.force_divr_nocutoff(
         inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params)
 end
@@ -77,7 +77,7 @@ end
     invr2 = inv(r2)
     r = √r2
     rc = cutoff.dist_cutoff
-    dVc = -Molly.force_divr_nocutoff(inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params) * r #sign error was here
+    dVc = -Molly.force_divr_nocutoff(inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params) * r #sign error here in original version
 
     Molly.potential(inter, r2, invr2, params) - (r - rc) * dVc -
     Molly.potential(inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params)
