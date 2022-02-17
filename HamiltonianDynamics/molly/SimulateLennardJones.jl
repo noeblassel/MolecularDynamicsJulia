@@ -1,7 +1,3 @@
-using Molly
-include("custom_loggers.jl")
-include("../utils/PlaceAtoms.jl")
-
 log_dict = Dict(
     :position => n -> CoordinateLogger(Float64, n),
     :temperature => n -> TemperatureLogger(Float64, n),

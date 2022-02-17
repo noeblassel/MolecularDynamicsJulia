@@ -1,7 +1,3 @@
-using Plots
-using LinearAlgebra
-using ProgressMeter
-
 function animate_trajectories(coords,filename)
 
     l,l,l=sys.box_size

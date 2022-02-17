@@ -1,19 +1,21 @@
 using Pkg
 
-Pkg.add.(split("Molly Plots ProgressMeter Statistics StaticArrays UnitfulRecipes"))
+Pkg.add.(split("Molly Plots ProgressMeter Statistics StaticArrays Unitful UnitfulRecipes"))
 
 using Molly
 using Plots
 using ProgressMeter
 using Statistics,StaticArrays
-using UnitfulRecipes
+using Unitful, UnitfulRecipes
+
 
 include("../molly/custom_loggers.jl")
 include("../molly/io.jl")
 include("../molly/custom_observables.jl")
 include("../molly/custom_cutoffs.jl")
 include("../molly/SimulateLennardJones.jl")
-include("../utils/animate.jl")
+
+include("../utils/PlaceAtoms.jl")
 include("../utils/ReducedUnits.jl")
 
 Npd=10

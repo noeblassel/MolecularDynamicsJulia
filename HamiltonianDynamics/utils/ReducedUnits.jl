@@ -1,5 +1,3 @@
-using Unitful
-
 const kᵦ= ustrip(Unitful.k) #Boltzmann's constant (J * K^-1)
 
 
