@@ -52,6 +52,7 @@ function pair_virial(s::System, neighbors = nothing)
                 r2 = Molly.square_distance(i, j, s.coords, s.box_size)
 
                 cutoff = inter.cutoff
+                C=typeof(cutoff)
                 σ2 = σ^2
                 params = (σ2, ϵ)
 
