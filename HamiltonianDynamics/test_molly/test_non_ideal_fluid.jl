@@ -35,5 +35,5 @@ end
 Ts=get_physical_temperature.(:Ar,Ts)
 Ps=get_physical_pressure.(:Ar,Ps)
 
-scatter(Ts,Ps,label="",xlabel="T",ylabel="P",title="Non-ideal regime, ρ=$(round(typeof(1.0u"mol * m^-3"),get_physical_density(:Ar,ρ)))")
+scatter(Ts,Ps,label="",xlabel="T",ylabel="P",title="Non-ideal regime, ρ=$(round(typeof(1.0u"mol * m^-3"),get_physical_density(:Ar,ρ)))",dpi=300)
 savefig("non_ideal_gas.png")
