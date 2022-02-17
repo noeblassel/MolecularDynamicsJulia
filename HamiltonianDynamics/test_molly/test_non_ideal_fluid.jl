@@ -22,9 +22,9 @@ Npd=10
 
 Ts=[]
 Ps=[]
-ρ=0.5
+ρ=0.8
 
-T_range=0.01:0.01:0.5
+T_range=0.8:0.01:1.2
 
 for T in T_range
     sys=sim_lennard_jones_fluid(Npd,ρ,T,5e-3,10000,VelocityVerlet,[],4.0)
@@ -34,10 +34,8 @@ for T in T_range
     push!(Ps,mean(sys.loggers[:pressure].pressures))
 end
 
-Ts_p=get_physical_temperature.(:Ar,Ts)
-Ps_p=get_physical_pressure.(:Ar,Ps)
 
-scatter(Ts_p,Ps_p,label="",xlabel="T",ylabel="P",title="Non-ideal regime, ρ=$(round(typeof(1.0u"mol * m^-3"),get_physical_density(:Ar,ρ)))",dpi=300)
+scatter(Ts,Ps,label="",xlabel="T/T*",ylabel="P/P*",title="ρ/ρ*=0.8",dpi=300,markershape=:xcross)
 savefig("non_ideal_gas.png")
 
 file=open("series_data.out","w")

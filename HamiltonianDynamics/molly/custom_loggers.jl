@@ -79,7 +79,7 @@ VirialLogger(n_steps::Integer) = VirialLogger(n_steps, Float64[])
 
 function Molly.log_property!(logger::VirialLogger, s::System, neighbors = nothing, step_n::Integer = 0)
     if step_n % logger.n_steps == 0
-        push!(logger.energies, virial(s, neighbors))
+        push!(logger.energies, pair_virial(s, neighbors))
     end
 end
 
@@ -91,8 +91,6 @@ end
 
 PressureLoggerReduced(T, n_steps::Integer) = PressureLoggerReduced(n_steps, T[])
 PressureLoggerReduced(n_steps::Integer) = PressureLoggerReduced(n_steps, Float64[])
-PressureLoggerReduced(n_steps::Integer) = PressureLoggerReduced(n_steps, Float64[])
-
 
 function Molly.log_property!(logger::PressureLoggerReduced, s::System, neighbors = nothing, step_n::Integer = 0)
     if step_n % logger.n_steps == 0

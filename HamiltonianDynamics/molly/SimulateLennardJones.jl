@@ -30,7 +30,14 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
     interactions = (LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c),force_units = NoUnits, energy_units = NoUnits,nl_only=true),)
     nb_mat = trues(N, N)
     mat_14 = falses(N, N)
-    nf = CellListMapNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=r_c)
+
+    nf=nothing
+    try
+        nf = CellListMapNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=r_c)##in case the system is too small, revert to tree neighbor finder
+    catch
+        nf=TreeNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=r_c)
+    end
+
 
     loggers = Dict()
     for (ob, n...) = observables
@@ -47,7 +54,7 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
         simulate!(sys_eq, simulator, equilibration_steps)
         sys = System(atoms = atoms, general_inters = interactions, coords = sys_eq.coords, velocities = sys_eq.velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
     else
-        sys = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
+        sys = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain,loggers=loggers, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
     end
 
     simulator = integrator(dt = Δt)
