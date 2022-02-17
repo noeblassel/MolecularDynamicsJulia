@@ -41,7 +41,11 @@ scatter(Ts_p,Ps_p,label="",xlabel="T",ylabel="P",title="Non-ideal regime, ρ=$(r
 savefig("non_ideal_gas.png")
 
 file=open("series_data.out","w")
-for t in Ts:print(file,"$(t) ")
+for t in Ts
+    print(file,"$(t) ")
+end
 println(file)
-for p in Ps:print(file,"$(p) ")
+for p in Ps
+    print(file,"$(p) ")
+end
 close(file)
