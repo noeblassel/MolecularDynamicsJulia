@@ -1,5 +1,3 @@
-using Molly
-
 function pair_virial(s::System, neighbors = nothing)
 
     W = 0.0 *s.energy_units
