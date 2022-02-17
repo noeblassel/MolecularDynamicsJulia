@@ -1,4 +1,4 @@
-
+using Molly
 include("custom_loggers.jl")
 include("../utils/PlaceAtoms.jl")
 
@@ -31,10 +31,10 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
 
     coords = place_atoms_on_lattice(N_per_dim, domain)
     velocities = [reduced_velocity_lj(T) for i in 1:N]
-    interactions = (LennardJones(cutoff = ShiftedPotentialCutoff(r_c),force_units = NoUnits, energy_units = NoUnits),)
+    interactions = (LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c),force_units = NoUnits, energy_units = NoUnits,nl_only=true),)
     nb_mat = trues(N, N)
     mat_14 = falses(N, N)
-    nf = NoNeighborFinder()
+    nf = CellListMapNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=r_c)
 
     loggers = Dict()
     for (ob, n...) = observables

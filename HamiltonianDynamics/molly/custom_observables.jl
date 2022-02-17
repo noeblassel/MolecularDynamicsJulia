@@ -87,7 +87,6 @@ end
 #not unit safe
 
 function pressure(s::System, neighbors = nothing)
-    N = length(s)
     l1, l2, l3 = s.box_size
     V = l1 * l2 * l3
     K = Molly.kinetic_energy_noconvert(s)

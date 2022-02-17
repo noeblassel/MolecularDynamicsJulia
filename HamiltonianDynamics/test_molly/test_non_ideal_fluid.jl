@@ -1,3 +1,7 @@
+using Pkg
+
+Pkg.add.(split("Molly Plots ProgressMeter Statistics StaticArrays UnitfulRecipes"))
+
 using Molly
 using Plots
 using ProgressMeter
@@ -6,16 +10,22 @@ using UnitfulRecipes
 
 include("../molly/custom_loggers.jl")
 include("../molly/io.jl")
+include("../molly/custom_observables.jl")
+include("../molly/custom_cutoffs.jl")
+include("../molly/SimulateLennardJones.jl")
 include("../utils/animate.jl")
 include("../utils/ReducedUnits.jl")
 
-N=length(sys)
+Npd=10
+
 Ts=[]
 Ps=[]
 ρ=0.5
+
 T_range=0.01:0.01:0.5
+
 for T in T_range
-    sys=read_reduced_lj_state("starting_states/T($(round(T,digits=2))).out")
+    sys=sim_lennard_jones_fluid(Npd,ρ,T,5e-3,10000,VelocityVerlet,[],4.0)
     sys.loggers=Dict(:pressure=>PressureLoggerReduced(Float64,1),:temperature=>TemperatureLogger(Float64,1))
     simulate!(sys,VelocityVerlet(dt=0.005),10000)
     push!(Ts,mean(sys.loggers[:temperature].temperatures))
