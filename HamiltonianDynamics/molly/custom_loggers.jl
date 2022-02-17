@@ -96,13 +96,7 @@ PressureLoggerReduced(n_steps::Integer) = PressureLoggerReduced(n_steps, Float64
 
 function Molly.log_property!(logger::PressureLoggerReduced, s::System, neighbors = nothing, step_n::Integer = 0)
     if step_n % logger.n_steps == 0
-        N = length(s)
-        l1, l2, l3 = s.box_size
-        V = l1 * l2 * l3
-        K = Molly.kinetic_energy_noconvert(s)
-        W = virial(s, neighbors)
-        P = (2K + W) / 3V
-        push!(logger.pressures, P)
+        push!(logger.pressures, pressure(s,neighbors))
     end
 end
 

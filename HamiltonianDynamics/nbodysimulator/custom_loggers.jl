@@ -1,7 +1,7 @@
 using NBodySimulator
 
 function virial(res::SimulationResult,t::Real)
-    
+    N=res.
 end
 
 function pressure(res::SimulationResult,t::Real)
