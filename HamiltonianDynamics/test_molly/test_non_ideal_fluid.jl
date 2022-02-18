@@ -22,9 +22,10 @@ Npd=12
 
 Ts=[]
 Ps=[]
-ρ=0.7
 
-T_range=0.5:0.01:1.6
+ρ=0.2
+
+T_range=0.2:0.02:2
 
 for T in T_range
     sys=sim_lennard_jones_fluid(Npd,ρ,T,5e-3,5000,VelocityVerlet,[],4.0)

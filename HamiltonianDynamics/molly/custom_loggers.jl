@@ -57,10 +57,7 @@ TemperatureLoggerReduced(n_steps::Integer)=TemperatureLoggerReduced(Float64, n_s
 
 function Molly.log_property!(logger::TemperatureLoggerReduced, s::System, neighbors=nothing, step_n::Integer=0)
     if step_n % logger.n_steps == 0
-        N=length(s)
-        ke=Molly.kinetic_energy_noconvert(s)
-        T=2ke/(3N-3)
-        push!(logger.temperatures,T)
+        push!(logger.temperatures,temperature_reduced(s))
     end
 end
 

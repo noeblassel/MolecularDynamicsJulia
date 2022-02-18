@@ -98,4 +98,5 @@ function temperature_reduced(s::System)##ie when kb=1
     ke=Molly.kinetic_energy_noconvert(s)
     
     return 2ke/(3N-3)
+end
     
