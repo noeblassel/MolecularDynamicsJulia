@@ -1,51 +1,52 @@
-using NBodySimulator, Base.Threads
-
-@fastmath function pair_virial_lj(sr::SimulationResult, time::Real, parallel::Bool = true)
+LennardJonesParameters
+@fastmath function pair_virial_lj(sr::NBodySimulator.SimulationResult, time::Real, parallel::Bool = true)
 
     lj_params = sr.simulation.system.potentials[:lennard_jones]
-    σ6 = lj_params.σ^2
+    σm6 = inv(lj_params.σ2^3)
     ϵ = lj_params.ϵ
+    R2=lj_params.R2
     pbc = sr.simulation.boundary_conditions
 
-    N = length(res.simulation.system.bodies)
-    q = reshape(get_position(sr, time), (N, 3))
+    N = length(sr.simulation.system.bodies)
+    q = get_position(sr, time)
 
     if parallel && nthreads() > 1
 
-        Ws_thread = [0.0 for i in 1:nthreads()]
+        W_threads = [0.0 for i in 1:nthreads()]
 
         @threads for i = 1:N
             for j = 1:i-1
-                ri = q[i]
-                rj = q[j]
+                ri = q[:,i]
+                rj = q[:,j]
                 (_, _, r2) = NBodySimulator.get_interparticle_distance(ri, rj, pbc)
 
-                if r2 < lj_params.R2
+                if r2 < R2
                     rm6 = inv(r2^3)
-
+                    wij=24ϵ*σm6*(2σm6*rm6^2-rm6)
+                    W_threads[threadid()]+=wij
                 end
 
             end
         end
 
-        return sum(Ws_thread)
-
-
+        return sum(W_threads)
     else
         W = 0
         for i = 1:N
             for j = 1:i-1
-                ri = q[i]
-                rj = q[j]
+                ri = @view q[:,i]
+                rj = @view q[:,j]
                 (_, _, r2) = NBodySimulator.get_interparticle_distance(ri, rj, pbc)
 
-                if r2 < lj_params.R2
-
+                if r2<R2
+                    rm6 = inv(r2^3)
+                    wij=24ϵ*σm6*(2σm6*rm6^2-rm6)
+                    W+=wij
                 end
 
             end
         end
-
+        return W
     end
 
 end

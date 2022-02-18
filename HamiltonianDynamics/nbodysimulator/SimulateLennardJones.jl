@@ -1,9 +1,9 @@
 
-function sim_lennard_jones_fluid(N_per_dim, ρ, T, Δt, steps,integrator)
+function sim_lennard_jones_fluid(N_per_dim, ρ, T,r_c, Δt, steps,integrator)
     N = N_per_dim^3
     L = (N / ρ)^(1 // 3)
     bodies = generate_bodies_in_cell_nodes(N, 1.0, sqrt(T), L)
-    potential_parameters = LennardJonesParameters(1.0, 1.0, 2.5)
+    potential_parameters = LennardJonesParameters(1.0, 1.0, r_c)
 
     system = PotentialNBodySystem(bodies, Dict(:lennard_jones => potential_parameters))
     boundary_conditions = CubicPeriodicBoundaryConditions(L)
