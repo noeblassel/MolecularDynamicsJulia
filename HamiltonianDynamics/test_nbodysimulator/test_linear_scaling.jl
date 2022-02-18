@@ -11,7 +11,7 @@ times = []
 
 T = 1.0
 ρ = 0.2
-r_c = 3
+r_c = 3.0
 
 Npd_range = 4:15
 n_samps = 10
