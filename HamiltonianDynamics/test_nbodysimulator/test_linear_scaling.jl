@@ -20,7 +20,7 @@ for N = Npd_range
     println(N)
     t = 0
     for i = 1:n_samps
-        t += @elapsed sim_lennard_jones_fluid(N, ρ, T, r_c, 5e-3, 100, VelocityVerlet)
+        t += @elapsed sim_lennard_jones_fluid(N, ρ, T, r_c, 5e-3, 10000, VelocityVerlet)
     end
     push!(times, t / n_samps)
 end

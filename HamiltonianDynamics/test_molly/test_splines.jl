@@ -23,7 +23,7 @@ for r in R
     for (i,cut) in enumerate(cutoffs)
         coord_j=SVector(r,0.0,0.0)
         inter=LennardJones(cutoff=cut,force_units=NoUnits,energy_units=NoUnits)
-        push!(graphs[i],norm(Molly.force(inter,coord_i,coord_j,atom,atom,box_size)))
+        push!(graphs[i],Molly.potential(inter,coord_i,coord_j,atom,atom,box_size))
     end
     
 end

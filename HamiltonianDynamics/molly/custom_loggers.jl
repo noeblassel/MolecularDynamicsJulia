@@ -93,3 +93,19 @@ function Molly.log_property!(logger::PressureLoggerReduced, s::System, neighbors
     end
 end
 
+#long range virial correction logger
+
+struct LRCVirialLogger{T}
+    n_steps::Int
+    LRCs::Vector{T}
+    inter::GeneralInteraction
+end
+
+LRCVirialLogger(T,n_steps::Integer,inter::GeneralInteraction)=LRCVirialLogger(n_steps,T[],inter)
+LRCVirialLogger(n_steps::Integer,inter::GeneralInteraction)=LRCVirialLogger(n_steps,Float64[],inter)
+
+function Molly.log_property!(logger::LRCVirialLogger,s::System,neighbors=nothing,step_n::Integer=0)
+    if step_n%logger.n_steps==0
+        push!(logger.LRCs,long_range_virial_correction(s,logger.inter))
+    end
+end

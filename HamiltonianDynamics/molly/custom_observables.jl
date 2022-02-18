@@ -1,4 +1,4 @@
-function pair_virial(s::System, neighbors = nothing)
+function pair_virial(s::System, neighbors = nothing,lrc=false)
 
     W = 0.0 *s.energy_units
 
@@ -78,7 +78,13 @@ function pair_virial(s::System, neighbors = nothing)
                 W += f_divr * r2
             end
         end
+
+        if lrc
+            W+=long_range_virial_correction(s,inter)
+        end
+        
     end
+
     return W
 end
 
@@ -98,5 +104,26 @@ function temperature_reduced(s::System)##ie when kb=1
     ke=Molly.kinetic_energy_noconvert(s)
     
     return 2ke/(3N-3)
+end
+
+function long_range_virial_correction(s::System,inter)#see discussion at Allen and Tildesley, section 2.8
+
+    @assert s.energy_units==NoUnits "long_range_virial_corrections not implemented for physical units. use reduced dimensionless units instead"
+
+    !hasproperty(inter,:cutoff) && return 0.0*s.energy_units
+    isa(inter.cutoff,NoCutoff) && return 0.0*s.energy_units
+    
+
+    l1,l2,l3=s.box_size
+    V=l1*l2*l3
+    N=length(s)
+
+    r_cm3=inv(inter.cutoff.dist_cutoff^3)
+
+    if isa(inter,LennardJones)
+        return (32N^2*r_cm3^3-16N^2*r_cm3)*π/V
+    else #implement other long range corrections here
+        return 0.0*s.energy_units
+    end
 end
     
