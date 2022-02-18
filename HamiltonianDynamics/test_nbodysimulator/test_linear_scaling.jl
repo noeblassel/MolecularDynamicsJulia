@@ -1,16 +1,15 @@
-using NBodySimulator, BenchmarkTools, Plots
+using Pkg
+
+Pkg.add.(["NBodySimulator,Unitful"])
 
 include("../utils/ReducedUnits.jl")
 include("../nbodysimulator/SimulateLennardJones.jl")
-include("../nbodysimulator/io.jl")
 
 times = []
 
 T = 1.0
 ρ = 0.2
 r_c = 3
-
-steps = 5000
 
 Npd_range = 4:15
 n_samps = 10
