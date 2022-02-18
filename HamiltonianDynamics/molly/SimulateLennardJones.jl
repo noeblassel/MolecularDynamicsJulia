@@ -7,7 +7,6 @@ log_dict = Dict(
     :velocity => n -> VelocityLogger(Float64, n),
     :pressure => n -> PressureLoggerReduced(Float64, n),
     :virial => n -> VirialLogger(Float64, n),
-    :
 )
 
 
