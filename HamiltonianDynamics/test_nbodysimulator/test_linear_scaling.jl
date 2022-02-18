@@ -2,6 +2,8 @@ using Pkg
 
 Pkg.add.(["NBodySimulator","Unitful"])
 
+using Unitful, NBodySimulator
+
 include("../utils/ReducedUnits.jl")
 include("../nbodysimulator/SimulateLennardJones.jl")
 
