@@ -61,9 +61,9 @@ for Npd in Npd_range
     end
 
     push!(times_no_nf,t_no_nf/n_samps)
-    push!(times_nf_dist,t_nf_dist/nsamps)
-    push!(times_nf_tree,t_nf_tree/nsamps)
-    push!(times_nf_cell,t_nf_cell/nsamps)
+    push!(times_nf_dist,t_nf_dist/n_samps)
+    push!(times_nf_tree,t_nf_tree/n_samps)
+    push!(times_nf_cell,t_nf_cell/n_samps)
 end
 
 f=open("molly_no_nf.txt","w")
@@ -87,5 +87,11 @@ close(f)
 f=open("molly_nf_cell.txt","w")
 for t=times_nf_cell
     print(f,"$(t) ")
+end
+close(f)
+
+f=open("n_range","w")
+for n in N_range
+print(f,"$(n) ")
 end
 close(f)
