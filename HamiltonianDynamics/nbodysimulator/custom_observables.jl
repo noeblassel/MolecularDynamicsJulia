@@ -66,6 +66,6 @@ function pressure(sr::NBodySimulator.SimulationResult, time::Real, parallel::Boo
         error("Only periodic boundary conditions are supported")
     end
 
-    return (2K+W)/3V
+    return (2K + W) / 3V
 
 end
