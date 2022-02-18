@@ -11,6 +11,7 @@ include("../molly/SimulateLennardJones.jl")
 include("../molly/custom_simulators.jl")
 include("../molly/custom_loggers.jl")
 include("../molly/custom_cutoffs.jl")
+include("../utils/PlaceAtoms.jl")
 
 times_no_nf = []
 times_nf_tree = []
