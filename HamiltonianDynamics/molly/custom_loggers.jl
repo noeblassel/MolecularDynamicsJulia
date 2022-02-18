@@ -46,8 +46,6 @@ function Molly.log_property!(logger::StateLogger, s::System, neighbors = nothing
     end
 end
 
-###redundant (TemperatureLogger is fixed-- GH version is not up to date )###
-
 ###reduced temperature logger (kb=1)
 struct TemperatureLoggerReduced{T}
     n_steps::Int
