@@ -15,4 +15,4 @@ for N=1:12
     println(N)
 end
 
-plot([N^3 for N in 1:12],times,xlabel="N",ylabel="T",title="runtime scaling",label="")
+plot([N^3 for N in 1:12],times,xlabel="N",ylabel="T",title="runtime scaling",label="",markershape=:xcross)
