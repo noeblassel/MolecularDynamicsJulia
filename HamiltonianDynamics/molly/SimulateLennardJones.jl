@@ -27,7 +27,7 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
 
     coords = place_atoms_on_lattice(N_per_dim, domain)
     velocities = [reduced_velocity_lj(T) for i in 1:N]
-    interactions = (LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c), force_units = NoUnits, energy_units = NoUnits, nl_only = true),)
+    interactions = (LennardJones(cutoff = DistanceCutoff(r_c), force_units = NoUnits, energy_units = NoUnits, nl_only = true),)
     nb_mat = trues(N, N)
     mat_14 = falses(N, N)
 
