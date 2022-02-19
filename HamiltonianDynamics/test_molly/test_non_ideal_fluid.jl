@@ -22,18 +22,21 @@ Npd=12
 
 Ts=[]
 Ps=[]
-LRCs=[]
 
-ρ=0.2
-T_range=0.2:0.02:2
-
+ρ=0.7070794961304674
+T_range=0:0.01:1.0
+lrc=0
+sys=nothing
 for T in T_range
-    sys=sim_lennard_jones_fluid(Npd,ρ,T,5e-3,5000,VelocityVerlet,[],4.0)
-    sys.loggers=Dict(:pressure=>PressureLoggerReduced(Float64,1),:temperature=>TemperatureLoggerReduced(Float64,1),:lrc=>LRCVirialLogger(Float64,1,sys.general_inters[1]))
+    sys=sim_lennard_jones_fluid(Npd,ρ,T,5e-3,10000,VelocityVerlet,[],4.0)
+    sys.loggers=Dict(:pressure=>PressureLoggerReduced(Float64,1),:temperature=>TemperatureLoggerReduced(Float64,1))
     simulate!(sys,VelocityVerlet(dt=0.005),10000)
     push!(Ts,mean(sys.loggers[:temperature].temperatures))
     push!(Ps,mean(sys.loggers[:pressure].pressures))
-    push!(LRCs,mean(sys.loggers[:lrc].LRCs))
+    
+    if T==first(T_range)
+        global lrc=long_range_virial_correction(sys,sys.general_inters[1])
+    end
 end
 
 V=Npd^3/ρ
@@ -50,7 +53,5 @@ for p in Ps
     print(file,"$(p) ")
 end
 println(file)
-for c in LRCs
-    print(file,"$(c/3V) ")
-end
+print(file,lrc)
 close(file)
