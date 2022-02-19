@@ -33,7 +33,7 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
 
     nf = nothing
     try
-        nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)##in case the system is too small, revert to tree neighbor finder
+        nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)##in case the system is too small, revert to tree neighbor finder
     catch
         nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
     end

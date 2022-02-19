@@ -23,14 +23,14 @@ Npd=12
 Ts=[]
 Ps=[]
 
-ρ=0.7070794961304674
-T_range=0:0.01:1.0
+ρ=0.8358858110089008
+T_range=0:0.005:0.1
 lrc=0
 sys=nothing
 for T in T_range
-    sys=sim_lennard_jones_fluid(Npd,ρ,T,5e-3,10000,VelocityVerlet,[],4.0)
+    sys=sim_lennard_jones_fluid(Npd,ρ,T,1e-3,10000,VelocityVerlet,[],5.0)
     sys.loggers=Dict(:pressure=>PressureLoggerReduced(Float64,1),:temperature=>TemperatureLoggerReduced(Float64,1))
-    simulate!(sys,VelocityVerlet(dt=0.005),10000)
+    simulate!(sys,VelocityVerlet(dt=0.1e-3),30000)
     push!(Ts,mean(sys.loggers[:temperature].temperatures))
     push!(Ps,mean(sys.loggers[:pressure].pressures))
     
@@ -38,8 +38,6 @@ for T in T_range
         global lrc=long_range_virial_correction(sys,sys.general_inters[1])
     end
 end
-
-V=Npd^3/ρ
 
 """scatter(Ts,Ps,label="",xlabel="T/T*",ylabel="P/P*",title="ρ/ρ*=0.8",dpi=300,markershape=:xcross)
 savefig("non_ideal_gas.png")"""
