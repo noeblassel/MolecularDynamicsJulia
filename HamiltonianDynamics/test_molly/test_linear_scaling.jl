@@ -25,8 +25,8 @@ r_c = 3.0
 Npd_range = 4:18
 N_range = Npd_range .^ 3
 
-n_samps=10
-n_steps=10000
+n_samps=1
+n_steps=1000
 
 inter_nl=(LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c),nl_only=true,force_units = NoUnits, energy_units = NoUnits),)
 inter_no_nl=(LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c),force_units = NoUnits, energy_units = NoUnits),)
@@ -89,25 +89,25 @@ for Npd in Npd_range
     push!(times_nf_cell,t_nf_cell/n_samps)
 end
 
-f=open("molly_no_nf.txt","w")
+f=open("molly_no_nf_monothread.txt","w")
 for t=times_no_nf
     print(f,"$(t) ")
 end
 close(f)
 
-f=open("molly_nf_dist.txt","w")
+f=open("molly_nf_dist_monothread.txt","w")
 for t=times_nf_dist
     print(f,"$(t) ")
 end
 close(f)
 
-f=open("molly_nf_tree.txt","w")
+f=open("molly_nf_tree_monothread.txt","w")
 for t=times_nf_tree
     print(f,"$(t) ")
 end
 close(f)
 
-f=open("molly_nf_cell.txt","w")
+f=open("molly_nf_cell_monothread.txt","w")
 for t=times_nf_cell
     print(f,"$(t) ")
 end
