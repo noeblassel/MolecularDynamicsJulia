@@ -1,6 +1,6 @@
 using Pkg
 
-Pkg.add.(["NBodySimulator","Unitful"])
+Pkg.add.(["NBodySimulator", "Unitful"])
 
 using Unitful, NBodySimulator
 
@@ -15,7 +15,7 @@ r_c = 3.0
 
 Npd_range = 4:14
 n_samps = 1
-n_steps=1000
+n_steps = 1000
 
 for N = Npd_range
     println(N)
@@ -30,5 +30,10 @@ f = open("nbody_scaling.txt", "w")
 
 for t in times
     print(f, "$(t) ")
+end
+println(f)
+
+for Npd in 4:14
+    print(f, "$(Npd^3) ")
 end
 close(f)
