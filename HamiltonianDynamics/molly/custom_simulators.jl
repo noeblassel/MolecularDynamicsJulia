@@ -126,7 +126,7 @@ end
 function LangevinTest(; dt, γ, T, coupling = NoCoupling(), rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
 
 
-    β = inv(T) #todo work with units
+    β = inv(T) #todo work with units, i.e. kb !=1
     α = exp(-γ * dt)
     σ = sqrt(T * (1 - α^2))
 
