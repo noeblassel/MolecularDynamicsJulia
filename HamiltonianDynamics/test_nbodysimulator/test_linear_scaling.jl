@@ -13,14 +13,15 @@ T = 1.0
 ρ = 0.2
 r_c = 3.0
 
-Npd_range = 4:18
-n_samps = 10
+Npd_range = 4:14
+n_samps = 1
+n_steps=1000
 
 for N = Npd_range
     println(N)
     t = 0
     for i = 1:n_samps
-        t += @elapsed sim_lennard_jones_fluid(N, ρ, T, r_c, 5e-3, 10000, VelocityVerlet)
+        t += @elapsed sim_lennard_jones_fluid(N, ρ, T, r_c, 5e-3, n_steps, VelocityVerlet)
     end
     push!(times, t / n_samps)
 end

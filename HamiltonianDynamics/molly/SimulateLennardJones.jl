@@ -68,5 +68,3 @@ function sim_lennard_jones_fluid!(sys::System, Δt::Real, steps::Integer, integr
     @time simulate!(sys, simulator, steps)
     return sys
 end
-
-reduced_velocity_lj(T::Real) = sqrt(T::Real) * (@SVector randn(3))
