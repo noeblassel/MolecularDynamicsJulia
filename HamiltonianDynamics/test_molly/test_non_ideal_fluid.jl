@@ -31,7 +31,7 @@ sys=nothing
 for T in T_range
     sys=sim_lennard_jones_fluid(Npd,ρ,T,1e-3,10000,VelocityVerlet,[],5.0)
     sys.loggers=Dict(:pressure=>PressureLoggerReduced(Float64,1),:temperature=>TemperatureLoggerReduced(Float64,1))
-    simulate!(sys,VelocityVerlet(dt=0.1e-3),30000)
+    simulate!(sys,VelocityVerlet(dt=0.1e-3),10000)
     push!(Ts,mean(sys.loggers[:temperature].temperatures))
     push!(Ps,mean(sys.loggers[:pressure].pressures))
     
