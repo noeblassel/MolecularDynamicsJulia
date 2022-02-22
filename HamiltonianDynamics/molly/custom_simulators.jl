@@ -161,7 +161,7 @@ function Molly.simulate!(sys::System{D,false},
 
         accels_t_dt = accelerations(sys, neighbors, parallel = parallel)
 
-        G = randn(sim.rng, Float64, (length(sys), D)) #todo, implement other dimensions
+        G = randn(sim.rng, Float64, (length(sys), D))
 
         for i = 1:length(sys)#fluctuation dissipation
             sys.velocities[i] = sim.α * (sys.velocities[i] + (accels_t[i] + accels_t_dt[i]) * sim.dt / 2) + sim.σ * G[i, :]

@@ -55,15 +55,21 @@ E_t = E.(t_range)
 V(t) = T * (1 - E(2t))
 V_t = V.(t_range)
 
-using Plots, Statistics
+q=zeros(n_steps,3N)
 
-empirical_E = []
-empirical_σ2 = []
-
-for i in 1:n_steps
-    v = sys.loggers[:velocities].velocities[i]
-    print(typeof(v))
-    break
-    push!(empirical_E, mean(mean(v[i])))
-    push!(empirical_σ2, var(v))
+for t in 1:n_steps
+    for i in 1:N
+        q[t,3*(i-1)+1:3*(i-1)+3]=sys.loggers[:velocities].velocities[t][i]
+    end
 end
+
+
+using Plots,Statistics
+
+E_hat=mean(q,dims=2)
+V_hat=var(q,dims=2)
+
+plot(t_range,E_t)
+plot!(t_range,E_hat)
+
+#savefig()
