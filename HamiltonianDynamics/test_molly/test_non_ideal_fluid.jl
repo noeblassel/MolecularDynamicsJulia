@@ -26,6 +26,7 @@ Ps=[]
 ρ=0.2
 T_range=0.1:0.01:1.0
 lrc=0
+V=0
 sys=nothing
 for T in T_range
     sys=sim_lennard_jones_fluid(Npd,ρ,T,1e-3,10000,VelocityVerlet,[],5.0)
@@ -36,6 +37,7 @@ for T in T_range
     
     if T==first(T_range)
         global lrc=long_range_virial_correction(sys,sys.general_inters[1])
+        global V=sys.box_size[1]*sys.box_size[2]*sys.box_size[3]
     end
 end
 
@@ -51,5 +53,5 @@ for p in Ps
     print(file,"$(p) ")
 end
 println(file)
-print(file,lrc)
+print(file,lrc/3V)
 close(file)
