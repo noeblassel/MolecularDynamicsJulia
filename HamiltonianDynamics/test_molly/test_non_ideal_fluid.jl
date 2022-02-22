@@ -23,8 +23,8 @@ Npd=12
 Ts=[]
 Ps=[]
 
-ρ=0.8358858110089008
-T_range=0:0.005:0.1
+ρ=0.2
+T_range=0.1:0.01:1.0
 lrc=0
 sys=nothing
 for T in T_range
