@@ -7,6 +7,7 @@ log_dict = Dict(
     :velocity => n -> VelocityLogger(Float64, n),
     :pressure => n -> PressureLoggerReduced(Float64, n),
     :virial => n -> VirialLogger(Float64, n),
+    :state => (n,fp)->StateLogger(n,fp)
 )
 
 
@@ -41,12 +42,9 @@ function sim_lennard_jones_fluid_nve(N_per_dim::Integer, ρ::Real, T_ini::Real, 
 
 
     loggers = Dict()
+    
     for (ob, n...) = observables
-        if ob == :state
-            loggers[ob] = StateLogger(n...)
-        else
-            loggers[ob] = log_dict[ob](first(n))
-        end
+        loggers[ob]=log_dict[ob](n...)
     end
 
     if equilibration_steps > 0
