@@ -153,7 +153,7 @@ function Molly.simulate!(sys::System{D,false},
     @showprogress for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
 
-        for i = 1:length(sys)#update coordinates
+        for i = 1:length(sys)
             sys.coords[i] += sys.velocities[i] * sim.dt + accels_t[i] * sim.dt^2 / 2
             sys.coords[i] = wrap_coords.(sys.coords[i], sys.box_size)
         end
@@ -162,7 +162,7 @@ function Molly.simulate!(sys::System{D,false},
 
         G = randn(sim.rng, Float64, (length(sys), D))
 
-        for i = 1:length(sys)#fluctuation dissipation
+        for i = 1:length(sys)
             sys.velocities[i] = sim.α * (sys.velocities[i] + (accels_t[i] + accels_t_dt[i]) * sim.dt / 2) + sim.σ * G[i, :]
         end
 
