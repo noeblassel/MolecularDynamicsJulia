@@ -2,7 +2,7 @@ using NBodySimulator,Base.Threads
 
 
 include("../nbodysimulator/custom_observables.jl")
-include("../nbodysimulator/SimulateLennardJones.jl")
+include("../nbodysimulator/sim_nve_lj.jl")
 
 Npd=6
 ρ=0.2

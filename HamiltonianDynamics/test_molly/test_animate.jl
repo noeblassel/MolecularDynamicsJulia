@@ -1,8 +1,7 @@
-include("../molly/io.jl")
-include("../utils/animate.jl")
+include("../../molly/io.jl")
+include("../../utils/animate.jl")
 
-using Molly
-using ProgressMeter
+using Molly,ProgressMeter
 
 sys=read_reduced_lj_state("starting_states/T(0.1).out")
 sys.loggers=Dict(:coords=>CoordinateLogger(Float64,1))

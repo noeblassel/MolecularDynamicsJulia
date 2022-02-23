@@ -1,8 +1,7 @@
-using Molly,ProgressMeter,Plots,StaticArrays
+using Plots
 
-include("../molly/custom_loggers.jl")
-include("../molly/custom_cutoffs.jl")
-include("../molly/custom_observables.jl")
+include("../../molly/MollyExtend.jl")
+
 configuration_file="../lj_sample_configurations/lj_sample_config_periodic1.txt"
 
 r_c=3.0

@@ -25,7 +25,7 @@ coords = place_atoms_on_lattice(Npd, box_size)
 velocities = [SVector(1.0, 1.0, 1.0) for i in 1:N]
 atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
 
-inter = LennardJones(cutoff = CubicSplineCutoff(r_a, r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
+inter = LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
 nf = nothing
 
@@ -40,7 +40,7 @@ loggers = Dict(:velocities => VelocityLogger(Float64, 1))
 sys = System(atoms = atoms, coords = coords, velocities = deepcopy(velocities), general_inters = (), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
 
-γ = 0.2
+γ = 10.0
 n_steps = 10000
 dt = 5e-3
 
@@ -55,21 +55,21 @@ E_t = E.(t_range)
 V(t) = T * (1 - E(2t))
 V_t = V.(t_range)
 
-q=zeros(n_steps,3N)
+q = zeros(n_steps, 3N)
 
 for t in 1:n_steps
     for i in 1:N
-        q[t,3*(i-1)+1:3*(i-1)+3]=sys.loggers[:velocities].velocities[t][i]
+        q[t, 3*(i-1)+1:3*(i-1)+3] = sys.loggers[:velocities].velocities[t][i]
     end
 end
 
 
-using Plots,Statistics
+using Plots, Statistics
 
-E_hat=mean(q,dims=2)
-V_hat=var(q,dims=2)
+E_hat = mean(q, dims = 2)
+V_hat = var(q, dims = 2)
 
-plot(t_range,E_t)
-plot!(t_range,E_hat)
+plot(t_range, E_t)
+plot!(t_range, E_hat)
 
 #savefig()

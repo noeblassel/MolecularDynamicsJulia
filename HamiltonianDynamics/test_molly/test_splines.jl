@@ -1,6 +1,6 @@
-using Molly,LinearAlgebra
+using LinearAlgebra
 
-include("../molly/custom_cutoffs.jl")
+include("../../molly/MollyExtend.jl")
 
 r_c=2.5
 r_s=1.5

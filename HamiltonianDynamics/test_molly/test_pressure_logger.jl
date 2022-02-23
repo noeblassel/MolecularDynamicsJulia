@@ -1,9 +1,4 @@
-include("../molly/io.jl")
-include("../utils/animate.jl")
-include("../molly/custom_loggers.jl")
-
-using Molly
-using ProgressMeter
+include("../../molly/MollyExtend.jl")
 
 sys=read_reduced_lj_state("starting_states/T(0.1).out")
 sys.loggers=Dict(:virial=>VirialLogger(Float64,1),:kinetic_energy=>KineticEnergyLoggerNoDims(Float64,1),:pressure=>PressureLoggerReduced(Float64,1))

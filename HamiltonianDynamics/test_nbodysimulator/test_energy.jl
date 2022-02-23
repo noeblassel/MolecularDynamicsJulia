@@ -2,8 +2,8 @@ using NBodySimulator,StaticArrays,Plots,Statistics
 
 include("../nbodysimulator/io.jl")
 include("../nbodysimulator/custom_simulators.jl")
-include("../nbodysimulator/SimulateLennardJones.jl")
-include("../utils/ReducedUnits.jl")
+include("../nbodysimulator/sim_nve_lj.jl")
+include("../../utils/reduced_units.jl")
 
 N_pd=6
 

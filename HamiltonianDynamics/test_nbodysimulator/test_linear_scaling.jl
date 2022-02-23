@@ -1,11 +1,7 @@
-using Pkg
-
-Pkg.add.(["NBodySimulator", "Unitful"])
-
 using Unitful, NBodySimulator
 
-include("../utils/ReducedUnits.jl")
-include("../nbodysimulator/SimulateLennardJones.jl")
+include("../../utils/reduced_units.jl")
+include("../nbodysimulator/sim_nve_lj.jl")
 
 times = []
 

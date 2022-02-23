@@ -153,7 +153,6 @@ function Molly.simulate!(sys::System{D,false},
     @showprogress for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
 
-
         for i = 1:length(sys)#update coordinates
             sys.coords[i] += sys.velocities[i] * sim.dt + accels_t[i] * sim.dt^2 / 2
             sys.coords[i] = wrap_coords.(sys.coords[i], sys.box_size)
@@ -168,7 +167,7 @@ function Molly.simulate!(sys::System{D,false},
         end
 
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n, parallel = parallel)
-        accels_t=accels_t_dt
+        accels_t = accels_t_dt
     end
 
 end

@@ -1,10 +1,10 @@
 using Molly
 using Test,ProgressMeter
 
-include("../utils/ReducedUnits.jl")
-include("../molly/SimulateLennardJones.jl")
-include("../molly/io.jl")
-include("../molly/custom_simulators.jl")
+include("../../utils/reduced_units.jl")
+include("../../molly/sim_nve_lj.jl")
+include("../../molly/io.jl")
+include("../../molly/custom_simulators.jl")
 
 
 
@@ -23,8 +23,8 @@ for i=1:length(sys_a)
     @test sys_a.velocities[i]==sys_b.velocities[i]
 end
 
-@time simulate!(sys_a,SymplecticEulerA(dt=0.005),1000)
-@time simulate!(sys_b,SymplecticEulerA(dt=0.005),1000)
+@time simulate!(sys_a,VelocityVerlet(dt=0.005),1000)
+@time simulate!(sys_b,VelocityVerlet(dt=0.005),1000)
 
 for i=1:length(sys_a)
     @test sys_a.coords[i]==sys_b.coords[i]

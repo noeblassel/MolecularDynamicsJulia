@@ -1,13 +1,9 @@
-using Pkg
+using Molly,ProgressMeter
 
-Pkg.add("Molly")
-Pkg.add("ProgressMeter")
-
-using Molly
-using ProgressMeter
-
-include("../molly/io.jl")
-include("../molly/SimulateLennardJones.jl")
+include("../../molly/io.jl")
+include("../../molly/sim_nve_lj.jl")
+include("../../utils/reduced_units.jl")
+include("../../utils/place_atoms.jl")
 
 N_per_dim=10
 ρ=1.0

@@ -17,7 +17,7 @@ Alternatively, they can be specified in physical (Unitful) units,or in reduced u
 The parameter Δt is always dimensionless.
 """
 
-function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Real, steps::Integer, integrator, observables, r_c::Real; equilibration_steps = 0)
+function sim_lennard_jones_fluid_nve(N_per_dim::Integer, ρ::Real, T_ini::Real, Δt::Real, steps::Integer, integrator, observables, r_c::Real; equilibration_steps = 0)
 
     N = N_per_dim^3
     atoms = [Atom(mass = 1.0, σ = 1.0, ϵ = 1.0) for i in 1:N]#in reduced units
@@ -32,10 +32,11 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
     mat_14 = falses(N, N)
 
     nf = nothing
-    try
+
+    if L<3r_c
         nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)##in case the system is too small, revert to tree neighbor finder
-    catch
-        nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
+    else
+        nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
     end
 
 
@@ -49,7 +50,7 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
     end
 
     if equilibration_steps > 0
-        simulator = integrator(dt = Δt, coupling = RescaleThermostat(T))
+        simulator = integrator(dt = Δt)
         sys_eq = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
         simulate!(sys_eq, simulator, equilibration_steps)
         sys = System(atoms = atoms, general_inters = interactions, coords = sys_eq.coords, velocities = sys_eq.velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
@@ -63,7 +64,7 @@ function sim_lennard_jones_fluid(N_per_dim::Integer, ρ::Real, T::Real, Δt::Rea
 end
 
 
-function sim_lennard_jones_fluid!(sys::System, Δt::Real, steps::Integer, integrator)
+function sim_lennard_jones_fluid_nve!(sys::System, Δt::Real, steps::Integer, integrator)
     simulator = integrator(dt = Δt)
     @time simulate!(sys, simulator, steps)
     return sys

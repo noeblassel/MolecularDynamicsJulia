@@ -1,17 +1,10 @@
-using Pkg
-
-Pkg.add("Molly")
-Pkg.add("ProgressMeter")
-Pkg.add("Plots")
-
-
 using Molly, ProgressMeter, Plots
 
-include("../molly/SimulateLennardJones.jl")
-include("../molly/custom_simulators.jl")
-include("../molly/custom_loggers.jl")
-include("../molly/custom_cutoffs.jl")
-include("../utils/PlaceAtoms.jl")
+include("../../molly/sim_nve_lj.jl")
+include("../../molly/custom_simulators.jl")
+include("../../molly/custom_loggers.jl")
+include("../../molly/custom_cutoffs.jl")
+include("../../utils/place_atoms.jl")
 
 times_no_nf = []
 times_nf_tree = []
@@ -22,7 +15,7 @@ times_nf_cell=[]
 T = 1.0
 r_c = 3.0
 
-Npd_range = 4:18
+Npd_range = 4:10
 N_range = Npd_range .^ 3
 
 n_samps=1
@@ -34,10 +27,6 @@ inter_no_nl=(LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c),force_units = N
 for Npd in Npd_range
 
     println(Npd)
-
-    if Npd==9#weird bug in celllistmap
-        continue
-    end
 
     conf = sim_lennard_jones_fluid(Npd, ρ, T, 5e-3, n_steps, VelocityVerlet, [], r_c)
     t_matrix=trues(length(conf), length(conf))

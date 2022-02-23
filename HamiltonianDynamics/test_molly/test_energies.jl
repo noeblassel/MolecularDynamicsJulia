@@ -3,9 +3,9 @@ using Molly
 using ProgressMeter
 using Statistics
 
-include("../molly/custom_simulators.jl")
-include("../molly/custom_loggers.jl")
-include("../molly/io.jl")
+include("../../molly/custom_simulators.jl")
+include("../../molly/custom_loggers.jl")
+include("../../molly/io.jl")
 
 initial_system=read_reduced_lj_state("starting_states/T(0.51)rho(0.91).out")
 

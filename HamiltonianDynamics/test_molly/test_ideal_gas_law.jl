@@ -1,21 +1,11 @@
-#!/libre/blasseln/julia-1.7.2/bin/julia
-
-using Pkg
-
-Pkg.add("Molly")
-Pkg.add("Plots")
-Pkg.add("ProgressMeter")
-Pkg.add("Statistics")
-Pkg.add("StaticArrays")
-
 using Molly
 using Plots
 using ProgressMeter
-using Statistics,StaticArrays
+using Statistics
 
-include("../molly/custom_loggers.jl")
-include("../molly/io.jl")
-include("../utils/animate.jl")
+include("../../molly/custom_loggers.jl")
+include("../../molly/io.jl")
+include("../../utils/animate.jl")
 
 
 ρ=0.01
@@ -29,7 +19,7 @@ for T in 0.01:0.1:10.0
     push!(Ps,mean(sys.loggers[:pressure].pressures))
 end
     
-scatter(Ts,Ps)
+scatter(Ts,Ps,markershape=:xcross)
 T_range=0.01:0.1:10.0
-plot!(T_range,ρ*T_range,label="Ideal gas law",xlabel="T",ylabel="P",title="Ideal gas regime, ρ=0.01")
+plot!(T_range,ρ*T_range,label="Ideal gas law",xlabel="T",ylabel="P",title="Ideal gas regime, ρ=0.01",linestyle=:dot)
 savefig("ideal_gas.png")
