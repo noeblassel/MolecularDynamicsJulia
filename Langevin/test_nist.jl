@@ -9,7 +9,7 @@ T = 1.2848906454490823
 
 file=open("pressures_T($(round(T,digits=2))).txt","w")
 
-Npd = 12
+Npd = 10
 N = Npd^3
 
 r_c=4.0
@@ -29,17 +29,13 @@ for ρ in ρs
     inter = LennardJones(cutoff = DistanceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
     nf = nothing
+    nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
 
-    try
-        nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c, unit_cell = box_size)
-    catch
-        nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
-    end
 
 
     γ = 1.0
-    eq_steps = 10000
-    samp_steps = 30000
+    eq_steps = 5000
+    samp_steps = 20000
 
     dt = 5e-3
 
