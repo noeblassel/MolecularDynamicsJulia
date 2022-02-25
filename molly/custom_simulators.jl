@@ -148,7 +148,7 @@ function Molly.simulate!(sys::System{D,false},
     G = zero(sys.velocities)
 
     for step_n in 1:n_steps
-        run_loggers!(sys, neighbors, step_n)
+        @showprogress run_loggers!(sys, neighbors, step_n)
 
         for i = 1:length(sys)
             sys.coords[i] += sys.velocities[i] * sim.dt + accels_t[i] * sim.dt^2 / 2

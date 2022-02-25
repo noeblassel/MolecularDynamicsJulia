@@ -2,7 +2,7 @@ using Statistics
 
 include("../molly/MollyExtend.jl")
 
-ρs = 0.4502:0.005:0.5704
+ρs = 0.4502:0.0:0.4502
 
 T = 1.2848906454490823
 
