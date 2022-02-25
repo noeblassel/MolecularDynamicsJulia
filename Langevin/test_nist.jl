@@ -45,7 +45,7 @@ for ρ in ρs
 
     simulator = LangevinTest(dt = dt, γ = γ, T = T, rseed = seed)
 
-    sys = System(atoms = atoms, coords = coords, velocities = deepcopy(velocities), general_inters = (), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits)
+    sys = System(atoms = atoms, coords = coords, velocities = deepcopy(velocities), general_inters = (inter,), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits)
 
     simulate!(sys, simulator, eq_steps)
 
