@@ -9,6 +9,10 @@ T = 1.2848906454490823
 Npd = 12
 N = Npd^3
 
+r_c=4.0
+
+atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
+
 for ρ in ρs
 
     L = (N / ρ)^(1 // 3)
@@ -17,16 +21,16 @@ for ρ in ρs
 
     coords = place_atoms_on_lattice(Npd, box_size)
 
-    velocities = [SVector(1.0, 1.0, 1.0) for i in 1:N]
+    velocities = [reduced_velocity_lj(T) for i in 1:N]
 
-    inter = LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
+    inter = LennardJones(cutoff = DistanceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
     nf = nothing
 
     try
-        global nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c, unit_cell = box_size)
+        nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c, unit_cell = box_size)
     catch
-        global nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
+        nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
     end
 
 
@@ -49,5 +53,5 @@ for ρ in ρs
     sys = System(atoms = sys.atoms, coords = sys.coords, velocities = sys.velocities, general_inters = (), box_size = sys.box_size, neighbor_finder = sys.neighbor_finder, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
     simulate!(sys, simulator, samp_steps)
-    println(mean(sys.loggers[:pressure].pressures))
+    println(ρ," ", mean(sys.loggers[:pressure].pressures))
 end
