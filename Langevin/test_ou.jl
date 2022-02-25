@@ -1,4 +1,4 @@
-using Plots, Statistics, Profile
+using Plots, Statistics
 
 include("../molly/MollyExtend.jl")
 
@@ -42,20 +42,20 @@ simulator = LangevinTest(dt = dt, γ = γ, T = T, rseed = seed)
 
 sys = System(atoms = atoms, coords = coords, velocities = deepcopy(velocities), general_inters = (), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits)
 
-@profile simulate!(sys, simulator, eq_steps)
+simulate!(sys, simulator, eq_steps)
 
 loggers = Dict(:velocities => VelocityLogger(Float64, 1))
 
 sys = System(atoms = sys.atoms, coords = sys.coords, velocities = sys.velocities, general_inters = (), box_size = sys.box_size, neighbor_finder = sys.neighbor_finder, force_units = NoUnits, energy_units = NoUnits,loggers=loggers)
 
-@profile simulate!(sys,simulator,samp_steps)
+simulate!(sys,simulator,samp_steps)
 
 t_range = 0:dt:(samp_steps*dt-dt)
 
 
 q = zeros(samp_steps, 3N)
 
-for t in 1:samp_steps
+for t in 1:samp_steps   
     for i in 1:N
         q[t, 3*(i-1)+1:3*(i-1)+3] = sys.loggers[:velocities].velocities[t][i]
     end
