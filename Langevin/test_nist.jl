@@ -28,19 +28,17 @@ for ρ in ρs
     velocities = [reduced_velocity_lj(T) for i in 1:N]
 
     inter = LennardJones(cutoff = DistanceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
-    nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
+    nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c,unit_cell=box_size)
 
 
 
     γ = 1.0
     eq_steps = 5000
-    samp_steps = 20000
+    samp_steps = 10000
 
     dt = 5e-3
 
-    seed = 1234
-
-    simulator = VelocityVerlet(dt = dt)
+    simulator = LangevinTest(dt = dt,γ=γ,T=T)
 
     sys = System(atoms = atoms, coords = coords, velocities = deepcopy(velocities), pairwise_inters = (inter,), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits)
 

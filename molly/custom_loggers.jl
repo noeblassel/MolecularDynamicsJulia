@@ -106,6 +106,6 @@ function Molly.log_property!(logger::PressureLoggerNVT, s::System, neighbors = n
     if step_n % logger.n_steps == 0
         W=pair_virial(s,neighbors)
         V=s.box_size[1]*s.box_size[2]*s.box_size[3]
-        push!(logger.pressures, (logger.T+W/3)/V)
+        push!(logger.pressures, (length(s)*logger.T+W/3)/V)
     end
 end
