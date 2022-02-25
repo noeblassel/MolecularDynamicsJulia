@@ -16,7 +16,7 @@ L = (N / ρ)^(1 // 3)
 box_size = SVector(L, L, L)
 
 coords = place_atoms_on_lattice(Npd, box_size)
-velocities = [reduced_velocity_lj(T) for i in 1:N]
+velocities = [SVector(1.0, 1.0, 1.0) for i in 1:N]
 atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
 
 inter = LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
