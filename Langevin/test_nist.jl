@@ -3,8 +3,8 @@ using Statistics
 include("../molly/MollyExtend.jl")
 
 
-(ρmin,dρ,ρmax)=parse.(Float64,ARGS)
-ρs=ρmin:dρ:ρmax
+ρmin=parse(Float64,ARGS[1])
+ρs=ρmin:0.0001:(0.0075125+ρmin)
 
 T = 1.2848906454490823
 
