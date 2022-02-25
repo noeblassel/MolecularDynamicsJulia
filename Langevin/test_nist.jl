@@ -1,3 +1,4 @@
+using Statistics
 
 include("../molly/MollyExtend.jl")
 
