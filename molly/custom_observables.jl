@@ -4,7 +4,7 @@ function pair_virial(s::System, neighbors = nothing, lrc = false)
 
     #TODO implement parallel version, specific pair interactions and other general interactions
 
-    for inter = s.general_inters
+    for inter = s.pairwise_inters
         if isnothing(neighbors) || (!inter.nl_only) #if neighbor list is not given or unused, then double loop
             for i = 1:N
                 for j = 1:i-1
@@ -94,8 +94,9 @@ function pressure(s::System, neighbors = nothing)
     V = l1 * l2 * l3
     K = Molly.kinetic_energy_noconvert(s)
     W = pair_virial(s, neighbors)
+    lrc=long_range_virial_correction(s,s.pairwise_inters[1])
     
-    return (2K + W) / 3V
+    return (2K + W+lrc) / 3V
 end
 
 function temperature_reduced(s::System)##ie when kb=1

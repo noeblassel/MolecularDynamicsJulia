@@ -2,10 +2,12 @@ using Statistics
 
 include("../molly/MollyExtend.jl")
 
-ρs = 0.4502:0.1:0.4502
+
+ρs = 0.4502:0.001:0.5704
 
 T = 1.2848906454490823
 
+file=open("pressures_T($(round(T,digits=2))).txt","w")
 
 Npd = 12
 N = Npd^3
@@ -43,16 +45,18 @@ for ρ in ρs
 
     seed = 1234
 
-    simulator = LangevinTest(dt = dt, γ = γ, T = T, rseed = seed)
+    simulator = VelocityVerlet(dt = dt)
 
-    sys = System(atoms = atoms, coords = coords, velocities = deepcopy(velocities), general_inters = (inter,), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits)
+    sys = System(atoms = atoms, coords = coords, velocities = deepcopy(velocities), pairwise_inters = (inter,), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits)
 
     simulate!(sys, simulator, eq_steps)
 
     loggers = Dict(:pressure => PressureLoggerReduced(Float64, 1))
 
-    sys = System(atoms = sys.atoms, coords = sys.coords, velocities = sys.velocities, general_inters = (), box_size = sys.box_size, neighbor_finder = sys.neighbor_finder, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
+    sys = System(atoms = sys.atoms, coords = sys.coords, velocities = sys.velocities, pairwise_inters = (inter,), box_size = sys.box_size, neighbor_finder = sys.neighbor_finder, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
     simulate!(sys, simulator, samp_steps)
-    println(ρ," ", mean(sys.loggers[:pressure].pressures))
+    println(file,ρ," ", mean(sys.loggers[:pressure].pressures))
 end
+
+close(file)

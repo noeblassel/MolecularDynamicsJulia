@@ -141,7 +141,7 @@ function Molly.simulate!(sys::System{D,false},
         neighbors_all = nothing
     end
 
-    neighbors = find_neighbors(sys, sys.neighbor_finder, parallel = parallel)
+    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel = parallel)
 
     accels_t = accelerations(sys, neighbors; parallel = parallel)
     accels_t_dt = zero(accels_t)
@@ -155,7 +155,7 @@ function Molly.simulate!(sys::System{D,false},
             sys.coords[i] = wrap_coords.(sys.coords[i], sys.box_size)
         end
 
-        accels_t_dt = accelerations(sys, neighbors, parallel = parallel)
+        accels_t_dt = accelerations(sys, neighbors; parallel = parallel)
 
         G = randn(sim.rng, Float64, (length(sys), D))
 
@@ -163,7 +163,7 @@ function Molly.simulate!(sys::System{D,false},
             sys.velocities[i] = sim.α * (sys.velocities[i] + (accels_t[i] + accels_t_dt[i]) * sim.dt / 2) + sim.σ * G[i, :]
         end
 
-        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n, parallel = parallel)
+        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel = parallel)
         accels_t = accels_t_dt
     end
 
