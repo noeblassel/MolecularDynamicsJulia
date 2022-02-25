@@ -94,9 +94,8 @@ function pressure(s::System, neighbors = nothing)
     V = l1 * l2 * l3
     K = Molly.kinetic_energy_noconvert(s)
     W = pair_virial(s, neighbors)
-    lrc=long_range_virial_correction(s,s.pairwise_inters[1])
     
-    return (2K + W+lrc) / 3V
+    return (2K + W) / 3V
 end
 
 function temperature_reduced(s::System)##ie when kb=1

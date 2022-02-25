@@ -3,13 +3,14 @@ using Statistics
 include("../molly/MollyExtend.jl")
 
 
-ρs = 0.4502:0.001:0.5704
+(ρmin,dρ,ρmax)=parse.(Float64,ARGS)
+ρs=ρmin:dρ:ρmax
 
 T = 1.2848906454490823
 
-file=open("pressures_T($(round(T,digits=2))).txt","w")
+file=open("pressures.txt","a")
 
-Npd = 10
+Npd = 12
 N = Npd^3
 
 r_c=4.0
@@ -34,8 +35,8 @@ for ρ in ρs
 
 
     γ = 1.0
-    eq_steps = 5000
-    samp_steps = 20000
+    eq_steps = 10000
+    samp_steps = 30000
 
     dt = 5e-3
 
