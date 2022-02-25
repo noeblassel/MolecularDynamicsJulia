@@ -92,3 +92,20 @@ function Molly.log_property!(logger::PressureLoggerReduced, s::System, neighbors
         push!(logger.pressures, pressure(s,neighbors))
     end
 end
+
+struct PressureLoggerNVT{P,K}
+    n_steps::Int
+    T::K
+    pressures::Vector{P}
+end
+
+PressureLoggerNVT(T,P, n_steps::Integer) = PressureLoggerNVT(n_steps,T,P[])
+PressureLoggerNVT(T,n_steps::Integer) = PressureLoggerNVT(n_steps,T, Float64[])
+
+function Molly.log_property!(logger::PressureLoggerNVT, s::System, neighbors = nothing, step_n::Integer = 0)
+    if step_n % logger.n_steps == 0
+        W=pair_virial(s,neighbors)
+        V=s.box_size[1]*s.box_size[2]*s.box_size[3]
+        push!(logger.pressures, (logger.T+W/3)/V)
+    end
+end
