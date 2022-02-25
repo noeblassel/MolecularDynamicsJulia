@@ -2,7 +2,7 @@ using ProgressMeter
 using Molly
 using Random
 
-#include("./custom_cutoffs.jl")
+include("./custom_cutoffs.jl")
 include("./custom_loggers.jl")
 include("./custom_observables.jl")
 include("./custom_simulators.jl")
