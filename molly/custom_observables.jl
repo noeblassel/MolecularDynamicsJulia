@@ -96,6 +96,9 @@ function pressure(s::System, neighbors = nothing)
     V = l1 * l2 * l3
     K = Molly.kinetic_energy_noconvert(s)
     W = pair_virial(s, neighbors)
+    if W==0
+        error("zero virial")
+    end
     return (2K + W) / 3V
 end
 
