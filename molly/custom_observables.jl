@@ -82,9 +82,9 @@ function pair_virial(s::System, neighbors = nothing, lrc = false)
         if lrc
             W += long_range_virial_correction(s, inter)
         end
-
+        println(W)
     end
-
+    println(W)
     return W
 end
 
