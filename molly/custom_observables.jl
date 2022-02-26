@@ -120,7 +120,7 @@ function long_range_virial_correction(s::System, inter)
     r_cm3 = inv(inter.cutoff.dist_cutoff^3)
 
     if isa(inter, LennardJones)
-        return r_cm3 * N^2 * π * (32 * r_cm3^2 / 3 - 16) / V
+        return 16*r_cm3 * N^2 * π * (2r_cm3^2 / 3 - 1) / V
     else #implement other long range corrections here
         return 0.0 * s.energy_units
     end
