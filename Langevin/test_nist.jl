@@ -18,8 +18,8 @@ N = Npd^3
 r_c=4.0
 
 atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
-ρ=0.47
-for _ in [1]
+
+for ρ in ρs
     
     L = (N / ρ)^(1 // 3)
     
