@@ -44,12 +44,10 @@ for ρ in ρs
     
     simulate!(sys, simulator, eq_steps)
     
-    loggers = Dict(:pressure => PressureLoggerNVT(T,Float64, 10))
+    loggers = Dict(:pressure => PressureLoggerNVT(T,Float64, 1))
 
     sys = System(atoms = sys.atoms, coords = sys.coords, velocities = sys.velocities, pairwise_inters = (inter,), box_size = sys.box_size, neighbor_finder = sys.neighbor_finder, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
     simulate!(sys, simulator, samp_steps)
-    f=open("pressures.txt","a")
-    print(f,ρ," ", mean(sys.loggers[:pressure].pressures)," ",long_range_virial_correction(sys,sys.pairwise_inters[1])/(3L^3))
-    close(f)
+    println(ρ," ", mean(sys.loggers[:pressure].pressures)," ",long_range_virial_correction(sys,sys.pairwise_inters[1])/(3L^3))
 end

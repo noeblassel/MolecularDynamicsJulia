@@ -130,10 +130,10 @@ function LangevinTest(; dt, γ, T, coupling = NoCoupling(), rseed = UInt32(round
     LangevinTest{typeof(coupling)}(dt, γ, β, coupling, rseed, rng, α, σ)
 end
 
-function Molly.simulate!(sys::System{D,false},
+function Molly.simulate!(sys::System{D},
     sim::LangevinTest,
     n_steps::Integer;
-    parallel::Bool = true) where {D,S}
+    parallel::Bool = true) where {D}
 
     if any(inter -> !inter.nl_only, values(sys.general_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
@@ -145,26 +145,32 @@ function Molly.simulate!(sys::System{D,false},
 
     accels_t = accelerations(sys, neighbors; parallel = parallel)
     accels_t_dt = zero(accels_t)
-    G = zero(sys.velocities)
+    dW = zero(sys.velocities)
 
     @showprogress for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
 
-        for i = 1:length(sys)
-            sys.coords[i] += sys.velocities[i] * sim.dt + accels_t[i] * sim.dt^2 / 2
-            sys.coords[i] = wrap_coords.(sys.coords[i], sys.box_size)
-        end
+        @. sys.coords += sys.velocities * sim.dt + accels_t * sim.dt^2 / 2
+        wrap_coords_vec.(sys.coords, (sys.box_size,))
 
         accels_t_dt = accelerations(sys, neighbors; parallel = parallel)
+        dW = [SVector{D}(randn(sim.rng, Float64,D)) for i in 1:length(sys)]
 
-        G = randn(sim.rng, Float64, (length(sys), D))
-
-        for i = 1:length(sys)
-            sys.velocities[i] = sim.α * (sys.velocities[i] + (accels_t[i] + accels_t_dt[i]) * sim.dt / 2) + sim.σ * G[i, :]
-        end
-
-        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel = parallel)
+        @. sys.velocities = sim.α * (sys.velocities + (accels_t + accels_t_dt) * sim.dt / 2) + sim.σ * dW
+        
         accels_t = accels_t_dt
+        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel = parallel)
     end
 
+end
+
+struct MALA{C}
+    dt::Real
+    γ::Real
+    β::Real
+    coupling::C
+    rseed::UInt32
+    rng::AbstractRNG
+    α::Real
+    σ::Real
 end
