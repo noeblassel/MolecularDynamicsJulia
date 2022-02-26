@@ -3,9 +3,9 @@ using Statistics
 include("../molly/MollyExtend.jl")
 
 
-ρmin=0.4574955528339076
-ρmax=0.6858732065373103
-n_sims=30
+ρmin=parse(Float64,ARGS[1])#0.4574955528339076
+ρmax=parse(Float64,ARGS[2])#0.6858732065373103
+n_sims=parse(Int32,ARGS[3])#30
 
 ρs=ρmin:((ρmax-ρmin)/n_sims):ρmax
 
@@ -47,7 +47,9 @@ for ρ in ρs
     loggers = Dict(:pressure => PressureLoggerNVT(T,Float64, 1))
 
     sys = System(atoms = sys.atoms, coords = sys.coords, velocities = sys.velocities, pairwise_inters = (inter,), box_size = sys.box_size, neighbor_finder = sys.neighbor_finder, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
-
+    
     simulate!(sys, simulator, samp_steps)
-    println(ρ," ", mean(sys.loggers[:pressure].pressures)," ",long_range_virial_correction(sys,sys.pairwise_inters[1])/(3L^3))
+    f=open("pressures.txt","a")
+    println(f,ρ," ", mean(sys.loggers[:pressure].pressures)," ",long_range_virial_correction(sys,sys.pairwise_inters[1])/(3L^3))
+    close(f)
 end
