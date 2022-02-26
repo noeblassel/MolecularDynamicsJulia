@@ -50,6 +50,6 @@ for ρ in ρs
 
     simulate!(sys, simulator, samp_steps)
     f=open("pressures.txt","a")
-    print(f,mean(sys.loggers[:pressure].pressures)," ",long_range_virial_correction(sys,sys.pairwise_inters[1]))
+    print(f,ρ," ", mean(sys.loggers[:pressure].pressures)," ",long_range_virial_correction(sys,sys.pairwise_inters[1])/(3L^3))
     close(f)
 end
