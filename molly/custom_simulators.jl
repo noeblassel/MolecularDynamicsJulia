@@ -116,24 +116,27 @@ struct LangevinTest{C}
     coupling::C
     rseed::UInt32
     rng::AbstractRNG
-    α::Real
-    σ::Real
 end
 
 
 function LangevinTest(; dt, γ, T, coupling = NoCoupling(), rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
 
     β = inv(T) #todo work with units, i.e. kb !=1
-    α = exp(-γ * dt)
-    σ = sqrt(T * (1 - α^2))
-
-    LangevinTest{typeof(coupling)}(dt, γ, β, coupling, rseed, rng, α, σ)
+    LangevinTest{typeof(coupling)}(dt, γ, β, coupling, rseed, rng)
 end
 
 function Molly.simulate!(sys::System{D},
     sim::LangevinTest,
     n_steps::Integer;
     parallel::Bool = true) where {D}
+
+    M_inv=inv.(mass.(sys.atoms))
+
+    α=zero(M_inv)
+    σ=zero(M_inv)
+
+    @. α=exp(-sim.γ*sim.dt*M_inv)
+    @. σ=sqrt(M_inv*(1-α^2)/sim.β) #noise acting on velocities, not momenta
 
     if any(inter -> !inter.nl_only, values(sys.general_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
@@ -146,7 +149,6 @@ function Molly.simulate!(sys::System{D},
     accels_t = accelerations(sys, neighbors; parallel = parallel)
     accels_t_dt = zero(accels_t)
     dW = zero(sys.velocities)
-
     @showprogress for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
 
@@ -154,10 +156,11 @@ function Molly.simulate!(sys::System{D},
         wrap_coords_vec.(sys.coords, (sys.box_size,))
 
         accels_t_dt = accelerations(sys, neighbors; parallel = parallel)
-        dW = [SVector{D}(randn(sim.rng, Float64,D)) for i in 1:length(sys)]
 
-        @. sys.velocities = sim.α * (sys.velocities + (accels_t + accels_t_dt) * sim.dt / 2) + sim.σ * dW
-        
+        dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
+
+        @. sys.velocities = α * (sys.velocities + (accels_t + accels_t_dt) * sim.dt / 2) + σ * dW
+
         accels_t = accels_t_dt
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel = parallel)
     end

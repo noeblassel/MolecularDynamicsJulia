@@ -29,7 +29,14 @@ get_reduced_energy(species::Symbol,e::E) where {E<:Unitful.Quantity}=get_reduced
 get_reduced_time(species::Symbol,t::T) where {T<:Unitful.Quantity}=get_reduced_time(species,ustrip(uₜ,t))
 get_reduced_temperature(species::Symbol,T::Θ) where {Θ<:Unitful.Quantity}=get_reduced_temperature(species,ustrip(u_T,T))
 get_reduced_pressure(species::Symbol,p::P) where {P<:Unitful.Quantity}=get_reduced_pressure(species,ustrip(uₚ,p))
-get_reduced_density(species::Symbol,ρ::R) where {R<:Unitful.Quantity}=get_reduced_density(species,ustrip(uᵣ,ρ))
+
+function get_reduced_density(species::Symbol,ρ::R) where {R<:Unitful.Quantity}
+    if dimension(ρ)==dimension(u"mol*m^-3")
+    return get_reduced_density(species,ustrip(uᵣ,ρ*Unitful.Na))
+    elseif dimension(ρ)==dimension(u"kg*m^-3")
+        return get_reduced_density(species,ustrip(uᵣ,ρ/(lj_params[species].m*uₘ)))
+    end
+end
 
 get_physical_length(species::Symbol,l::Real)=uconvert(u"nm",l*lj_params[species].σ*uₗ)
 get_physical_energy(species::Symbol,e::Real)=uconvert(u"J",e*lj_params[species].ϵ*uₑ)
