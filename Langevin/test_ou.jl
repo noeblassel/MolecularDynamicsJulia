@@ -21,7 +21,7 @@ atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
 γ = 1.0
 eq_steps=600
 
-dt = 3e-3
+dt = 5e-3
 
 seed = 1234
 

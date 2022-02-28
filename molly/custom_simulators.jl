@@ -136,7 +136,7 @@ function Molly.simulate!(sys::System{D},
     σ=zero(M_inv)
 
     @. α=exp(-sim.γ*sim.dt*M_inv)
-    @. σ=sqrt(M_inv*(1-α^2)/sim.β) #noise acting on velocities, not momenta
+    @. σ=sqrt(M_inv*(1-α^2)/sim.β) #noise on velocities, not momenta
 
     if any(inter -> !inter.nl_only, values(sys.general_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
@@ -153,7 +153,7 @@ function Molly.simulate!(sys::System{D},
         run_loggers!(sys, neighbors, step_n)
 
         @. sys.coords += sys.velocities * sim.dt + accels_t * sim.dt^2 / 2
-        wrap_coords_vec.(sys.coords, (sys.box_size,))
+        sys.coords=wrap_coords_vec.(sys.coords, (sys.box_size,))
 
         accels_t_dt = accelerations(sys, neighbors; parallel = parallel)
 
