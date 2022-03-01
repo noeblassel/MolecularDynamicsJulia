@@ -3,7 +3,7 @@ using Statistics
 include("../molly/MollyExtend.jl")
     
 T = 2.509902891886945
-Npd=10
+Npd=14
 eq_steps=3000
 samp_steps=100_000
 dt = 5e-3
@@ -34,7 +34,7 @@ for ρ in ρs
     if L>3*r_c
         nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c,unit_cell=box_size)   
     else
-        nf=DistanceNeighborFinder(dist_cutoff=r_c)
+        nf=TreeNeighborFinder(nb_matrix = trues(N, N),dist_cutoff=r_c)
     end
 
     γ = 1.0
