@@ -22,7 +22,7 @@ for dt in dt_range
     push!(spreads,maximum(sys.loggers[:hamiltonian].energies)-minimum(sys.loggers[:hamiltonian].energies))
 end
 
-f=open("energy_fluctuations_verlet.txt","w")
+f=open("energy_fluctuations_SEA.txt","w")
 
 for (dt,dH) in zip(dt_range,spreads)
     println(f,dt," ",dH)
