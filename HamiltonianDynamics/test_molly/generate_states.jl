@@ -1,16 +1,11 @@
-using Molly,ProgressMeter
-
-include("../../molly/io.jl")
-include("../../molly/sim_nve_lj.jl")
-include("../../utils/reduced_units.jl")
-include("../../utils/place_atoms.jl")
+include("../../molly/MollyExtend.jl")
 
 N_per_dim=10
-ρ=1.0
-Trange=0.01:0.1:10.0
-n_steps=1000
+ρ=0.4
+Trange=[1.0]
+n_steps=10000
 
 for T in Trange
-sys=sim_lennard_jones_fluid(N_per_dim,ρ,T,0.005,n_steps,VelocityVerlet,[],3.0,equilibration_steps=0)
-save_reduced_lj_state(sys,"starting_states/config_T($(T)).lj_out")
+sys=sim_lennard_jones_fluid_nve(N_per_dim,ρ,T,0.005,n_steps,VelocityVerlet,[],4.0,equilibration_steps=0)
+save_reduced_lj_state(sys,"starting_states/config.lj_out")
 end

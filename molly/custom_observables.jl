@@ -105,11 +105,8 @@ function temperature_reduced(s::System)##ie when kb=1
     return 2ke / (3N - 3)
 end
 
-function long_range_virial_correction(s::System, inter)
-    
-    @assert s.energy_units == NoUnits "long_range_virial_corrections not implemented for physical units. use reduced dimensionless units instead"
-
-    !hasproperty(inter, :cutoff) && return 0.0 * s.energy_units
+function long_range_virial_correction(s::System, inter::LennardJones)
+        !hasproperty(inter, :cutoff) && return 0.0 * s.energy_units
     isa(inter.cutoff, NoCutoff) && return 0.0 * s.energy_units
 
 
@@ -118,10 +115,5 @@ function long_range_virial_correction(s::System, inter)
     N = length(s)
 
     r_cm3 = inv(inter.cutoff.dist_cutoff^3)
-
-    if isa(inter, LennardJones)
-        return 16*r_cm3 * N^2 * π * (2r_cm3^2 / 3 - 1) / V
-    else #implement other long range corrections here
-        return 0.0 * s.energy_units
-    end
+    
 end

@@ -27,8 +27,8 @@ function sim_lennard_jones_fluid_nve(N_per_dim::Integer, ρ::Real, T_ini::Real, 
     domain = SVector(L, L, L)
 
     coords = place_atoms_on_lattice(N_per_dim, domain)
-    velocities = [reduced_velocity_lj(T) for i in 1:N]
-    interactions = (LennardJones(cutoff = DistanceCutoff(r_c), force_units = NoUnits, energy_units = NoUnits, nl_only = true),)
+    velocities = [reduced_velocity_lj(T_ini,atoms[i].mass) for i in 1:N]
+    interactions = (LennardJones(cutoff = ShiftedPotentialCutoff(r_c), force_units = NoUnits, energy_units = NoUnits, nl_only = true),)
     nb_mat = trues(N, N)
     mat_14 = falses(N, N)
 
@@ -51,9 +51,9 @@ function sim_lennard_jones_fluid_nve(N_per_dim::Integer, ρ::Real, T_ini::Real, 
         simulator = integrator(dt = Δt)
         sys_eq = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
         simulate!(sys_eq, simulator, equilibration_steps)
-        sys = System(atoms = atoms, general_inters = interactions, coords = sys_eq.coords, velocities = sys_eq.velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
+        sys = System(atoms = atoms, pairwise_inters = interactions, coords = sys_eq.coords, velocities = sys_eq.velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
     else
-        sys = System(atoms = atoms, general_inters = interactions, coords = coords, velocities = velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
+        sys = System(atoms = atoms, pairwise_inters = interactions, coords = coords, velocities = velocities, box_size = domain, loggers = loggers, energy_units = NoUnits, force_units = NoUnits, neighbor_finder = nf)
     end
 
     simulator = integrator(dt = Δt)

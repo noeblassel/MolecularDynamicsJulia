@@ -1,12 +1,12 @@
 function save_reduced_lj_state(s::System,filename::AbstractString)
 
-    @assert length(s.general_inters)==1 "Trying to save a system with more than one GeneralInteraction"
+    @assert length(s.pairwise_inters)==1 "Trying to save a system with more than one GeneralInteraction"
     @assert isempty(s.specific_inter_lists) "Trying to save a system with specific interactions"
-    @assert typeof(s.general_inters[1])<:LennardJones "Trying to save a non Lennard-Jones system"
-    @assert typeof(s.general_inters[1].cutoff)<:ShiftedPotentialCutoff "Currently only implemented for Shifted potential cutoff"
+    @assert typeof(s.pairwise_inters[1])<:LennardJones "Trying to save a non Lennard-Jones system"
+    @assert typeof(s.pairwise_inters[1].cutoff)<:ShiftedPotentialCutoff "Currently only implemented for Shifted potential cutoff"
 
     file=open(filename,"w")
-    println(file,"$(s.box_size[1]) $(s.box_size[2]) $(s.box_size[3]) $(s.general_inters[1].cutoff.dist_cutoff)")
+    println(file,"$(s.box_size[1]) $(s.box_size[2]) $(s.box_size[3]) $(s.pairwise_inters[1].cutoff.dist_cutoff)")
     for i = 1:length(s)
         x=s.coords[i]
         v=s.velocities[i]
@@ -36,8 +36,15 @@ function read_reduced_lj_state(filename::AbstractString)
         end
     end
     close(file)
+
+    if minimum(box_size)>3*r_c
+
+        nf=CellListMapNeighborFinder(nb_matrix=trues(length(atoms),length(atoms)),dist_cutoff=r_c,unit_cell=box_size)
+    else
+        nf=TreeNeighborFinder(nb_matrix=trues(length(atoms),length(atoms)),dist_cutoff=r_c)
+    end
     ##Assume ShiftedPotentialCutoff
-    sys=System(atoms = atoms, general_inters =(LennardJones(cutoff=ShiftedPotentialCutoff(r_c),force_units=NoUnits,energy_units=NoUnits),), coords = coords, velocities = velocities, box_size = box_size, energy_units = NoUnits, force_units = NoUnits)
+    sys=System(atoms = atoms, pairwise_inters =(LennardJones(cutoff=ShiftedPotentialCutoff(r_c),force_units=NoUnits,energy_units=NoUnits),), coords = coords, velocities = velocities, box_size = box_size, energy_units = NoUnits, force_units = NoUnits)
     return sys
 end
 
