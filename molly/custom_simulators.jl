@@ -13,9 +13,9 @@ end
 SymplecticEulerB(; dt, coupling = NoCoupling()) = SymplecticEulerB(dt, coupling)
 
 
-function Molly.simulate!(sys::System{D,false},
+function Molly.simulate!(sys::System{D},
     sim::SymplecticEulerA,
-    n_steps::Integer; parallel::Bool = true) where {D,S}
+    n_steps::Integer; parallel::Bool = true) where {D}
 
     if any(inter -> !inter.nl_only, values(sys.general_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
@@ -29,15 +29,12 @@ function Molly.simulate!(sys::System{D,false},
     @showprogress for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
 
-        for i = 1:length(sys)
-            sys.coords[i] += sys.velocities[i] * sim.dt
-            sys.coords[i] = wrap_coords.(sys.coords[i], sys.box_size)
-        end
+        @. sys.coords+=sys.velocities *sim.dt
+        
+        sys.coords=wrap_coords_vec.(sys.coords,(sys.box_size,))
         accels = Molly.remove_molar.(accelerations(sys, neighbors, parallel = parallel))
-
-        for i = 1:length(sys)
-            sys.velocities[i] += accels[i] * sim.dt
-        end
+        
+        @. sys.velocities+=accels*sim.dt
 
         if step_n != n_steps
             neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n, parallel = parallel)
@@ -47,10 +44,10 @@ function Molly.simulate!(sys::System{D,false},
 end
 
 
-function Molly.simulate!(sys::System{D,false},
+function Molly.simulate!(sys::System{D},
     sim::SymplecticEulerB,
     n_steps::Integer;
-    parallel::Bool = true) where {D,S}
+    parallel::Bool = true) where {D}
 
     if any(inter -> !inter.nl_only, values(sys.general_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
@@ -65,11 +62,10 @@ function Molly.simulate!(sys::System{D,false},
 
         accels = Molly.remove_molar.(accelerations(sys, neighbors, parallel = parallel))
 
-        for i = 1:length(sys)
-            sys.velocities[i] += accels[i] * sim.dt
-            sys.coords[i] += sys.velocities[i] * sim.dt
-            sys.coords[i] = wrap_coords.(sys.coords[i], sys.box_size)
-        end
+        @. sys.velocities+=accels*sim.dt
+        @. sys.coords+=sys.velocities *sim.dt
+        
+        sys.coords=wrap_coords_vec.(sys.coords,(sys.box_size,))
 
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n, parallel = parallel)
     end
@@ -166,54 +162,6 @@ function Molly.simulate!(sys::System{D},
     end
 
 end
-
-
-
-struct Langevin{S, K, F, T}
-    dt::S
-    temperature::K
-    friction::F
-    remove_CM_motion::Bool
-    vel_scale::T
-    noise_scale::T
-end
-
-function Langevin(; dt, temperature, friction, remove_CM_motion=false)
-    vel_scale = exp(-dt * friction)
-    noise_scale = sqrt(1 - vel_scale^2)
-    return Langevin(dt, temperature, friction, remove_CM_motion, vel_scale, noise_scale)
-end
-
-function Molly.simulate!(sys,
-                    sim::Langevin,
-                    n_steps::Integer;
-                    parallel::Bool=true)
-    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
-
-    for step_n in 1:n_steps
-        run_loggers!(sys, neighbors, step_n)
-
-        accels_t = accelerations(sys, neighbors; parallel=parallel)
-        sys.velocities += Molly.remove_molar.(accels_t) .* sim.dt
-
-        sys.coords += sys.velocities .* sim.dt / 2
-
-        noise = velocity.(mass.(sys.atoms), (sim.temperature,); dims=n_dimensions(sys))
-
-        sys.velocities = sys.velocities .* sim.vel_scale .+ noise .* sim.noise_scale
-
-        sys.coords += sys.velocities .* sim.dt / 2
-        sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
-
-        if step_n != n_steps
-            neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n;
-                                        parallel=parallel)
-        end
-    end
-    return sys
-end
-
-
 
 struct MALA{C}
     dt::Real

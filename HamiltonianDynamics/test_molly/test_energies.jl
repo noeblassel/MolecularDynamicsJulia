@@ -17,7 +17,7 @@ dt_range=0.0001:0.0001:0.0064
 
 for dt in dt_range
     sys=deepcopy(initial_system)
-    simulate!(sys,VelocityVerlet(dt=dt),500)
+    simulate!(sys,SymplecticEulerA(dt=dt),500)
     #plot!(energy_plot,sys.loggers[:hamiltonian].energies,label="Δt=$(dt)")
     push!(spreads,maximum(sys.loggers[:hamiltonian].energies)-minimum(sys.loggers[:hamiltonian].energies))
 end
