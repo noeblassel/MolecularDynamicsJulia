@@ -17,12 +17,12 @@ dt_range=0.0001:0.0001:0.0064
 
 for dt in dt_range
     sys=deepcopy(initial_system)
-    simulate!(sys,SymplecticEulerA(dt=dt),500)
+    simulate!(sys,SymplecticEulerB(dt=dt),500)
     #plot!(energy_plot,sys.loggers[:hamiltonian].energies,label="Δt=$(dt)")
     push!(spreads,maximum(sys.loggers[:hamiltonian].energies)-minimum(sys.loggers[:hamiltonian].energies))
 end
 
-f=open("energy_fluctuations_SEA.txt","w")
+f=open("energy_fluctuations_SEB.txt","w")
 
 for (dt,dH) in zip(dt_range,spreads)
     println(f,dt," ",dH)
