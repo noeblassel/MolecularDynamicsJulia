@@ -94,9 +94,9 @@ function Molly.simulate!(sys::System{D,false},
     @showprogress for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
         accels = Molly.remove_molar.(accelerations(sys, neighbors, parallel = parallel))
-        sys.coords += sys.velocities .* sim.dt
+        @. sys.coords += sys.velocities * sim.dt
         sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
-        sys.velocities += accels * sim.dt
+        @. sys.velocities += accels * sim.dt
 
         if step_n != n_steps
             neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n)
@@ -185,7 +185,7 @@ function Molly.simulate!(sys::System{D},
     n_steps::Integer;
     parallel::Bool = true) where {D}
 
-    M_inv = inv.(mass.(ustrip.(sys.atoms)))
+    M_inv = inv.(ustrip.(mass.((sys.atoms))))
 
     α = zero(M_inv)
     σ = zero(M_inv)
@@ -210,7 +210,7 @@ function Molly.simulate!(sys::System{D},
 
         dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
 
-        @. sys.coords = sys.coords +(1 + α) * (sys.velocities + accels_t * sim.dt / 2) * sim.dt / 2 + σ * dW * sim.dt / 2
+        @. sys.coords += (1 + α) * (sys.velocities + accels_t * sim.dt / 2) * sim.dt / 2 + σ * dW * sim.dt / 2
         sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
 
         accels_t_dt = accelerations(sys, neighbors; parallel = parallel)

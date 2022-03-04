@@ -2,9 +2,9 @@ using Statistics
 
 include("../molly/MollyExtend.jl")
 
-if length(ARGS)!=9
+if length(ARGS)!=10
     println("Error parsing arguments.")
-    println("Usage: julia test_nist.jl TEMPERATURE ρMIN ρMAX NUMBER_OF_SIMULATIONS ATOMS_PER_DIM EQUILIBRATION_STEPS SAMPLING_STEPS Δt FILEOUT")
+    println("Usage: julia test_nist.jl TEMPERATURE ρMIN ρMAX NUMBER_OF_SIMULATIONS ATOMS_PER_DIM EQUILIBRATION_STEPS SAMPLING_STEPS Δt CUTOFF_RADIUS OUTPUT_FILE|STDOUT")
     exit(1)
 end
     
@@ -16,7 +16,8 @@ Npd=parse(Int32, ARGS[5])
 eq_steps=parse(Int32,ARGS[6])
 samp_steps=parse(Int32, ARGS[7])
 dt = parse(Float64,ARGS[8])
-filename=ARGS[9]
+r_c=parse(Float64,ARGS[9])
+filename=ARGS[10]
 
 
 ρs=ρmin:((ρmax-ρmin)/n_sims):ρmax
@@ -38,10 +39,16 @@ for ρ in ρs
     velocities = [reduced_velocity_lj(T,atoms[i].mass) for i in 1:N]
     
     inter = LennardJones(cutoff = DistanceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
-    nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c,unit_cell=box_size)   
-    
+
+
+    if 3*r_c<L
+     nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c,unit_cell=box_size)   
+    else
+        nf=TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
+    end
+
+
     γ = 1.0
- 
     
     simulator = LangevinBAOAB(dt = dt,γ=γ,T=T)
     

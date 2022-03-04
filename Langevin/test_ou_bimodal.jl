@@ -26,14 +26,14 @@ dt = 5e-3
 
 seed = 1234
 
-simulator = LangevinTest(dt = dt, γ = γ, T = T,rseed=seed)
+simulator = LangevinBAOAB(dt = dt, γ = γ, T = T,rseed=seed)
 
-loggers = Dict(:velocity => VelocityLogger(Float64,1))
+loggers =Dict()# Dict(:velocity => VelocityLogger(Float64,1))
 
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (), box_size = box_size, force_units = NoUnits, energy_units = NoUnits,loggers=loggers)
 
-simulate!(sys,simulator,eq_steps)
-f(x)=sqrt(2/π)*x^2*exp(-x^2/2)#density of chi(3) law
+@time simulate!(sys,simulator,eq_steps)
+"""f(x)=sqrt(2/π)*x^2*exp(-x^2/2)#density of chi(3) law
 
 function maxwell(x,m)
     a=sqrt(m)
@@ -50,5 +50,5 @@ for (i,vs) in enumerate(sys.loggers[:velocity].velocities)
     println(i,"/",eq_steps)
     histogram(norms,normalize=true,xlims=(0,7),ylims=(0,1),dpi=600,label="",bins=100,color=:blue,linecolor=:blue)
     plot!(Xrange,v_eqs,label="",xlabel="velocity",ylabel="",xlims=(0,7),ylims=(0,1),dpi=600,color=:red)
-   (i<=30 || i%save_every==0) && savefig("vels_bimodal/velocities_$(i).pdf")
-end
+   (i<=30 || i%save_every==0) && savefig("vels_bimodal/velocities_\$(i).pdf")
+end"""
