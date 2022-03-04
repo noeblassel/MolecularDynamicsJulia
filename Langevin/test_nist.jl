@@ -23,7 +23,7 @@ filename=ARGS[9]
 
 
 N = Npd^3
-r_c=4.0
+r_c=5.0
 
 atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
 
@@ -43,7 +43,7 @@ for ρ in ρs
     γ = 1.0
  
     
-    simulator = LangevinTest(dt = dt,γ=γ,T=T)
+    simulator = LangevinBAOAB(dt = dt,γ=γ,T=T)
     
     sys = System(atoms = atoms, coords = coords, velocities = deepcopy(velocities), pairwise_inters = (inter,), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits)
     try 
@@ -63,6 +63,7 @@ for ρ in ρs
             println(ρ," ", mean(sys.loggers[:pressure].pressures)," ",long_range_virial_correction(sys,sys.pairwise_inters[1])/(3L^3))
         end
     catch
+        if filename!="STDOUT"
         f=open(filename,"a")
         println(f,ρ," :error")
         close(f)
