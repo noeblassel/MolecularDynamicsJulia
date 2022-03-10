@@ -1,6 +1,6 @@
 #!/bin/bash
 
-simulator=BABO
+sim=BABO
 
 for dt in 1e-6 2e-6 3e-6 4e-6 5e-6 7e-6 8e-6 9e-6 1e-5 2e-5 3e-5 4e-5 5e-5
 do
