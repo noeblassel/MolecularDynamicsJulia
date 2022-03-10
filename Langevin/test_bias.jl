@@ -15,6 +15,7 @@ sys=read_reduced_lj_state("bias_preconfig/initial_config_T_$(T)_rho_$(ρ).out")
 
 
 n_steps=Int64(round(tfin/dt))
+println(n_steps)
 
 loggers=Dict(:potential_energy=>PotentialEnergyLogger(Float64,1),:kinetic_energy=>KineticEnergyLoggerNoDims(Float64,1),:virial=>VirialLogger(Float64,1))
 
