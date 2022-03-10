@@ -2,7 +2,27 @@
 
 sim=BABO
 
-for dt in 1e-6 2e-6 3e-6 4e-6 5e-6 7e-6 8e-6 9e-6 1e-5 2e-5 3e-5 4e-5 5e-5
+for dt in 1e-4 2e-4 3e-4
+do
+nohup /libre/blasseln/julia-1.7.2/bin/julia test_bias.jl 1.25 0.25 $dt 500 $sim bias_test.out > nohup.out &
+done
+
+for dt in 4e-4 5e-4 6e-4
+do
+nohup /libre/blasseln/julia-1.7.2/bin/julia test_bias.jl 1.25 0.25 $dt 500 $sim bias_test.out > nohup.out &
+done
+
+for dt in 7e-4 8e-4 9e-4
+do
+nohup /libre/blasseln/julia-1.7.2/bin/julia test_bias.jl 1.25 0.25 $dt 500 $sim bias_test.out > nohup.out &
+done
+
+for dt in 1e-3 2e-3 3e-3
+do
+nohup /libre/blasseln/julia-1.7.2/bin/julia test_bias.jl 1.25 0.25 $dt 500 $sim bias_test.out > nohup.out &
+done
+
+for dt in 4e-3 5e-3
 do
 nohup /libre/blasseln/julia-1.7.2/bin/julia test_bias.jl 1.25 0.25 $dt 500 $sim bias_test.out > nohup.out &
 done
