@@ -12,7 +12,7 @@ sim=ARGS[5]
 output_file=ARGS[6]
 
 sys=read_reduced_lj_state("bias_preconfig/initial_config_T_$(T)_rho_$(ρ).out")
-
+N=length(sys)
 
 n_steps=Int64(round(tfin/dt))
 println(n_steps)
@@ -21,7 +21,7 @@ loggers=Dict(:potential_energy=>PotentialEnergyLogger(Float64,1),:kinetic_energy
 
 sys.loggers=loggers
 pairwise_inters=(LennardJones(cutoff = ShiftedForceCutoff(sys.pairwise_inters[1].cutoff.dist_cutoff), nl_only = true, force_units = NoUnits, energy_units = NoUnits),)
-nf=DistanceNeighborFinder(dist_cutoff=pairwise_inters[1].cutoff.dist_cutoff)
+nf=DistanceNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=pairwise_inters[1].cutoff.dist_cutoff)
 
 
 sys=System(atoms=sys.atoms,coords=sys.coords,velocities=sys.velocities,pairwise_inters=pairwise_inters,loggers=sys.loggers,neighbor_finder=nf,box_size=sys.box_size,energy_units=NoUnits,force_units=NoUnits)
