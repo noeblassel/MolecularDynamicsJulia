@@ -3,8 +3,7 @@ function save_reduced_lj_state(s::System,filename::AbstractString)
     @assert length(s.pairwise_inters)==1 "Trying to save a system with more than one GeneralInteraction"
     @assert isempty(s.specific_inter_lists) "Trying to save a system with specific interactions"
     @assert typeof(s.pairwise_inters[1])<:LennardJones "Trying to save a non Lennard-Jones system"
-    @assert typeof(s.pairwise_inters[1].cutoff)<:ShiftedPotentialCutoff "Currently only implemented for Shifted potential cutoff"
-
+    
     file=open(filename,"w")
     println(file,"$(s.box_size[1]) $(s.box_size[2]) $(s.box_size[3]) $(s.pairwise_inters[1].cutoff.dist_cutoff)")
     for i = 1:length(s)

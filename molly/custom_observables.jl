@@ -1,7 +1,7 @@
 function pair_virial(s::System, neighbors = nothing, lrc = false)
 
     W = 0.0 * s.energy_units
-
+    N=length(s)
     #TODO implement parallel version, specific pair interactions and other general interactions
 
     for inter = s.pairwise_inters

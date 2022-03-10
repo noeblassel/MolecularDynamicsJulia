@@ -18,7 +18,7 @@ coords = place_atoms_on_lattice(Npd, box_size)
 atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
 velocities = [reduced_velocity_lj(T,atoms[i].mass) for i in 1:N]
 
-inter = LennardJones(cutoff = ShiftedForceCutoff_fixed(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
+inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
 nf = nothing
 

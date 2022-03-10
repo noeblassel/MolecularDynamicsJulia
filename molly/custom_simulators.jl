@@ -105,20 +105,19 @@ function Molly.simulate!(sys::System{D,false},
     return sys
 end
 
-struct LangevinBABO{C}
+struct LangevinBABO
     dt::Real
     γ::Real
     β::Real
-    coupling::C
     rseed::UInt32
     rng::AbstractRNG
 end
 
 
-function LangevinBABO(; dt, γ, T, coupling = NoCoupling(), rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
+function LangevinBABO(; dt, γ, T, rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
 
     β = inv(T) #todo work with units, i.e. kb !=1
-    LangevinBABO{typeof(coupling)}(dt, γ, β, coupling, rseed, rng)
+    LangevinBABO(dt, γ, β, rseed, rng)
 end
 
 function Molly.simulate!(sys::System{D},
@@ -164,20 +163,19 @@ function Molly.simulate!(sys::System{D},
 end
 
 
-struct LangevinBAOAB{C}
+struct LangevinBAOAB
     dt::Real
     γ::Real
     β::Real
-    coupling::C
     rseed::UInt32
     rng::AbstractRNG
 end
 
 
-function LangevinBAOAB(; dt, γ, T, coupling = NoCoupling(), rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
+function LangevinBAOAB(; dt, γ, T, rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
 
     β = ustrip(inv(T)) #todo work with units, i.e. kb !=1
-    LangevinBAOAB{typeof(coupling)}(dt, γ, β, coupling, rseed, rng)
+    LangevinBAOAB(dt, γ, β,  rseed, rng)
 end
 
 function Molly.simulate!(sys::System{D},
@@ -223,13 +221,43 @@ function Molly.simulate!(sys::System{D},
 
 end
 
-struct MALA{C}
+struct LangevinBAOA##Molly upcoming version
     dt::Real
-    γ::Real
-    β::Real
-    coupling::C
-    rseed::UInt32
-    rng::AbstractRNG
-    α::Real
-    σ::Real
+    temperature::Real
+    friction::Real
+    vel_scale::Real
+    noise_scale::Real
+end
+
+function LangevinBAOA(; dt, temperature, friction)
+    vel_scale = exp(-dt * friction)
+    noise_scale = sqrt(1 - vel_scale^2)
+    return LangevinBAOA(dt, temperature, friction, vel_scale, noise_scale)
+end
+
+function Molly.simulate!(sys,
+                    sim::LangevinBAOA,
+                    n_steps::Integer;
+                    parallel::Bool=true)
+    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
+
+    for step_n in 1:n_steps
+        run_loggers!(sys, neighbors, step_n)
+
+        accels_t = accelerations(sys, neighbors; parallel=parallel)
+        sys.velocities += Molly.remove_molar.(accels_t) .* sim.dt
+
+        sys.coords += sys.velocities .* sim.dt / 2
+        noise = velocity.(mass.(sys.atoms), (sim.temperature,); dims=n_dimensions(sys))
+
+        sys.velocities = sys.velocities .* sim.vel_scale .+ noise .* sim.noise_scale
+
+        sys.coords += sys.velocities .* sim.dt / 2
+        sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
+        if step_n != n_steps
+            neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n;
+                                        parallel=parallel)
+        end
+    end
+    return sys
 end
