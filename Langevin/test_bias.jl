@@ -21,17 +21,12 @@ loggers=Dict(:potential_energy=>PotentialEnergyLogger(Float64,1),:kinetic_energy
 
 sys.loggers=loggers
 pairwise_inters=(LennardJones(cutoff = ShiftedForceCutoff(sys.pairwise_inters[1].cutoff.dist_cutoff), nl_only = true, force_units = NoUnits, energy_units = NoUnits),)
-nf=nothing
-if 3*sys.pairwise_inters[1].cutoff.dist_cutoff<sys.box_size[1]
-    nf=CellListMapNeighborFinder(nb_matrix=trues(length(sys),length(sys)),dist_cutoff=sys.pairwise_inters[1].cutoff.dist_cutoff,unit_cell=sys.box_size)
-else
-    nf=TreeNeighborFinder(nb_matrix=trues(length(sys),length(sys)),dist_cutoff=sys.pairwise_inters[1].cutoff.dist_cutoff)
-end
+nf=DistanceNeighborFinder(dist_cutoff=pairwise_inters[1].cutoff.dist_cutoff)
 
 
 sys=System(atoms=sys.atoms,coords=sys.coords,velocities=sys.velocities,pairwise_inters=pairwise_inters,loggers=sys.loggers,neighbor_finder=nf,box_size=sys.box_size,energy_units=NoUnits,force_units=NoUnits)
 γ=1.0
-simulator=LangevinBAOAB(dt=dt,T=T,γ=γ)
+simulator=LangevinBAOAB(dt=dt,T=T,γ=γ,rseed=123)
 
 
 if sim=="BAOAB"
