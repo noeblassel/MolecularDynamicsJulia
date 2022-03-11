@@ -57,7 +57,7 @@ for i=1:Nruns
     loggers=Dict(:potential_energy=>PotentialEnergyLogger(Float64,1),:kinetic_energy=>KineticEnergyLoggerNoDims(Float64,1),:virial=>VirialLogger(Float64,1))
 
     sys.loggers=loggers
-    simulator=LangevinBAOAB(dt=dt,T=T,γ=γ,rseed=123)
+    simulator=LangevinBAOAB(dt=dt,T=T,γ=γ)
 
     if sim=="BAOAB"
         simulator=LangevinBAOAB(dt=dt,T=T,γ=γ)
