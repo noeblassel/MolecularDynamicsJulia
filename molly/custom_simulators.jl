@@ -155,7 +155,7 @@ function Molly.simulate!(sys::System{D},
 
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel = parallel)
 
-        step_n < n_steps && accels_t = accelerations(sys, neighbors; parallel = parallel)
+        accels_t = accelerations(sys, neighbors; parallel = parallel)
     end
 
 end
