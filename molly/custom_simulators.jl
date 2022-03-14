@@ -105,6 +105,62 @@ function Molly.simulate!(sys::System{D,false},
     return sys
 end
 
+struct LangevinBAO
+    dt::Real
+    γ::Real
+    β::Real
+    rseed::UInt32
+    rng::AbstractRNG
+end
+
+
+function LangevinBAO(; dt, γ, T, rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
+
+    β = inv(T) #todo work with units, i.e. kb !=1
+    LangevinBAO(dt, γ, β, rseed, rng)
+end
+
+function Molly.simulate!(sys::System{D},
+    sim::LangevinBAO,
+    n_steps::Integer;
+    parallel::Bool = true) where {D}
+
+    M_inv = inv.(mass.(sys.atoms))
+
+    α = zero(M_inv)
+    σ = zero(M_inv)
+
+    @. α = exp(-sim.γ * sim.dt * M_inv)
+    @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
+
+    if any(inter -> !inter.nl_only, values(sys.general_inters))
+        neighbors_all = Molly.all_neighbors(length(sys))
+    else
+        neighbors_all = nothing
+    end
+
+    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel = parallel)
+
+    accels_t = accelerations(sys, neighbors; parallel = parallel)
+    dW = zero(sys.velocities)
+    @showprogress for step_n in 1:n_steps
+        run_loggers!(sys, neighbors, step_n)
+        @. sys.velocities += accels_t * sim.dt
+        @. sys.coords += sys.velocities * sim.dt
+        sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
+
+        dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
+
+        @. sys.velocities = α * sys.velocities + σ * dW
+
+        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel = parallel)
+
+        step_n < n_steps && accels_t = accelerations(sys, neighbors; parallel = parallel)
+    end
+
+end
+
+
 struct LangevinBABO
     dt::Real
     γ::Real
@@ -175,7 +231,7 @@ end
 function LangevinBAOAB(; dt, γ, T, rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
 
     β = ustrip(inv(T)) #todo work with units, i.e. kb !=1
-    LangevinBAOAB(dt, γ, β,  rseed, rng)
+    LangevinBAOAB(dt, γ, β, rseed, rng)
 end
 
 function Molly.simulate!(sys::System{D},
@@ -221,43 +277,20 @@ function Molly.simulate!(sys::System{D},
 
 end
 
-struct LangevinBAOA##Molly upcoming version
+struct LangevinGHMC
     dt::Real
-    temperature::Real
-    friction::Real
-    vel_scale::Real
-    noise_scale::Real
+    γ::Real
+    β::Real
+
+    n_accepted::Int64
+    n_rejected::Int64
+    acceptance_ratio::Float64
+
+    rseed::UInt32
+    rng::AbstractRNG
 end
 
-function LangevinBAOA(; dt, temperature, friction)
-    vel_scale = exp(-dt * friction)
-    noise_scale = sqrt(1 - vel_scale^2)
-    return LangevinBAOA(dt, temperature, friction, vel_scale, noise_scale)
-end
+function Molly.simulate!(sys, sim::LangevinGHMC, n_steps::Integer, parallel::Bool = true)
 
-function Molly.simulate!(sys,
-                    sim::LangevinBAOA,
-                    n_steps::Integer;
-                    parallel::Bool=true)
-    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
 
-    for step_n in 1:n_steps
-        run_loggers!(sys, neighbors, step_n)
-
-        accels_t = accelerations(sys, neighbors; parallel=parallel)
-        sys.velocities += Molly.remove_molar.(accels_t) .* sim.dt
-
-        sys.coords += sys.velocities .* sim.dt / 2
-        noise = velocity.(mass.(sys.atoms), (sim.temperature,); dims=n_dimensions(sys))
-
-        sys.velocities = sys.velocities .* sim.vel_scale .+ noise .* sim.noise_scale
-
-        sys.coords += sys.velocities .* sim.dt / 2
-        sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
-        if step_n != n_steps
-            neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n;
-                                        parallel=parallel)
-        end
-    end
-    return sys
 end

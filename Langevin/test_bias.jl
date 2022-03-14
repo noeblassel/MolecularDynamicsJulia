@@ -64,6 +64,8 @@ elseif sim=="BABO"
 elseif sim=="BAOA"
     k=0.008314462621026539#to deal with Molly's assumption about units
     simulator=Langevin(dt=dt,temperature=T/k,friction=γ)
+elseif sim=="BAO"
+    simulator=LangevinBAO(dt=dt,T=T,γ=γ)
 else
     println("unrecognized simulator.")
     exit(1)
