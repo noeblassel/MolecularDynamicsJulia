@@ -17,7 +17,7 @@ function Molly.simulate!(sys::System{D},
     sim::SymplecticEulerA,
     n_steps::Integer; parallel::Bool = true) where {D}
 
-    if any(inter -> !inter.nl_only, values(sys.general_inters))
+    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
     else
         neighbors_all = nothing
@@ -49,7 +49,7 @@ function Molly.simulate!(sys::System{D},
     n_steps::Integer;
     parallel::Bool = true) where {D}
 
-    if any(inter -> !inter.nl_only, values(sys.general_inters))
+    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
     else
         neighbors_all = nothing
@@ -84,7 +84,7 @@ function Molly.simulate!(sys::System{D,false},
     n_steps::Integer;
     parallel::Bool = true) where {D,S}
 
-    if any(inter -> !inter.nl_only, values(sys.general_inters))
+    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
     else
         neighbors_all = nothing
@@ -133,7 +133,7 @@ function Molly.simulate!(sys::System{D},
     @. α = exp(-sim.γ * sim.dt * M_inv)
     @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
 
-    if any(inter -> !inter.nl_only, values(sys.general_inters))
+    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
     else
         neighbors_all = nothing
@@ -189,7 +189,7 @@ function Molly.simulate!(sys::System{D},
     @. α = exp(-sim.γ * sim.dt * M_inv)
     @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
 
-    if any(inter -> !inter.nl_only, values(sys.general_inters))
+    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
     else
         neighbors_all = nothing
@@ -247,7 +247,7 @@ function Molly.simulate!(sys::System{D},
     @. α = exp(-sim.γ * sim.dt * M_inv)
     @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
 
-    if any(inter -> !inter.nl_only, values(sys.general_inters))
+    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
         neighbors_all = Molly.all_neighbors(length(sys))
     else
         neighbors_all = nothing
@@ -277,20 +277,181 @@ function Molly.simulate!(sys::System{D},
 
 end
 
-struct LangevinGHMC
+struct LangevinSplitting
+    dt::Real
+    γ::Real
+    β::Real
+    
+    rseed::Uint32
+    rng::AbstractRNG
+
+    splitting::AbstractString
+end
+
+function LangevinSplitting(; dt, γ, T,splitting, rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
+    β = ustrip(inv(T)) #todo work with units, i.e. kb !=1
+    @assert all(x ∈ "ABO" for x in splitting)  "Invalid splitting descriptor: use only letters A, B and O."
+    LangevinSplitting(dt, γ, β, rseed, rng,splitting)
+end
+
+
+function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Integer, parallel::Bool = true) where {D}
+    M_inv = inv.(ustrip.(mass.((sys.atoms))))
+
+    α = zero(M_inv)
+    σ = zero(M_inv)
+
+    @. α = exp(-sim.γ * sim.dt * M_inv)
+    @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
+
+    effective_dts=[sim.dt/count(c,sim.splitting) for c in sim.splitting]
+    forces_known=true
+    force_computation_steps=Bool[]
+
+    #determine the need to recompute accelerations before B steps
+
+    #first pass to determine if first B step needs to compute accelerations
+    for op in sim.splitting 
+        if op=='A'
+            forces_known=false
+        elseif op=='B'
+            forces_known=true
+        end
+    end
+
+    for op in sim.splitting
+        if op=='O'
+            push!(force_computation_steps,false)
+        elseif op=='A'
+            push!(force_computation_steps,false)
+            forces_known=false
+        elseif op=='B'
+            if forces_known
+                push!(force_computation_steps,false)
+            else
+                push!(force_computation_steps,true)
+                forces_known=true
+            end
+        end
+    end
+
+    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
+        neighbors_all = Molly.all_neighbors(length(sys))
+    else
+        neighbors_all = nothing
+    end
+
+    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel = parallel)
+    accels_t = accelerations(sys, neighbors; parallel = parallel)
+    dW=zero(sys.velocities)
+
+    for step_n=1:n_steps
+        run_loggers!(sys,neighbors,step_n)
+        for (j,op) in enumerate(sim.splitting)
+            if op=='A'
+                A_step!(sys,effective_dts[j])
+            elseif op=='B'
+                B_step!(sys,effective_dts[j],accels_t,neighbors,force_computation_steps[j],parallel=parallel)
+            elseif op=='O'
+                O_step!(sys,effective_dts[j],α,σ,sim.rng,dW)
+        end
+    end
+
+    
+end
+
+function O_step!(s::System{D},dt::Real,α::Real,σ::Real,rng::AbstractRNG,noise_vec::Vector{SVector{D}}) where {D}
+    noise_vec = SVector{D}.(eachrow(randn(rng, Float64, (length(sys), D))))
+    @. s.velocities = α * s.velocities + σ * noise_vec
+end
+
+function A_step!(s::System,dt::Real)
+    @. s.coords+= s.velocities * dt
+    s.coords=wrap_coord_vec.(s.coords,(s.box_size,))
+end
+
+function B_step!(s::System{D},dt::Real,acceleration_vector::Vector{SVector{D}},neighbors,compute_forces::Bool,parallel::Bool=true) where {D}
+    compute_forces && acceleration_vector=accelerations(s,neighbors,parallel=parallel)
+    @. s.velocities+=dt*acceleration_vector
+end
+
+mutable struct LangevinGHMC
     dt::Real
     γ::Real
     β::Real
 
-    n_accepted::Int64
-    n_rejected::Int64
-    acceptance_ratio::Float64
-
     rseed::UInt32
     rng::AbstractRNG
+
+    n_accepted::Int64
+    n_total::Int64
 end
 
-function Molly.simulate!(sys, sim::LangevinGHMC, n_steps::Integer, parallel::Bool = true)
+function LangevinGHMC(; dt, γ, T, rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
 
+    β = ustrip(inv(T)) #todo work with units, i.e. kb !=1
+    LangevinGHMC(dt, γ, β, rseed, rng, 0, 0)
+end
+
+
+
+
+function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer, parallel::Bool = true) where {D}
+    M_inv = inv.(ustrip.(mass.((sys.atoms))))
+
+    α = zero(M_inv)
+    σ = zero(M_inv)
+
+    @. α = exp(-sim.γ * sim.dt * M_inv)
+    @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
+
+    if any(inter -> !inter.nl_only, values(sys.general_inters))
+        neighbors_all = Molly.all_neighbors(length(sys))
+    else
+        neighbors_all = nothing
+    end
+
+    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel = parallel)
+    candidate_neighbors = find_neighbors(sys, sys.neighbor_finder,neighbors; parallel = parallel)
+
+    accels_t = zero(sys.velocities)
+    accels_t_dt = zero(sys.velocities)
+
+    dW = zero(sys.velocities)
+
+    candidate_coords = zero(sys.coords)
+    candidate_velocities = zero(sys.velocities)
+
+    accels_t = accelerations(sys, neighbors; parallel = parallel)
+
+    for i = 1:n_steps
+        dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
+        @. sys.velocities = α * sys.velocities + σ * dW
+        H = total_energy(sys, neighbors)
+        @. candidate_coords = sys.coords + sys.velocities * sim.dt + accels_t * sim.dt^2 / 2
+        candidate_coords = wrap_coords_vec.(candidate_coords, (sys.box_size,))
+
+        sys.coords, candidate_coords = candidate_coords, sys.coords
+
+        @. candidate_velocities = sys.velocities + (accels_t + accels_t_dt) * sim.dt / 2
+
+        sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
+        candidate_neighbors = find_neighbors(sys, sys.neighbor_finder; parallel = parallel)
+        H_tilde = total_energy(sys, candidate_neighbors)
+
+        U = rand(sim.rng)
+
+        if min(1, exp(sim.β * (H - H_tilde))) > U
+            accels_t = accels_t_dt
+            neighbors=candidate_neighbors
+            sim.n_accepted+=1
+        else
+            sys.coords, candidate_coords = candidate_coords, sys.coords 
+            sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
+            @. sys.velocities = -sys.velocities
+        end
+
+        sim.n_total+=1
+    end
 
 end
