@@ -145,13 +145,72 @@ function Molly.simulate!(sys::System{D},
     dW = zero(sys.velocities)
     @showprogress for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
-        @. sys.velocities += accels_t * sim.dt
-        @. sys.coords += sys.velocities * sim.dt
+
+        @. sys.velocities += accels_t * sim.dt#B
+
+        @. sys.coords += sys.velocities * sim.dt#A
         sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
 
         dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
 
-        @. sys.velocities = α * sys.velocities + σ * dW
+        @. sys.velocities = α * sys.velocities + σ * dW#O
+
+        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel = parallel)
+
+        accels_t = accelerations(sys, neighbors; parallel = parallel)
+    end
+
+end
+
+struct LangevinBAOA
+    dt::Real
+    γ::Real
+    β::Real
+    rseed::UInt32
+    rng::AbstractRNG
+end
+
+
+function LangevinBAOA(; dt, γ, T, rseed = UInt32(round(time())), rng = MersenneTwister(rseed))
+
+    β = inv(T) #todo work with units, i.e. kb !=1
+    LangevinBAOA(dt, γ, β, rseed, rng)
+end
+
+function Molly.simulate!(sys::System{D},
+    sim::LangevinBAOA,
+    n_steps::Integer;
+    parallel::Bool = true) where {D}
+
+    M_inv = inv.(mass.(sys.atoms))
+
+    α = zero(M_inv)
+    σ = zero(M_inv)
+
+    @. α = exp(-sim.γ * sim.dt * M_inv)
+    @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
+
+    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
+        neighbors_all = Molly.all_neighbors(length(sys))
+    else
+        neighbors_all = nothing
+    end
+
+    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel = parallel)
+
+    accels_t = accelerations(sys, neighbors; parallel = parallel)
+    dW = zero(sys.velocities)
+    @showprogress for step_n in 1:n_steps
+        run_loggers!(sys, neighbors, step_n)
+        @. sys.velocities += accels_t * sim.dt#B
+        @. sys.coords += sys.velocities * sim.dt/2#A
+        sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
+
+        dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
+
+        @. sys.velocities = α * sys.velocities + σ * dW#O
+        @. sys.coords += sys.velocities * sim.dt/2#A
+        sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
 
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel = parallel)
 
@@ -282,7 +341,7 @@ struct LangevinSplitting
     γ::Real
     β::Real
     
-    rseed::Uint32
+    rseed::UInt32
     rng::AbstractRNG
 
     splitting::AbstractString
@@ -354,10 +413,9 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
                 B_step!(sys,effective_dts[j],accels_t,neighbors,force_computation_steps[j],parallel=parallel)
             elseif op=='O'
                 O_step!(sys,effective_dts[j],α,σ,sim.rng,dW)
+            end
         end
     end
-
-    
 end
 
 function O_step!(s::System{D},dt::Real,α::Real,σ::Real,rng::AbstractRNG,noise_vec::Vector{SVector{D}}) where {D}
@@ -371,7 +429,7 @@ function A_step!(s::System,dt::Real)
 end
 
 function B_step!(s::System{D},dt::Real,acceleration_vector::Vector{SVector{D}},neighbors,compute_forces::Bool,parallel::Bool=true) where {D}
-    compute_forces && acceleration_vector=accelerations(s,neighbors,parallel=parallel)
+    compute_forces && (acceleration_vector=accelerations(s,neighbors,parallel=parallel))
     @. s.velocities+=dt*acceleration_vector
 end
 
