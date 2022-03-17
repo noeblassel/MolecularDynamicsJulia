@@ -200,6 +200,7 @@ function Molly.simulate!(sys::System{D},
 
     accels_t = accelerations(sys, neighbors; parallel = parallel)
     dW = zero(sys.velocities)
+    
     @showprogress for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
         @. sys.velocities += accels_t * sim.dt#B
@@ -357,16 +358,26 @@ end
 function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Integer, parallel::Bool = true) where {D}
     M_inv = inv.(ustrip.(mass.((sys.atoms))))
 
-    α = zero(M_inv)
-    σ = zero(M_inv)
+    α_eff = zero(M_inv)
+    σ_eff = zero(M_inv)
+    
+    @. α_eff = exp(-sim.γ * sim.dt * M_inv/count('O',sim.splitting))
+    @. σ_eff = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
+    
+    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
+        neighbors_all = Molly.all_neighbors(length(sys))
+    else
+        neighbors_all = nothing
+    end
 
-    @. α = exp(-sim.γ * sim.dt * M_inv)
-    @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
+    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel = parallel)
+    accels_t = accelerations(sys, neighbors; parallel = parallel)
+    dW=zero(sys.velocities)
 
     effective_dts=[sim.dt/count(c,sim.splitting) for c in sim.splitting]
     forces_known=true
     force_computation_steps=Bool[]
-
+    
     #determine the need to recompute accelerations before B steps
 
     #first pass to determine if first B step needs to compute accelerations
@@ -394,43 +405,49 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
         end
     end
 
-    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
+    steps=[]
+    arguments=[]
 
-    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel = parallel)
-    accels_t = accelerations(sys, neighbors; parallel = parallel)
-    dW=zero(sys.velocities)
-
-    for step_n=1:n_steps
-        run_loggers!(sys,neighbors,step_n)
-        for (j,op) in enumerate(sim.splitting)
-            if op=='A'
-                A_step!(sys,effective_dts[j])
-            elseif op=='B'
-                B_step!(sys,effective_dts[j],accels_t,neighbors,force_computation_steps[j],parallel=parallel)
-            elseif op=='O'
-                O_step!(sys,effective_dts[j],α,σ,sim.rng,dW)
-            end
+    for (j,op) in enumerate(sim.splitting)
+        if op=='A'
+            push!(steps,A_step!)
+            push!(args,(sys,effective_dts[j]))
+        elseif op=='B'
+            push!(steps,B_step!)
+            push!(arguments,(sys,effective_dts[j],accels_t,neighbors,force_computation_steps[j],parallel=parallel))
+        elseif op=='O'
+            push!(steps,O_step!)
+            push!(arguments,(sys,α_eff,σ_eff,sim.rng,dW))
         end
     end
+
+    step_arg_pairs=zip(steps,arguments)
+
+    for step_n=1:n_steps
+
+        run_loggers!(sys, neighbors, step_n)
+
+        for (step!,args)=step_arg_pairs
+            step!(args...)
+        end
+
+        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel = parallel)
+    end
 end
 
-function O_step!(s::System{D},dt::Real,α::Real,σ::Real,rng::AbstractRNG,noise_vec::Vector{SVector{D}}) where {D}
+function O_step!(s::System{D},α_eff::Real,σ_eff::Real,rng::AbstractRNG,noise_vec::Vector{SVector{D}}) where {D}
     noise_vec = SVector{D}.(eachrow(randn(rng, Float64, (length(sys), D))))
-    @. s.velocities = α * s.velocities + σ * noise_vec
+    @. s.velocities = α_eff * s.velocities + σ_eff * noise_vec
 end
 
-function A_step!(s::System,dt::Real)
-    @. s.coords+= s.velocities * dt
+function A_step!(s::System,dt_eff::Real)
+    @. s.coords+= s.velocities * dt_eff
     s.coords=wrap_coord_vec.(s.coords,(s.box_size,))
 end
 
-function B_step!(s::System{D},dt::Real,acceleration_vector::Vector{SVector{D}},neighbors,compute_forces::Bool,parallel::Bool=true) where {D}
+function B_step!(s::System{D},dt_eff::Real,acceleration_vector::Vector{SVector{D}},neighbors,compute_forces::Bool,parallel::Bool=true) where {D}
     compute_forces && (acceleration_vector=accelerations(s,neighbors,parallel=parallel))
-    @. s.velocities+=dt*acceleration_vector
+    @. s.velocities+=dt_eff*acceleration_vector
 end
 
 mutable struct LangevinGHMC
