@@ -51,24 +51,11 @@ velocities = [reduced_velocity_lj(T, atoms[i].mass) for i in 1:N]
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = Dict{Symbol,Any}())
 
 γ = 1.0
-simulator = LangevinBAOAB(T = T, γ = γ, dt = dt_eq)
+
+simulator = LangevinSplitting(T = T, γ = γ, dt = dt_eq,splitting=sim)
 simulate!(sys, simulator, eq_nsteps)
 loggers = Dict(:potential_energy => PotentialEnergyLogger(Float64, 1), :kinetic_energy => KineticEnergyLoggerNoDims(Float64, 1), :virial => VirialLogger(Float64, 1))
 sys.loggers = loggers
-simulator = LangevinBAOAB(dt = dt, T = T, γ = γ)
-
-if sim == "BAOAB"
-    simulator = LangevinBAOAB(dt = dt, T = T, γ = γ)
-elseif sim == "BABO"
-    simulator = LangevinBABO(dt = dt, T = T, γ = γ)
-elseif sim == "BAOA"
-    simulator = LangevinBAOA(dt = dt, T=T, γ = γ)
-elseif sim == "BAO"
-    simulator = LangevinBAO(dt = dt, T = T, γ = γ)
-else
-    println("unrecognized simulator.")
-    exit(1)
-end
 
 for i = 1:Nruns
 

@@ -59,6 +59,17 @@ simulate!(sys_abstract, sim_baoa_abstract, n_steps)
 
 @assert all(sys.velocities[i] ≈ sys_abstract.velocities[i] for i = 1:N)
 @assert all(sys.coords[i] ≈ sys_abstract.coords[i] for i = 1:N)
+println("-----BAOAB-----")
+
+simulate!(sys, sim_baoab, n_steps)
+simulate!(sys_abstract, sim_baoab_abstract, n_steps)
+
+
+@time simulate!(sys, sim_baoab, n_steps)
+@time simulate!(sys_abstract, sim_baoab_abstract, n_steps)
+
+@assert all(sys.velocities[i] ≈ sys_abstract.velocities[i] for i = 1:N)
+@assert all(sys.coords[i] ≈ sys_abstract.coords[i] for i = 1:N)
 
 println("-----BABO-----")
 
@@ -68,18 +79,6 @@ simulate!(sys_abstract, sim_babo_abstract, n_steps)
 
 @time simulate!(sys, sim_babo, n_steps)
 @time simulate!(sys_abstract, sim_babo_abstract, n_steps)
-
-@assert all(sys.velocities[i] ≈ sys_abstract.velocities[i] for i = 1:N)
-@assert all(sys.coords[i] ≈ sys_abstract.coords[i] for i = 1:N)
-
-println("-----BAOAB-----")
-
-simulate!(sys, sim_baoab, n_steps)
-simulate!(sys_abstract, sim_baoab_abstract, n_steps)
-
-
-@time simulate!(sys, sim_baoab, n_steps)
-@time simulate!(sys_abstract, sim_baoab_abstract, n_steps)
 
 @assert all(sys.velocities[i] ≈ sys_abstract.velocities[i] for i = 1:N)
 @assert all(sys.coords[i] ≈ sys_abstract.coords[i] for i = 1:N)

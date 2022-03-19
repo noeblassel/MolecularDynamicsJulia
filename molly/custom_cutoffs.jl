@@ -51,34 +51,3 @@ end
     ##cubic spline interpolation
     return (2t^3 - 3t^2 + 1) * Vs + (t^3 - 2t^2 + t) * cutoff.delta * dVs
 end
-
-
-#ShiftedForceCutoff is broken
-struct ShiftedForceCutoff_fixed{D,S,I}
-    dist_cutoff::D
-    sqdist_cutoff::S
-    inv_sqdist_cutoff::I
-end
-
-function ShiftedForceCutoff_fixed(dist_cutoff)
-    (D, S, I) = typeof.([dist_cutoff, dist_cutoff^2, inv(dist_cutoff^2)])
-    return ShiftedForceCutoff_fixed{D,S,I}(dist_cutoff, dist_cutoff^2, inv(dist_cutoff^2))
-end
-
-
-Molly.cutoff_points(::Type{ShiftedForceCutoff_fixed{D,S,I}}) where {D,S,I} = 1
-
-function Molly.force_divr_cutoff(cutoff::ShiftedForceCutoff_fixed, r2, inter, params)#OK
-    return Molly.force_divr_nocutoff(inter, r2, inv(r2), params) - Molly.force_divr_nocutoff(
-        inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params)
-end
-
-@fastmath function Molly.potential_cutoff(cutoff::ShiftedForceCutoff_fixed, r2, inter, params)
-    invr2 = inv(r2)
-    r = √r2
-    rc = cutoff.dist_cutoff
-    dVc = -Molly.force_divr_nocutoff(inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params) * r #sign error here in original version
-
-    Molly.potential(inter, r2, invr2, params) - (r - rc) * dVc -
-    Molly.potential(inter, cutoff.sqdist_cutoff, cutoff.inv_sqdist_cutoff, params)
-end

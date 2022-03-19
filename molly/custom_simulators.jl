@@ -269,13 +269,13 @@ function Molly.simulate!(sys::System{D},
         @. sys.coords += sys.velocities * sim.dt #A
         sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
 
-        accels_t = accelerations(sys, neighbors; parallel=parallel)
+        accels_t .= accelerations(sys, neighbors; parallel=parallel)
 
 
         @. sys.velocities += accels_t * sim.dt / 2 #B 
 
 
-        dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
+        dW .= SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
 
         @. sys.velocities = α * sys.velocities + σ * dW #O
 
@@ -452,17 +452,17 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
 end
 
 function O_step!(s::System{D}, α_eff::Vector{T}, σ_eff::Vector{T}, rng::AbstractRNG, noise_vec::Vector{SVector{D,T}}) where {D,T}
-    noise_vec = SVector{D}.(eachrow(randn(rng, Float64, (length(sys), D))))
+    noise_vec .= SVector{D}.(eachrow(randn(rng, Float64, (length(sys), D))))
     @. s.velocities = α_eff * s.velocities + σ_eff * noise_vec
 end
 
 function A_step!(s::System, dt_eff::Real)
     @. s.coords += s.velocities * dt_eff
-    s.coords = wrap_coords_vec.(s.coords, (s.box_size,))
+    s.coords .= wrap_coords_vec.(s.coords, (s.box_size,))
 end
 
 function B_step!(s::System{D}, dt_eff::Real, acceleration_vector::Vector{SVector{D,T}}, neighbors, compute_forces::Bool, parallel::Bool) where {D,T}
-    compute_forces && (acceleration_vector .= accelerations(s, neighbors, parallel=parallel)) #.= otherwise declares local
+    compute_forces && (acceleration_vector .= accelerations(s, neighbors, parallel=parallel))
 
     @. s.velocities += dt_eff * acceleration_vector
 end
