@@ -2,7 +2,7 @@
 
 sim=$1
 
-for dt in 1e-2 6e-3 7e-3 8e-3 9e-3
+for dt in 1e-1 2e-1 3e-1 4e-1 5e-1
 do
-nohup /libre/blasseln/julia-1.7.2/bin/julia test_bias.jl 1.5 0.15 $dt 50.0 1000.0 4 8000 4.0 $sim bias_test_64.$sim > nohup$dt.out &
+nohup /libre/blasseln/julia-1.7.2/bin/julia test_bias.jl 1.5 0.3 $dt 20 500 3 20000 4.0 $sim bias_test_64.$sim > nohup$dt.out &
 done

@@ -21,10 +21,10 @@ sim = ARGS[9]
 output_file = ARGS[10]
 
 if !isfile(output_file)
-    g = open(output_file, "w")
+    g = output_file!="STDOUT" ? open(output_file, "w") : stdout
     println(g, "Trajectorial averages of NVT Lennard-Jones system of $(Npd^3) particles at T=$(T), ρ=$(ρ) with $(sim) splitting, $(r_c) shifted force cutoff. Physical time of each run: $(tfin). All units are reduced.")
     println(g, "[dt] [average potential energy] [average kinetic energy] [average virial]")
-    close(g)
+    (output_file!="STDOUT") && close(g)
 end
 
 dt_eq = 5e-3
@@ -59,15 +59,15 @@ sys.loggers = loggers
 
 for i = 1:Nruns
 
-    simulate!(sys, simulator, n_steps)
+    @time simulate!(sys, simulator, n_steps)
 
-    f = open(output_file, "a")
+    f = output_file !="STDOUT" ? open(output_file, "a") : stdout
     Vhat = mean(sys.loggers[:potential_energy].energies)
     Khat = mean(sys.loggers[:kinetic_energy].energies)
     What = mean(sys.loggers[:virial].energies)
 
     println(f, "$(dt) $(Vhat) $(Khat) $(What)")
-    close(f)
+    (output_file!="STDOUT") && close(f)
 
     empty!(sys.loggers[:potential_energy].energies)
     empty!(sys.loggers[:kinetic_energy].energies)
