@@ -63,7 +63,7 @@ for i = 1:Nruns
     Khat = mean(sys.loggers[:kinetic_energy].energies)
     What = mean(sys.loggers[:virial].energies)
 
-    println(f, "$(dt) $(Vhat) $(Khat) $(What)")
+    println(f, "$(dt),$(Vhat),$(Khat),$(What)")
     close(f)
 
     empty!(sys.loggers[:potential_energy].energies)
