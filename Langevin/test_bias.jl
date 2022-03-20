@@ -4,11 +4,9 @@ Pkg.instantiate()
 
 include("../molly/MollyExtend.jl")
 
-
-
 #julia test_bias.jl T ρ dt tfin simulator output
 
-@assert length(ARGS) == 10 "Error (Wrong Argument Count) Usage: test_bias.jl T ρ Δt teq tfin  Npd Nruns r_c splitting OUTPUT|STDOUT"
+@assert length(ARGS) == 9 "Error (Wrong Argument Count) Usage: test_bias.jl T ρ Δt teq tfin  Npd Nruns r_c splitting"
 T = parse(Float64, ARGS[1])
 ρ = parse(Float64, ARGS[2])
 dt = parse(Float64, ARGS[3])
@@ -18,13 +16,12 @@ Npd = parse(Int64, ARGS[6])
 Nruns = parse(Int64, ARGS[7])
 r_c = parse(Float64, ARGS[8])
 sim = ARGS[9]
-output_file = ARGS[10]
 
-if !isfile(output_file)
-    g = output_file!="STDOUT" ? open(output_file, "w") : stdout
+if !isfile(sim)
+    g=open(sim, "w")
     println(g, "Trajectorial averages of NVT Lennard-Jones system of $(Npd^3) particles at T=$(T), ρ=$(ρ) with $(sim) splitting, $(r_c) shifted force cutoff. Physical time of each run: $(tfin). All units are reduced.")
-    println(g, "[dt] [average potential energy] [average kinetic energy] [average virial]")
-    (output_file!="STDOUT") && close(g)
+    println(g, "dt,potential_energy,kinetic_energy,virial")
+    close(g)
 end
 
 dt_eq = 5e-3
@@ -61,13 +58,13 @@ for i = 1:Nruns
 
     simulate!(sys, simulator, n_steps)
 
-    f = output_file !="STDOUT" ? open(output_file, "a") : stdout
+    f =  open("$(sim)$(dt)", "a") : stdout
     Vhat = mean(sys.loggers[:potential_energy].energies)
     Khat = mean(sys.loggers[:kinetic_energy].energies)
     What = mean(sys.loggers[:virial].energies)
 
     println(f, "$(dt) $(Vhat) $(Khat) $(What)")
-    (output_file!="STDOUT") && close(f)
+    close(f)
 
     empty!(sys.loggers[:potential_energy].energies)
     empty!(sys.loggers[:kinetic_energy].energies)
