@@ -58,7 +58,7 @@ for i = 1:Nruns
 
     simulate!(sys, simulator, n_steps)
 
-    f =  open("$(sim)$(dt)", "a") : stdout
+    f =  open("$(sim)$(dt)", "a") 
     Vhat = mean(sys.loggers[:potential_energy].energies)
     Khat = mean(sys.loggers[:kinetic_energy].energies)
     What = mean(sys.loggers[:virial].energies)
