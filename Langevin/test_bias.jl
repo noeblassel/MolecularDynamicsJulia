@@ -18,8 +18,8 @@ r_c = parse(Float64, ARGS[8])
 sim = ARGS[9]
 
 if !isfile(sim)
-    g=open(sim, "w")
-    println(g, "Trajectorial averages of NVT Lennard-Jones system of $(Npd^3) particles at T=$(T), ρ=$(ρ) with $(sim) splitting, $(r_c) shifted force cutoff. Physical time of each run: $(tfin). All units are reduced.")
+    g=open("_"*sim, "w")
+    println(g, "#Trajectorial averages of NVT Lennard-Jones system of $(Npd^3) particles at T=$(T), ρ=$(ρ) with $(sim) splitting, $(r_c) shifted force cutoff. Physical time of each run: $(tfin). All units are reduced.")
     println(g, "dt,potential_energy,kinetic_energy,virial")
     close(g)
 end
