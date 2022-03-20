@@ -8,7 +8,7 @@ include("../molly/MollyExtend.jl")
 
 #julia test_bias.jl T ρ dt tfin simulator output
 
-@assert length(ARGS) == 10 "Error (Wrong Argument Count) Usage: test_bias.jl T ρ Δt teq tfin Nruns Npd r_c BAOAB|BABO|BAOA OUTPUT|STDOUT"
+@assert length(ARGS) == 10 "Error (Wrong Argument Count) Usage: test_bias.jl T ρ Δt teq tfin  Npd Nruns r_c splitting OUTPUT|STDOUT"
 T = parse(Float64, ARGS[1])
 ρ = parse(Float64, ARGS[2])
 dt = parse(Float64, ARGS[3])
@@ -37,7 +37,7 @@ inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_uni
 nf = nothing
 n_steps = Int64(round(tfin / dt))
 
-if L > 3 * r_c
+if (L > 3 * r_c) && N>900
     nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c, unit_cell = box_size)
 elseif N > 900
     nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
@@ -59,7 +59,7 @@ sys.loggers = loggers
 
 for i = 1:Nruns
 
-    @time simulate!(sys, simulator, n_steps)
+    simulate!(sys, simulator, n_steps)
 
     f = output_file !="STDOUT" ? open(output_file, "a") : stdout
     Vhat = mean(sys.loggers[:potential_energy].energies)
