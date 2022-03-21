@@ -50,11 +50,15 @@ sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_i
 γ = 1.0
 
 simulator = LangevinSplitting(T = T, γ = γ, dt = dt_eq,splitting=sim)
-simulate!(sys, simulator, eq_nsteps)
 loggers = Dict(:potential_energy => PotentialEnergyLogger(Float64, 1), :kinetic_energy => KineticEnergyLoggerNoDims(Float64, 1), :virial => VirialLogger(Float64, 1))
-sys.loggers = loggers
 
 for i = 1:Nruns
+    sys.coords = place_atoms_on_lattice(Npd, box_size)
+    sys.velocities=[reduced_velocity_lj(T, atoms[i].mass) for i in 1:N]
+    sys.loggers=Dict{Symbol,Any}()
+
+    simulate!(sys,simulator,eq_nsteps)
+    sys.loggers=loggers
 
     simulate!(sys, simulator, n_steps)
 
