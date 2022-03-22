@@ -12,6 +12,7 @@ function animate_trajectories(coords,filename)
     traj_bits_z=[]
     current_traj_bit_z=[]
     ix=rand(1:N)
+
     anim=@animate for i=1:n_steps
         if i%100==0
             println("Frame $(i)/$(n_steps)")
@@ -20,9 +21,10 @@ function animate_trajectories(coords,filename)
         X=[P[i][j][1] for j=1:N-1]
         Y=[P[i][j][2] for j=1:N-1]
         Z=[P[i][j][3] for j=1:N-1]
+        for i=1:N
         plot([x],[y],[z],seriestype=:scatter,color=:red,xlims=(0,l),ylims=(0,l),zlims=(0,l),label="",markersize=3,showaxis=false,ticks=false)
-        plot!(X,Y,Z,seriestype=:scatter,color=:grey,xlims=(0,l),ylims=(0,l),zlims=(0,l),label="",markersize=2,showaxis=false,ticks=false)
-
+        plot!(X,Y,Z,seriestype=:scatter,color=:gray,xlims=(0,l),ylims=(0,l),zlims=(0,l),label="",markersize=2,showaxis=false,ticks=false)
+        
         for j=1:length(traj_bits_x)
             plot!(traj_bits_x[j],traj_bits_y[j],traj_bits_z[j],color=:red,xlims=(0,l),ylims=(0,l),zlims=(0,l),label="",showaxis=false,ticks=false)
         end

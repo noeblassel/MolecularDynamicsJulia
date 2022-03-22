@@ -428,7 +428,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
 
     step_arg_pairs = zip(steps, arguments)
 
-    for step_n = 1:n_steps
+    @showprogress for step_n = 1:n_steps
 
         run_loggers!(sys, neighbors, step_n)
 

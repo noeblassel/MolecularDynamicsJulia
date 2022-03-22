@@ -114,11 +114,18 @@ struct SelfDiffusionLogger{D,T}
     n_steps::Int
     last_coords::T
     self_diffusion_coords::T
+    self_diffusion_history::Vector{T}
+    record_history::Bool
 end
 
-SelfDiffusionLogger(n_steps,initial_coords)=SelfDiffusionLogger{length(initial_coords[1]),typeof(coords)}(n_steps,initial_coords,zero(initial_coords))
+SelfDiffusionLogger(n_steps,initial_coords;record_history::Bool=False)=SelfDiffusionLogger{length(initial_coords[1]),typeof(coords)}(n_steps,initial_coords,zero(initial_coords),typeof(coords)[],record_history)
 
-function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer= 0)
-    @. logger.self_diffusion_coords+=s.coords-last_coords
+function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer=0)
+    
+    @. logger.self_diffusion_coords+=s.coords-logger.last_coords
     @. logger.last_coords=s.coords
+
+    if logger.record_history && (step_n % logger.n_steps ==0)
+        push!(logger.self_diffusion_history,deepcopy(logger.self_diffusion_coords))
+    end
 end

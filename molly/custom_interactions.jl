@@ -15,9 +15,9 @@ function SingleDriftNEMD(N_atoms::Integer,ix::Integer,η::Real,F::SVector{D,T}) 
 
 end
 
-SingleDriftNEMD(N_atoms::Integer,η::Float64,ix::Integer) where {T}=SingleDriftNEMD(N_atoms,0,η,SVector(1.0,0.0,0.0))
+SingleDriftNEMD(N_atoms::Integer,η::Float64,ix::Integer)=SingleDriftNEMD(N_atoms,0,η,SVector(1.0,0.0,0.0))
 
-forces(inter::SingleDriftNEMD, s::System{D}, neighbors)=inter.force_field
+Molly.forces(inter::SingleDriftNEMD, s::System, neighbors)=inter.force_field
 
 
 struct ColorDriftNEMD{D,T}
@@ -43,6 +43,7 @@ function ColorDriftNEMD(N_atoms::Integer,η::Real,F::SVector{D,T}) where {D,T}
     return ColorDriftNEMD{D,T}(N_atoms,η,F,ff)
 
 end
-ColorDriftNEMD(N_atoms::Integer,η::Float64)=ColorDriftNEMD{3,Float64}(η,SVector(1.0,0.0,0.0))
 
-forces(inter::ColorDriftNEMD, s::System, neighbors)=inter.force_field
+ColorDriftNEMD(N_atoms::Integer,η::Float64)=ColorDriftNEMD(N_atoms,η,SVector(1.0,0.0,0.0))
+
+Molly.forces(inter::ColorDriftNEMD, s::System, neighbors)=inter.force_field
