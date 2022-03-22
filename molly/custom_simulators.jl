@@ -362,7 +362,7 @@ end
 
 function LangevinSplitting(; dt, γ, T, splitting, rseed=UInt32(round(time())), rng=MersenneTwister(rseed))
     β = ustrip(inv(T)) #todo work with units, i.e. kb !=1
-    @assert all(x ∈ "ABO" for x in splitting) "Invalid splitting descriptor: use only letters A, B and O."
+    @assert (all(x ∈ "ABO" for x ∈ splitting) && all(x ∈ splitting for x ∈ "ABO")) "Invalid splitting descriptor: use only and all letters A, B and O."
     LangevinSplitting(dt, γ, β, rseed, rng, splitting)
 end
 
@@ -393,15 +393,17 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
     force_computation_steps = Bool[]
 
     #determine the need to recompute accelerations before B steps
-
-    #first pass to determine if first B step needs to compute accelerations
+"""
+    #first pass to determine if forces are known after one pass through the scheme
     for op in sim.splitting
         if op == 'A'
             forces_known = false
         elseif op == 'B'
             forces_known = true
         end
-    end
+    end"""
+
+    occursin(r"^[BAO]*B[AO]*A[AO]*$",sim.splitting) && (forces_known = false) # (same logic with regexp)
 
     for op in sim.splitting
         if op == 'O'
@@ -462,7 +464,7 @@ function A_step!(s::System, dt_eff::Real)
 end
 
 function B_step!(s::System{D}, dt_eff::Real, acceleration_vector::Vector{SVector{D,T}}, neighbors, compute_forces::Bool, parallel::Bool) where {D,T}
-    compute_forces && (acceleration_vector .= accelerations(s, neighbors, parallel=parallel))
+    compute_forces && (acceleration_vector .= accelerations(s, neighbors, parallel=parallel)) 
 
     @. s.velocities += dt_eff * acceleration_vector
 end

@@ -109,3 +109,16 @@ function Molly.log_property!(logger::PressureLoggerNVT, s::System, neighbors = n
         push!(logger.pressures, (length(s)*logger.T+W/3)/V)
     end
 end
+
+struct SelfDiffusionLogger{D,T}
+    n_steps::Int
+    last_coords::T
+    self_diffusion_coords::T
+end
+
+SelfDiffusionLogger(n_steps,initial_coords)=SelfDiffusionLogger{length(initial_coords[1]),typeof(coords)}(n_steps,initial_coords,zero(initial_coords))
+
+function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer= 0)
+    @. logger.self_diffusion_coords+=s.coords-last_coords
+    @. logger.last_coords=s.coords
+end
