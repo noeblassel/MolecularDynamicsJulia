@@ -3,16 +3,16 @@
 using Plots,Statistics,CSV
 
 
-#Base.run(`./scp_bias_files.sh`)
+Base.run(`./scp_bias_files.sh`)
 
-#data_folder="./results/biases/125N/"
 data_folder="./bias_dumps/"
 
-#files=["BABO.csv","BAOAB.csv","BAOA.csv","BAO.csv"]
-files=["BAO.csv"]
+files=["BABO.csv","BAOAB.csv","BAOA.csv","BAO.csv"]
+
 n_regr=3#number of regression points
 y_lim_tol=0.005
-orders=Dict("BAO"=>1,"BAOA"=> 1,"BAOAB"=>2,"BABO"=>2)
+explosion_threshold=60.0
+orders=Dict("BAO"=>1,"BAOA"=> 2,"BAOAB"=>2,"BABO"=>2)
 colors=Dict("BAO"=>:blue,"BAOA"=>:orange,"BAOAB"=>:green,"BABO"=>:red)
 
 X=zeros(n_regr*length(files),1+length(files))
@@ -30,21 +30,20 @@ dts=nothing
 for (j,input_file) in enumerate(files)
     scheme=split(input_file,'.')[1]
     dat=CSV.File(data_folder*input_file;header=false,types=Float64)
-    order= orders[scheme]
-    s=read(data_folder*input_file,String)
-    A=split(s,"\n")
-    data=[parse.((Float64,),split(r)) for r in A]
-    
+    dat=[r for r in dat if maximum(abs.(r))<explosion_threshold]
+    order= orders[scheme]    
 
     if j==1
         global dts=Set(r[1] for r in dat)
         global dts=[dt for dt in dts]
         sort!(dts)
-
+        X[:,1].=1
+    end
     for (i,Δt) in enumerate(dts[1:n_regr])
         X[(j-1)*n_regr+i,j+1]=Δt^order
     end
-    end
+    
+    
     
     V=[mean(r[2] for r in dat if r[1]==dt) for dt in dts]
     K=[mean(r[3] for r in dat if r[1]==dt) for dt in dts]
@@ -63,10 +62,10 @@ for (j,input_file) in enumerate(files)
     scatter!(plot_W,dts,W,label="",markershape=:xcross,color=color)
 
 end
-    
-end
+
 
 #solve least squares
+
 H=inv(transpose(X)*X)*transpose(X)
 θ_V=H*V_Y
 θ_K=H*K_Y
@@ -96,8 +95,6 @@ println("Estimated kinetic energy: $(θ_K[1])")
 ylims!(plot_K,(θ_K[1]-y_lim_tol*abs(θ_K[1]),θ_K[1]+y_lim_tol*abs(θ_K[1])))
 ylims!(plot_W,(θ_W[1]-y_lim_tol*abs(θ_W[1]),θ_W[1]+y_lim_tol*abs(θ_W[1])))"""
 
-savefig(plot_V,"potential_energy_bias.pdf")
-savefig(plot_K,"kinetic_energy_bias.pdf")
-savefig(plot_W,"virial_bias.pdf")
-
-Base.run(`rm BABO.out BAOAB.out BAOA.out BAO.out `)
+savefig(plot_V,"/home/noeblassel/Documents/stage_docs/Rapport/figures/chapter1/potential_energy_bias.pdf")
+savefig(plot_K,"/home/noeblassel/Documents/stage_docs/Rapport/figures/chapter1/kinetic_energy_bias.pdf")
+savefig(plot_W,"/home/noeblassel/Documents/stage_docs/Rapport/figures/chapter1/virial_bias.pdf")

@@ -6,7 +6,7 @@ include("./custom_cutoffs.jl")
 include("./custom_loggers.jl")
 include("./custom_observables.jl")
 include("./custom_simulators.jl")
-
+include("./custom_interactions.jl")
 
 include("./sim_nve_lj.jl")
 include("./sim_nvt_lj.jl")

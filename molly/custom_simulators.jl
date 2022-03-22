@@ -125,7 +125,7 @@ function Molly.simulate!(sys::System{D},
     n_steps::Integer;
     parallel::Bool=true) where {D}
 
-    M_inv = inv.(mass.(sys.atoms))
+    M_inv = inv.(ustrip.(mass.(sys.atoms)))
 
     α = zero(M_inv)
     σ = zero(M_inv)
@@ -182,7 +182,7 @@ function Molly.simulate!(sys::System{D},
     n_steps::Integer;
     parallel::Bool=true) where {D}
 
-    M_inv = inv.(mass.(sys.atoms))
+    M_inv = inv.(ustrip.(mass.(sys.atoms)))
 
     α = zero(M_inv)
     σ = zero(M_inv)
@@ -241,7 +241,7 @@ function Molly.simulate!(sys::System{D},
     n_steps::Integer;
     parallel::Bool=true) where {D}
 
-    M_inv = inv.(mass.(sys.atoms))
+    M_inv = inv.(ustrip.(mass.(sys.atoms)))
 
     α = zero(M_inv)
     σ = zero(M_inv)
@@ -305,7 +305,7 @@ function Molly.simulate!(sys::System{D},
     n_steps::Integer;
     parallel::Bool=true) where {D}
 
-    M_inv = inv.(ustrip.(mass.((sys.atoms))))
+    M_inv = inv.(ustrip.(mass.(sys.atoms)))
 
     α = zero(M_inv)
     σ = zero(M_inv)
@@ -369,7 +369,7 @@ end
 
 function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Integer, parallel::Bool=true) where {D}
 
-    M_inv = inv.(ustrip.(mass.((sys.atoms))))
+    M_inv = inv.(ustrip.(mass.(sys.atoms)))
 
     α_eff = zero(M_inv)
     σ_eff = zero(M_inv)
@@ -392,18 +392,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
     forces_known = true
     force_computation_steps = Bool[]
 
-    #determine the need to recompute accelerations before B steps
-"""
-    #first pass to determine if forces are known after one pass through the scheme
-    for op in sim.splitting
-        if op == 'A'
-            forces_known = false
-        elseif op == 'B'
-            forces_known = true
-        end
-    end"""
-
-    occursin(r"^[BAO]*B[AO]*A[AO]*$",sim.splitting) && (forces_known = false) # (same logic with regexp)
+    occursin(r"^.*B[^B]*A[^B]*$",sim.splitting) && (forces_known = false) #determine the need to recompute accelerations before B steps
 
     for op in sim.splitting
         if op == 'O'

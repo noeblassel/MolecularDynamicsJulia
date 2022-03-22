@@ -1,6 +1,6 @@
-using Plots,LinearAlgebra
 include("../molly/MollyExtend.jl")
 include("../utils/animate.jl")
+
 ρ = 0.25
 T = 1.25
 
@@ -19,13 +19,13 @@ atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
 velocities = [reduced_velocity_lj(T,atoms[i].mass) for i in 1:N]
 
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
+NEMD_forcing=ColorDriftNEMD
 
 nf = nothing
 
-try
+if 3*r_c<L
     global nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c, unit_cell = box_size)
-catch
-    println("revert to tree nf")
+else
     global nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
 end
 
@@ -43,4 +43,3 @@ seed = 1234
 simulator = LangevinSplitting(dt = dt, γ = γ, T = T, rseed = seed,splitting="BAO")
 @time simulate!(sys, simulator, n_steps)
 print(sys.coords)
-#animate_trajectories(sys.loggers[:coords].coords,"langevin_T0.1.mp4")
