@@ -15,7 +15,7 @@ function SingleDriftNEMD(N_atoms::Integer,ix::Integer,η::Real,F::SVector{D,T}) 
 
 end
 
-SingleDriftNEMD(N_atoms::Integer,η::Float64,ix::Integer)=SingleDriftNEMD(N_atoms,0,η,SVector(1.0,0.0,0.0))
+SingleDriftNEMD(N_atoms::Integer,ix::Integer,η::Float64)=SingleDriftNEMD(N_atoms,ix,η,SVector(1.0,0.0,0.0))
 
 Molly.forces(inter::SingleDriftNEMD, s::System, neighbors)=inter.force_field
 

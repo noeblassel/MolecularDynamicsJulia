@@ -1,4 +1,4 @@
-function animate_trajectories(coords,filename)
+function animate_trajectories(coords,filename;ix=rand(1:length(coords[1])))
 
     l,l,l=sys.box_size
     P=coords
@@ -11,7 +11,6 @@ function animate_trajectories(coords,filename)
     current_traj_bit_y=[]
     traj_bits_z=[]
     current_traj_bit_z=[]
-    ix=rand(1:N)
 
     anim=@animate for i=1:n_steps
         if i%100==0
@@ -21,7 +20,7 @@ function animate_trajectories(coords,filename)
         X=[P[i][j][1] for j=1:N-1]
         Y=[P[i][j][2] for j=1:N-1]
         Z=[P[i][j][3] for j=1:N-1]
-        for i=1:N
+    
         plot([x],[y],[z],seriestype=:scatter,color=:red,xlims=(0,l),ylims=(0,l),zlims=(0,l),label="",markersize=3,showaxis=false,ticks=false)
         plot!(X,Y,Z,seriestype=:scatter,color=:gray,xlims=(0,l),ylims=(0,l),zlims=(0,l),label="",markersize=2,showaxis=false,ticks=false)
         

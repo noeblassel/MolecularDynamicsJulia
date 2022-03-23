@@ -495,7 +495,6 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer, pa
     end
 
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
-    candidate_neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors; parallel=parallel)
 
     accels_t = zero(sys.velocities)
     accels_t_dt = zero(sys.velocities)
@@ -506,35 +505,46 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer, pa
     candidate_velocities = zero(sys.velocities)
 
     accels_t = accelerations(sys, neighbors; parallel=parallel)
+    
+    H = total_energy(sys, neighbors)
+    
+    while sim.n_accepted<n_steps
 
-    for i = 1:n_steps
+        ## O momentum update
         dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
         @. sys.velocities = α * sys.velocities + σ * dW
-        H = total_energy(sys, neighbors)
+
+        # Generate candidate state from Verlet step
         @. candidate_coords = sys.coords + sys.velocities * sim.dt + accels_t * sim.dt^2 / 2
         candidate_coords = wrap_coords_vec.(candidate_coords, (sys.box_size,))
 
         sys.coords, candidate_coords = candidate_coords, sys.coords
 
+        accels_t_dt=accelerations(sys,neighbors ; parallel=parallel)
+        
         @. candidate_velocities = sys.velocities + (accels_t + accels_t_dt) * sim.dt / 2
-
         sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
-        candidate_neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
-        H_tilde = total_energy(sys, candidate_neighbors)
+
+        # Candidate energy
+        H_tilde = total_energy(sys, neighbors)
 
         U = rand(sim.rng)
 
-        if min(1, exp(sim.β * (H - H_tilde))) > U
-            accels_t = accels_t_dt
-            neighbors = candidate_neighbors
+        
+        sim.n_total += 1
+
+        if exp(sim.β * (H - H_tilde)) > U ## Acceptation
+            @. accels_t = accels_t_dt #reuse computed forces for next step
             sim.n_accepted += 1
+            neighbors = (sys, sys.neighbor_finder, neighbors, sim.n_accepted; parallel=parallel)
+            H=H_tilde #reuse computed energy for the next step
+            println(stderr,"$(sim.n_accepted)-th accepted step out of $(n_steps) (acceptance ratio: $(sim.n_accepted/sim.n_steps))")
         else
-            sys.coords, candidate_coords = candidate_coords, sys.coords
+            sys.coords, candidate_coords = candidate_coords, sys.coords #swap back original state
             sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
-            @. sys.velocities = -sys.velocities
+            @. sys.velocities = -sys.velocities #reverse momenta
         end
 
-        sim.n_total += 1
     end
 
 end

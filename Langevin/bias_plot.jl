@@ -9,7 +9,7 @@ data_folder="./bias_dumps/"
 
 files=["BABO.csv","BAOAB.csv","BAOA.csv","BAO.csv"]
 
-n_regr=3#number of regression points
+n_regr=2#number of regression points
 y_lim_tol=0.005
 explosion_threshold=60.0
 orders=Dict("BAO"=>1,"BAOA"=> 2,"BAOAB"=>2,"BABO"=>2)
