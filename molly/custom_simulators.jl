@@ -518,7 +518,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
         candidate_coords = wrap_coords_vec.(candidate_coords, (sys.box_size,))
 
         sys.coords, candidate_coords = candidate_coords, sys.coords
-
+        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, sim.n_accepted; parallel=parallel)
         accels_t_dt=accelerations(sys,neighbors ; parallel=parallel)
         
         @. candidate_velocities = sys.velocities + (accels_t + accels_t_dt) * sim.dt / 2
@@ -535,14 +535,13 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
         if U < min(1,exp(-sim.β * (H_tilde-H))) ## Acceptation
             @. accels_t = accels_t_dt #reuse computed forces for next step
             sim.n_accepted += 1
-            neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, sim.n_accepted; parallel=parallel)
             H=H_tilde #reuse computed energy for the next step
         else
             sys.coords, candidate_coords = candidate_coords, sys.coords #swap back original state
             sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
             @. sys.velocities = -sys.velocities #reverse momenta
         end
-
+        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, sim.n_accepted; parallel=parallel)
     end
 
 end
