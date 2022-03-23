@@ -471,7 +471,6 @@ mutable struct LangevinGHMC
 end
 
 function LangevinGHMC(; dt, γ, T, rseed=UInt32(round(time())), rng=MersenneTwister(rseed))
-
     β = ustrip(inv(T)) #todo work with units, i.e. kb !=1
     LangevinGHMC(dt, γ, β, rseed, rng, 0, 0)
 end
@@ -479,7 +478,7 @@ end
 
 
 
-function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer, parallel::Bool=true) where {D}
+function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; parallel::Bool=true) where {D}
     M_inv = inv.(ustrip.(mass.((sys.atoms))))
 
     α = zero(M_inv)
@@ -509,7 +508,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer, pa
     H = total_energy(sys, neighbors)
     
     while sim.n_accepted<n_steps
-
+        run_loggers!(sys, neighbors, sim.n_accepted)
         ## O momentum update
         dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
         @. sys.velocities = α * sys.velocities + σ * dW
@@ -536,9 +535,8 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer, pa
         if exp(sim.β * (H - H_tilde)) > U ## Acceptation
             @. accels_t = accels_t_dt #reuse computed forces for next step
             sim.n_accepted += 1
-            neighbors = (sys, sys.neighbor_finder, neighbors, sim.n_accepted; parallel=parallel)
+            neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, sim.n_accepted; parallel=parallel)
             H=H_tilde #reuse computed energy for the next step
-            println(stderr,"$(sim.n_accepted)-th accepted step out of $(n_steps) (acceptance ratio: $(sim.n_accepted/sim.n_steps))")
         else
             sys.coords, candidate_coords = candidate_coords, sys.coords #swap back original state
             sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
