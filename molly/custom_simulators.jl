@@ -532,7 +532,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
         
         sim.n_total += 1
 
-        if exp(sim.β * (H - H_tilde)) > U ## Acceptation
+        if U < min(1,exp(-sim.β * (H_tilde-H))) ## Acceptation
             @. accels_t = accels_t_dt #reuse computed forces for next step
             sim.n_accepted += 1
             neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, sim.n_accepted; parallel=parallel)
