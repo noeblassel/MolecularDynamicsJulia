@@ -17,11 +17,6 @@ function Molly.simulate!(sys::System{D},
     sim::SymplecticEulerA,
     n_steps::Integer; parallel::Bool=true) where {D}
 
-    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
     neighbors = find_neighbors(sys, sys.neighbor_finder, parallel=parallel)
 
     accels = zero(sys.velocities)
@@ -49,11 +44,6 @@ function Molly.simulate!(sys::System{D},
     n_steps::Integer;
     parallel::Bool=true) where {D}
 
-    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
     neighbors = find_neighbors(sys, sys.neighbor_finder, parallel=parallel)
     accels = zero(sys.velocities)
 
@@ -84,11 +74,6 @@ function Molly.simulate!(sys::System{D,false},
     n_steps::Integer;
     parallel::Bool=true) where {D,S}
 
-    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
     neighbors = find_neighbors(sys, sys.neighbor_finder)
 
     @showprogress for step_n in 1:n_steps
@@ -132,12 +117,6 @@ function Molly.simulate!(sys::System{D},
 
     @. α = exp(-sim.γ * sim.dt * M_inv)
     @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
-
-    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
 
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
 
@@ -189,12 +168,6 @@ function Molly.simulate!(sys::System{D},
 
     @. α = exp(-sim.γ * sim.dt * M_inv)
     @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
-
-    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
 
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
 
@@ -248,12 +221,6 @@ function Molly.simulate!(sys::System{D},
 
     @. α = exp(-sim.γ * sim.dt * M_inv)
     @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
-
-    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
 
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
 
@@ -313,12 +280,6 @@ function Molly.simulate!(sys::System{D},
     @. α = exp(-sim.γ * sim.dt * M_inv)
     @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
 
-    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
-
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
 
     accels_t = accelerations(sys, neighbors; parallel=parallel)
@@ -376,12 +337,6 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
 
     @. α_eff = exp(-sim.γ * sim.dt * M_inv / count('O', sim.splitting))
     @. σ_eff = sqrt(M_inv * (1 - α_eff^2) / sim.β) #noise on velocities, not momenta
-
-    if any(inter -> !inter.nl_only, values(sys.pairwise_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
 
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
     accels_t = accelerations(sys, neighbors; parallel=parallel)
@@ -487,65 +442,53 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
     @. α = exp(-sim.γ * sim.dt * M_inv)
     @. σ = sqrt(M_inv * (1 - α^2) / sim.β) #noise on velocities, not momenta
 
-    if any(inter -> !inter.nl_only, values(sys.general_inters))
-        neighbors_all = Molly.all_neighbors(length(sys))
-    else
-        neighbors_all = nothing
-    end
-
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
-
-    accels_t = zero(sys.velocities)
     dW = zero(sys.velocities)
 
     candidate_coords = zero(sys.coords)
     candidate_velocities = zero(sys.velocities)
 
-    accels_t = accelerations(sys, neighbors; parallel=parallel)
+    accels = accelerations(sys, neighbors; parallel=parallel)
+    accels_tilde=zero(accels)
     
     H = total_energy(sys, neighbors)
+    H_tilde=zero(H)
     
     for i=1:n_steps
         run_loggers!(sys, neighbors, i)
 
-        ## exp(γΔtO) update on the momenta
         dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
-        @. sys.velocities = α * sys.velocities + σ * dW
+        @. sys.velocities = α * sys.velocities + σ * dW 
 
-        # Verlet-evolved candidate state
+        @. candidate_velocities=sys.velocities + accels * sim.dt / 2
 
-        @. candidate_velocities=sys.velocities + accels_t*sim.dt/2 #B
-
-        @. candidate_coords = sys.coords + candidate_velocities * sim.dt #A
+        @. candidate_coords = sys.coords + candidate_velocities * sim.dt
         candidate_coords = wrap_coords_vec.(candidate_coords, (sys.box_size,))
-
         sys.coords, candidate_coords = candidate_coords, sys.coords
 
-        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors,i; parallel=parallel)
-        accels_t=accelerations(sys,neighbors ; parallel=parallel)
+        neighbors = find_neighbors(sys, sys.neighbor_finder,neighbors,i; parallel=parallel)
+        accels_tilde = accelerations(sys,neighbors ; parallel=parallel)
         
-        @. candidate_velocities += accels_t * sim.dt / 2 #B
+        @. candidate_velocities += accels_tilde * sim.dt / 2
         sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
 
-        @. sys.velocities= -sys.velocities
-        # Candidate energy
         H_tilde = total_energy(sys, neighbors)
 
         U = rand(sim.rng)
         
         sim.n_total += 1
 
-        if log(U) < -sim.β * (H_tilde-H) ## Acceptation
+        if log(U) < -sim.β * ustrip(H_tilde-H)
             sim.n_accepted += 1
-            H=H_tilde #reuse computed energy for the next step
+            H=H_tilde
+            accels,accels_tilde=accels_tilde,accels
         else
-            sys.coords, candidate_coords = candidate_coords, sys.coords #swap back original state
+            sys.coords, candidate_coords = candidate_coords, sys.coords
             sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
+            @. sys.velocities = -sys.velocities 
         end
-        
-        @. sys.velocities = -sys.velocities #reverse momenta
 
-        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, i; parallel=parallel)
+        neighbors = find_neighbors(sys, sys.neighbor_finder,neighbors,i; parallel=parallel)
     end
 
 end
