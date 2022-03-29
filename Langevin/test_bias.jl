@@ -6,7 +6,7 @@ include("../molly/MollyExtend.jl")
 
 #julia test_bias.jl T ρ dt tfin simulator output
 
-@assert length(ARGS) == 9 "Error (Wrong Argument Count) Usage: test_bias.jl T ρ Δt teq tfin  Npd Nruns r_c splitting"
+@assert length(ARGS) == 8 "Error(Wrong Argument Count) expected 8, got $(length(ARGS)).\n Usage: test_bias.jl T ρ Δt teq tfin  Npd Nruns splitting"
 T = parse(Float64, ARGS[1])
 ρ = parse(Float64, ARGS[2])
 dt = parse(Float64, ARGS[3])
@@ -14,12 +14,12 @@ teq = parse(Float64, ARGS[4])
 tfin = parse(Float64, ARGS[5])
 Npd = parse(Int64, ARGS[6])
 Nruns = parse(Int64, ARGS[7])
-r_c = parse(Float64, ARGS[8])
-sim = ARGS[9]
+sim = ARGS[8]
+r_c=2.0
 
 if !isfile(sim)
     g=open("_"*sim, "w")
-    println(g, "#Trajectorial averages of NVT Lennard-Jones system of $(Npd^3) particles at T=$(T), ρ=$(ρ) with $(sim) splitting, $(r_c) shifted force cutoff. Physical time of each run: $(tfin). All units are reduced.")
+    println(g, "#Trajectorial averages of NVT Lennard-Jones system of $(Npd^3) particles at T=$(T), ρ=$(ρ) with $(sim) splitting, spline cutoff (1.5/2.0). Physical time of each run: $(tfin). All units are reduced.")
     println(g, "dt,potential_energy,kinetic_energy,virial")
     close(g)
 end
@@ -29,17 +29,17 @@ eq_nsteps = Int64(round(teq / dt_eq))
 N = Npd^3
 L = (N / ρ)^(1 // 3)
 box_size = SVector(L, L, L)
-inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
+inter = LennardJones(cutoff = CubicSplineCutoff(1.5,r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
 nf = nothing
 n_steps = Int64(round(tfin / dt))
 
 if (L > 3 * r_c) && N>900
-    nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c, unit_cell = box_size)
+    global nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c, unit_cell = box_size)
 elseif N > 900
-    nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
+    global nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
 else
-    nf = DistanceNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
+    global nf = DistanceNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
 end
 
 coords = place_atoms_on_lattice(Npd, box_size)

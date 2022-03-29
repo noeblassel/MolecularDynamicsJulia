@@ -4,9 +4,7 @@ Pkg.instantiate()
 
 include("../molly/MollyExtend.jl")
 
-#julia test_bias.jl T ρ dt tfin simulator output
-
-@assert length(ARGS) == 8 "Error (Wrong Argument Count) Usage: test_bias.jl T ρ Δt teq tfin  Npd Nruns r_c"
+@assert length(ARGS) == 7 "Error(Wrong Argument Count) expected 7, got $(length(ARGS)).\n Usage: test_bias_hmc.jl T ρ Δt teq tfin  Npd Nruns"
 T = parse(Float64, ARGS[1])
 ρ = parse(Float64, ARGS[2])
 dt = parse(Float64, ARGS[3])
@@ -14,10 +12,10 @@ teq = parse(Float64, ARGS[4])
 tfin = parse(Float64, ARGS[5])
 Npd = parse(Int64, ARGS[6])
 Nruns = parse(Int64, ARGS[7])
-r_c = parse(Float64, ARGS[8])
+r_c=2.0
 
 g=open("_GHMC", "w")
-println(g, "#Trajectorial averages of NVT Lennard-Jones system of $(Npd^3) particles at T=$(T), ρ=$(ρ), $(r_c) shifted force cutoff. Physical time of each run: $(tfin). All units are reduced.")
+println(g, "#Trajectorial averages of NVT Lennard-Jones system of $(Npd^3) particles at T=$(T), ρ=$(ρ), spline cutoff (1.5/2.0). Physical time of each run: $(tfin). All units are reduced.")
 println(g, "dt,potential_energy,kinetic_energy,virial")
 close(g)
 
@@ -26,7 +24,7 @@ eq_nsteps = Int64(round(teq / dt_eq))
 N = Npd^3
 L = (N / ρ)^(1 // 3)
 box_size = SVector(L, L, L)
-inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
+inter = LennardJones(cutoff = CubicSplineCutoff(1.5,r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
 nf = nothing
 n_steps = Int64(round(tfin / dt))
@@ -69,7 +67,7 @@ for i = 1:Nruns
     println(f, "$(dt),$(Vhat),$(Khat),$(What)")
     close(f)
 
-    f=open("_rejection_rates_GHMC","a")
+    f=open("_acceptance_ratios_GHMC","a")
     println(f,"$(dt) $(simulator.n_accepted/simulator.n_total)")
     close(f)
 

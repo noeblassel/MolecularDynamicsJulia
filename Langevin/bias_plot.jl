@@ -9,7 +9,8 @@ data_folder="./bias_dumps/"
 
 files=["BABO.csv","BAOAB.csv","BAOA.csv","BAO.csv"]
 
-n_regr=2#number of regression points
+n_regr=5#number of regression points
+n_start_regr=1
 y_lim_tol=0.005
 explosion_threshold=60.0
 orders=Dict("BAO"=>1,"BAOA"=> 2,"BAOAB"=>2,"BABO"=>2)
@@ -30,7 +31,7 @@ dts=nothing
 for (j,input_file) in enumerate(files)
     scheme=split(input_file,'.')[1]
     dat=CSV.File(data_folder*input_file;header=false,types=Float64)
-    dat=[r for r in dat if maximum(abs.(r))<explosion_threshold]
+    dat=[r for r in dat if all(!isa(x,Missing) for x in r)&&(maximum(abs.(r))<explosion_threshold)]
     order= orders[scheme]    
 
     if j==1
@@ -39,7 +40,7 @@ for (j,input_file) in enumerate(files)
         sort!(dts)
         X[:,1].=1
     end
-    for (i,Δt) in enumerate(dts[1:n_regr])
+    for (i,Δt) in enumerate(dts[n_start_regr:n_start_regr+n_regr-1])
         X[(j-1)*n_regr+i,j+1]=Δt^order
     end
     
@@ -50,9 +51,9 @@ for (j,input_file) in enumerate(files)
     W=[mean(r[4] for r in dat if r[1]==dt) for dt in dts]
 
     for i in 1:n_regr
-        V_Y[(j-1)*n_regr+i]=V[i]
-        K_Y[(j-1)*n_regr+i]=K[i]
-        W_Y[(j-1)*n_regr+i]=W[i]
+        V_Y[(j-1)*n_regr+i]=V[i+n_start_regr-1]
+        K_Y[(j-1)*n_regr+i]=K[i+n_start_regr-1]
+        W_Y[(j-1)*n_regr+i]=W[i+n_start_regr-1]
     end
     
     color= colors[scheme]
