@@ -24,7 +24,7 @@ eq_nsteps = Int64(round(teq / dt_eq))
 N = Npd^3
 L = (N / ρ)^(1 // 3)
 box_size = SVector(L, L, L)
-inter = LennardJones(cutoff = CubicSplineCutoff(1.5,r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
+inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
 nf = nothing
 n_steps = Int64(round(tfin / dt))
