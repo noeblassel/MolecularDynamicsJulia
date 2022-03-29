@@ -2,7 +2,6 @@ function pair_virial(s::System, neighbors = nothing, lrc = false)
 
     W = 0.0 * s.energy_units
     N=length(s)
-    #TODO implement parallel version, specific pair interactions and other general interactions
 
     for inter = s.pairwise_inters
         if isnothing(neighbors) || (!inter.nl_only) #if neighbor list is not given or unused, then double loop
@@ -31,7 +30,7 @@ function pair_virial(s::System, neighbors = nothing, lrc = false)
                         if r2 > cutoff.sqdist_cutoff
                             f_divr = 0.0 * inter.force_units
 
-                        elseif r2 < cutoff.activation_dist
+                        elseif r2 < cutoff.sqdist_activation
                             f_divr = Molly.force_divr_nocutoff(inter, r2, inv(r2), params)
                         else
                             f_divr = Molly.force_divr_cutoff(cutoff, r2, inter, params)
@@ -68,7 +67,7 @@ function pair_virial(s::System, neighbors = nothing, lrc = false)
                     if r2 > cutoff.sqdist_cutoff
                         f_divr = 0.0 * inter.force_units
 
-                    elseif r2 < cutoff.activation_dist
+                    elseif r2 < cutoff.sqdist_activation
                         f_divr = Molly.force_divr_nocutoff(inter, r2, inv(r2), params)
                     else
                         f_divr = Molly.force_divr_cutoff(cutoff, r2, inter, params)

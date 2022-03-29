@@ -44,7 +44,3 @@ sq_norm(x)=sum(x .^ 2)
 for i=1:length(sys.loggers[:self_diffusion].self_diffusion_history)
     push!(msds,mean(sq_norm.(sys.loggers[:self_diffusion].self_diffusion_history[i])))
 end
-
-Ts=0:dt:(n_steps*dt-dt)
-plot(Ts,msds,label="")
-savefig("msds_hamiltonian.png")

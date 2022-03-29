@@ -143,3 +143,25 @@ end
 
 unwrap_coords_vec(c1, c2, box_size) = unwrap_coords.(c1, c2, box_size)
 
+mutable struct AutoCorrelationLogger{F,T}
+    n_steps::Int
+
+    observable::F
+    args::T
+
+    corr_length::Int
+    Array{}
+
+end
+
+
+mutable struct CrossCorrelationLogger{F1,F2,T1,T2}
+    n_steps
+
+    observable1::F1
+    args1::T1
+
+    observable2::F2
+    args2::T2
+
+end

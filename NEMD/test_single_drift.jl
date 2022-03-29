@@ -43,4 +43,4 @@ dt = 5e-3
 simulator = LangevinSplitting(dt = dt, γ = γ, T = T,splitting="BAOAB")
 simulate!(sys,simulator,n_steps)
 
-animate_trajectories(sys.loggers[:coords].coords,"one_drift.mp4";ix=530)
+animate_trajectories(sys.loggers[:coords].coords,"one_drift.mp4";ix=530,camera=(0,0))

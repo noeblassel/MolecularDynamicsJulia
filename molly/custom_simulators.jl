@@ -507,7 +507,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
     
     H = total_energy(sys, neighbors)
     
-    while sim.n_accepted<n_steps
+    for i=1:n_steps
         run_loggers!(sys, neighbors, sim.n_accepted)
         ## O momentum update
         dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
@@ -532,7 +532,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
         
         sim.n_total += 1
 
-        if U < min(1,exp(-sim.β * (H_tilde-H))) ## Acceptation
+        if log(U) < -sim.β * (H_tilde-H) ## Acceptation
             @. accels_t = accels_t_dt #reuse computed forces for next step
             sim.n_accepted += 1
             H=H_tilde #reuse computed energy for the next step

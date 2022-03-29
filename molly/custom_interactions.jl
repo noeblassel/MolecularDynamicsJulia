@@ -19,7 +19,6 @@ SingleDriftNEMD(N_atoms::Integer,ix::Integer,η::Float64)=SingleDriftNEMD(N_atom
 
 Molly.forces(inter::SingleDriftNEMD, s::System, neighbors)=inter.force_field
 
-
 struct ColorDriftNEMD{D,T}
     N_atoms::Int64
 
