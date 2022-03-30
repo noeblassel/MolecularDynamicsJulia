@@ -7,19 +7,20 @@ Base.run(`./scp_bias_files.sh`)
 
 data_folder="./bias_dumps/"
 
-files=["BABO.csv","BAOAB.csv","BAOA.csv","BAO.csv"]
+files=["BABO.csv","BAOAB.csv","BAOA.csv","BAO.csv"]#,"GHMC.csv"]
 
-n_regr=5#number of regression points
+n_regr=3#number of regression points
 n_start_regr=1
 y_lim_tol=0.005
 explosion_threshold=60.0
-orders=Dict("BAO"=>1,"BAOA"=> 2,"BAOAB"=>2,"BABO"=>2)
-colors=Dict("BAO"=>:blue,"BAOA"=>:orange,"BAOAB"=>:green,"BABO"=>:red)
+orders=Dict("BAO"=>1,"BAOA"=> 2,"BAOAB"=>2,"BABO"=>2,"GHMC"=>0)
+colors=Dict("BAO"=>:blue,"BAOA"=>:orange,"BAOAB"=>:green,"BABO"=>:red,"GHMC"=>:purple)
 
 X=zeros(n_regr*length(files),1+length(files))
 V_Y=zeros(n_regr*length(files))
 K_Y=zeros(n_regr*length(files))
 W_Y=zeros(n_regr*length(files))
+legend_pos=:bottomleft
 
 plot_V=plot(xlabel="Δt",ylabel="Potential Energy")
 plot_K=plot(xlabel="Δt",ylabel="Kinetic Energy")
@@ -43,9 +44,7 @@ for (j,input_file) in enumerate(files)
     for (i,Δt) in enumerate(dts[n_start_regr:n_start_regr+n_regr-1])
         X[(j-1)*n_regr+i,j+1]=Δt^order
     end
-    
-    
-    
+
     V=[mean(r[2] for r in dat if r[1]==dt) for dt in dts]
     K=[mean(r[3] for r in dat if r[1]==dt) for dt in dts]
     W=[mean(r[4] for r in dat if r[1]==dt) for dt in dts]
@@ -82,9 +81,9 @@ for (j,input_file) in enumerate(files)
     f_K(x)=θ_K[1]+θ_K[1+j]*x^order
     f_W(x)=θ_W[1]+θ_W[1+j]*x^order
 
-    plot!(plot_V,f_V,0,maximum(dts),label=scheme,color=color,linestyle=:dot,legend=:top)
-    plot!(plot_K,f_K,0,maximum(dts),label=scheme,color=color,linestyle=:dot,legend=:top)
-    plot!(plot_W,f_W,0,maximum(dts),label=scheme,color=color,linestyle=:dot,legend=:top)
+    plot!(plot_V,f_V,0,maximum(dts),label=scheme,color=color,linestyle=:dot,legend=legend_pos)
+    plot!(plot_K,f_K,0,maximum(dts),label=scheme,color=color,linestyle=:dot,legend=legend_pos)
+    plot!(plot_W,f_W,0,maximum(dts),label=scheme,color=color,linestyle=:dot,legend=legend_pos)
 
 end
 
@@ -96,6 +95,6 @@ println("Estimated kinetic energy: $(θ_K[1])")
 ylims!(plot_K,(θ_K[1]-y_lim_tol*abs(θ_K[1]),θ_K[1]+y_lim_tol*abs(θ_K[1])))
 ylims!(plot_W,(θ_W[1]-y_lim_tol*abs(θ_W[1]),θ_W[1]+y_lim_tol*abs(θ_W[1])))"""
 
-savefig(plot_V,"/home/noeblassel/Documents/stage_docs/Rapport/figures/chapter1/potential_energy_bias.pdf")
-savefig(plot_K,"/home/noeblassel/Documents/stage_docs/Rapport/figures/chapter1/kinetic_energy_bias.pdf")
-savefig(plot_W,"/home/noeblassel/Documents/stage_docs/Rapport/figures/chapter1/virial_bias.pdf")
+savefig(plot_V,"./potential_energy_bias.pdf")
+savefig(plot_K,"./kinetic_energy_bias.pdf")
+savefig(plot_W,"./virial_bias.pdf")

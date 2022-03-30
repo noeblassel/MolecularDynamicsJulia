@@ -26,7 +26,7 @@ L = (N / ρ)^(1 // 3)
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
-nf = nothing
+#nf = nothing
 n_steps = Int64(round(tfin / dt))
 
 if (L > 3 * r_c) && N>900

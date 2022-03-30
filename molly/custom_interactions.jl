@@ -9,9 +9,10 @@ struct SingleDriftNEMD{D,T}
 end
 
 function SingleDriftNEMD(N_atoms::Integer,ix::Integer,η::Real,F::SVector{D,T}) where {D,T}
+    F_norm=normalize(F)
     ff=zeros(SVector{D,T},N_atoms)
-    ff[ix]=η*F
-    return SingleDriftNEMD{D,T}(N_atoms,ix,η,F ,ff)
+    ff[ix]=η*F_norm
+    return SingleDriftNEMD{D,T}(N_atoms,ix,η,F_norm,ff)
 
 end
 
@@ -29,17 +30,18 @@ struct ColorDriftNEMD{D,T}
 end
 
 function ColorDriftNEMD(N_atoms::Integer,η::Real,F::SVector{D,T}) where {D,T}
+    F_norm=normalize(F)
     ff=zeros(SVector{D,T},N_atoms)
 
     for ix=1:2:length(ff)
-        ff[ix]=η*F
+        ff[ix]=η*F_norm/N_atoms
     end
 
     for ix=2:2:length(ff)
-        ff[ix]=-η*F
+        ff[ix]=-η*F_norm/N_atoms
     end
 
-    return ColorDriftNEMD{D,T}(N_atoms,η,F,ff)
+    return ColorDriftNEMD{D,T}(N_atoms,η,F_norm,ff)
 
 end
 

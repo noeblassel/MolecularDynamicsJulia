@@ -1,4 +1,4 @@
-using Plots,LinearAlgebra
+using Plots
 
 include("../molly/MollyExtend.jl")
 

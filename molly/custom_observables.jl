@@ -116,3 +116,9 @@ function long_range_virial_correction(s::System, inter::LennardJones)
     r_cm3 = inv(inter.cutoff.dist_cutoff^3)
     
 end
+
+
+function MobilityObservable(ff::Vector)
+    R(s::System,neighbors=nothing)=sum(dot.(ff,s.velocities))
+    return R
+end

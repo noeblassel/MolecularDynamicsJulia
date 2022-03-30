@@ -310,10 +310,10 @@ function Molly.simulate!(sys::System{D},
 
 end
 
-struct LangevinSplitting
+struct LangevinSplitting{T}
     dt::Real
     γ::Real
-    β::Real
+    β::T
 
     rseed::UInt32
     rng::AbstractRNG
@@ -322,9 +322,9 @@ struct LangevinSplitting
 end
 
 function LangevinSplitting(; dt, γ, T, splitting, rseed=UInt32(round(time())), rng=MersenneTwister(rseed))
-    β = ustrip(inv(T)) #todo work with units, i.e. kb !=1
+    β = ustrip.(inv.(T))
     @assert (all(x ∈ "ABO" for x ∈ splitting) && all(x ∈ splitting for x ∈ "ABO")) "Invalid splitting descriptor: use only and all letters A, B and O."
-    LangevinSplitting(dt, γ, β, rseed, rng, splitting)
+    LangevinSplitting{typeof(β)}(dt, γ, β, rseed, rng, splitting)
 end
 
 
@@ -466,13 +466,13 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
         candidate_coords = wrap_coords_vec.(candidate_coords, (sys.box_size,))
         sys.coords, candidate_coords = candidate_coords, sys.coords
 
-        neighbors = find_neighbors(sys, sys.neighbor_finder,neighbors,i; parallel=parallel)
-        accels_tilde = accelerations(sys,neighbors ; parallel=parallel)
+        neighbors_tilde = find_neighbors(sys, sys.neighbor_finder,neighbors,i; parallel=parallel)
+        accels_tilde = accelerations(sys,neighbors; parallel=parallel)
         
         @. candidate_velocities += accels_tilde * sim.dt / 2
         sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
 
-        H_tilde = total_energy(sys, neighbors)
+        H_tilde = total_energy(sys, neighbors_tilde)
 
         U = rand(sim.rng)
         
@@ -482,13 +482,13 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
             sim.n_accepted += 1
             H=H_tilde
             accels,accels_tilde=accels_tilde,accels
+            neighbors,neighbors_tilde=neighbors_tilde,neighbors
         else
             sys.coords, candidate_coords = candidate_coords, sys.coords
             sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
             @. sys.velocities = -sys.velocities 
         end
 
-        neighbors = find_neighbors(sys, sys.neighbor_finder,neighbors,i; parallel=parallel)
     end
 
 end

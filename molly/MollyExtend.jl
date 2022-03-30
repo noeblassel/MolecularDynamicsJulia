@@ -1,6 +1,7 @@
 using ProgressMeter
 using Molly
 using Random
+using LinearAlgebra
 
 #include("./custom_cutoffs.jl")
 include("./custom_loggers.jl")

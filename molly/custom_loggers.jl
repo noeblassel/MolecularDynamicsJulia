@@ -9,9 +9,8 @@ HamiltonianLogger(T, n_steps::Integer) = HamiltonianLogger(n_steps, T[])
 HamiltonianLogger(n_steps::Integer) = HamiltonianLogger(Float32, n_steps)
 
 function Molly.log_property!(logger::HamiltonianLogger, s::System, neighbors=nothing, step_n::Integer=0)
-    if step_n % logger.n_steps == 0
-        push!(logger.energies, Molly.kinetic_energy_noconvert(s) + Molly.potential_energy(s, neighbors))
-    end
+    (step_n % logger.n_steps != 0) && return
+    push!(logger.energies, Molly.kinetic_energy_noconvert(s) + Molly.potential_energy(s, neighbors))
 end
 
 ###Dimensionless kinetic energy logger--- Molly version (as of now) requires physical units
@@ -25,9 +24,8 @@ KineticEnergyLoggerNoDims(T, n_steps::Integer) = KineticEnergyLoggerNoDims(n_ste
 KineticEnergyLoggerNoDims(n_steps::Integer) = KineticEnergyLoggerNoDims(Float64, n_steps)
 
 function Molly.log_property!(logger::KineticEnergyLoggerNoDims, s::System, neighbors=nothing, step_n::Integer=0)
-    if step_n % logger.n_steps == 0
-        push!(logger.energies, Molly.kinetic_energy_noconvert(s))
-    end
+    (step_n % logger.n_steps != 0) && return
+    push!(logger.energies, Molly.kinetic_energy_noconvert(s))
 end
 
 ###State logger (writes state of system to external file --- NOT GENERAL)
@@ -41,9 +39,8 @@ StateLogger(n_steps::Integer) = StateLogger(n_steps, "logfile")
 StateLogger(n_steps::Integer, file_prefix::AbstractString) = StateLogger(n_steps, file_prefix)
 
 function Molly.log_property!(logger::StateLogger, s::System, neighbors=nothing, step_n::Integer=0)
-    if step_n % logger.n_steps == 0
-        save_reduced_lj_state(s, logger.prefix * "_$(step_n).txt")
-    end
+    (step_n % logger.n_steps != 0) && return
+    save_reduced_lj_state(s, logger.prefix * "_$(step_n).txt")
 end
 
 ###reduced temperature logger (kb=1)
@@ -56,9 +53,8 @@ TemperatureLoggerReduced(T, n_steps::Integer) = TemperatureLoggerReduced(n_steps
 TemperatureLoggerReduced(n_steps::Integer) = TemperatureLoggerReduced(Float64, n_steps)
 
 function Molly.log_property!(logger::TemperatureLoggerReduced, s::System, neighbors=nothing, step_n::Integer=0)
-    if step_n % logger.n_steps == 0
-        push!(logger.temperatures, temperature_reduced(s))
-    end
+    (step_n % logger.n_steps != 0) && return
+    push!(logger.temperatures, temperature_reduced(s))
 end
 
 ###virial logger
@@ -73,9 +69,8 @@ VirialLogger(n_steps::Integer) = VirialLogger(n_steps, Float64[])
 
 
 function Molly.log_property!(logger::VirialLogger, s::System, neighbors=nothing, step_n::Integer=0)
-    if step_n % logger.n_steps == 0
-        push!(logger.energies, pair_virial(s, neighbors))
-    end
+    (step_n % logger.n_steps != 0) && return
+    push!(logger.energies, pair_virial(s, neighbors))
 end
 
 ###pressure logger
@@ -88,9 +83,8 @@ PressureLoggerReduced(T, n_steps::Integer) = PressureLoggerReduced(n_steps, T[])
 PressureLoggerReduced(n_steps::Integer) = PressureLoggerReduced(n_steps, Float64[])
 
 function Molly.log_property!(logger::PressureLoggerReduced, s::System, neighbors=nothing, step_n::Integer=0)
-    if step_n % logger.n_steps == 0
-        push!(logger.pressures, pressure(s, neighbors))
-    end
+    (step_n % logger.n_steps != 0) && return
+    push!(logger.pressures, pressure(s, neighbors))
 end
 
 struct PressureLoggerNVT{P,K}
@@ -110,7 +104,7 @@ function Molly.log_property!(logger::PressureLoggerNVT, s::System, neighbors=not
     end
 end
 
-mutable struct SelfDiffusionLogger{D,T}
+mutable struct SelfDiffusionLogger{T}
     n_steps::Int
     last_coords::T
     self_diffusion_coords::T
@@ -125,9 +119,8 @@ function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=n
     @. logger.self_diffusion_coords += unwrap_coords_vec.(logger.last_coords, s.coords, (s.box_size,)) - logger.last_coords
     @. logger.last_coords = s.coords
 
-    if logger.record_history && (step_n % logger.n_steps == 0)
-        push!(logger.self_diffusion_history, deepcopy(logger.self_diffusion_coords))
-    end
+    (step_n % logger.n_steps != 0) && return
+    push!(logger.self_diffusion_history, deepcopy(logger.self_diffusion_coords))
 end
 
 """
@@ -143,25 +136,67 @@ end
 
 unwrap_coords_vec(c1, c2, box_size) = unwrap_coords.(c1, c2, box_size)
 
-mutable struct AutoCorrelationLogger{F,T}
-    n_steps::Int
-
-    observable::F
-    args::T
-
-    corr_length::Int
-    Array{}
-
+struct GeneralObservableLogger{T}
+    observable::Function
+    n_steps::Int64
+    history::Vector{T}
 end
 
+GeneralObservableLogger(T::DataType,observable::Function,n_steps::Integer)=GeneralObservableLogger{T}(observable,n_steps,T[])
+GeneralObservableLogger(observable::Function,n_steps::Integer)=GeneralObservableLogger(Float64,observable,n_steps)
 
-mutable struct CrossCorrelationLogger{F1,F2,T1,T2}
-    n_steps
+function Molly.log_property!(logger::GeneralObservableLogger,s::System,neighbors=nothing,step_n::Integer=0)
+    (step_n % logger.n_steps != 0) && return
+    push!(logger.history,logger.observable(s,neighbors))
+end
 
-    observable1::F1
-    args1::T1
+mutable struct TimeCorrelationLogger{T}
 
-    observable2::F2
-    args2::T2
+    observableA::Function
+    observableB::Function
 
+    n_correlation::Integer
+    
+    history_A::Vector{T}
+    history_B::Vector{T}
+
+    correlations::Vector{T}
+
+    n_timesteps::Int64
+
+    avg_A::T
+    avg_B::T
+end
+
+TimeCorrelationLogger(T::DataType,observableA::Function,observableB::Function,n_correlation::Integer)=TimeCorrelationLogger{T}(observableA,observableB,n_correlation,T[],T[],zeros(T,n_correlation),0,zero(T),zero(T))
+TimeCorrelationLogger(observableA::Function,observableB::Function,n_correlation::Integer)=TimeCorrelationLogger(Float64,observableA,observableB,n_correlation)
+
+AutoCorrelationLogger(T::DataType,observable::Function,n_correlation::Integer)=TimeCorrelationLogger(T,observable,observable,n_correlation)
+AutoCorrelationLogger(observable::Function,n_correlation::Integer)=TimeCorrelationLogger(Float64,observable,observable,n_correlation)
+
+
+function Molly.log_property!(logger::TimeCorrelationLogger,s::System,neighbors=nothing,step_n::Integer=0)
+    A=logger.observableA(s,neighbors)
+    B=logger.observableB(s,neighbors)
+
+    logger.n_timesteps+=1
+
+    #update running averages
+    logger.avg_A=((logger.n_timesteps-1)*logger.avg_A+A)/logger.n_timesteps
+    logger.avg_B=((logger.n_timesteps-1)*logger.avg_B+B)/logger.n_timesteps
+
+    push!(logger.history_A,A)
+    push!(logger.history_B,B)
+
+    (length(logger.history_A) > logger.n_correlation) && (popfirst!(logger.history_A) ; popfirst!(logger.history_B))
+    B1=first(logger.history_B)
+
+    for (i,Ai)=enumerate(logger.history_A)
+        n_sampled=logger.n_timesteps-i-1
+
+        if n_sampled>0
+            correlation_term=(Ai-logger.avg_A)*(B1-logger.avg_B)
+            logger.correlations[i]=(logger.correlations[i]*n_sampled + correlation_term)/(n_sampled+1)
+        end
+    end
 end
