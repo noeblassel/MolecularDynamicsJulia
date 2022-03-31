@@ -199,12 +199,5 @@ function Molly.log_property!(logger::TimeCorrelationLogger,s::System,neighbors=n
         end
     end
 
-    @. logger.correlations=logger.uncentered_correlations - logger.avg_A*logger.avg_B
-
-    if (step_n-1)%1000==0
-        f=open("dump.out","a")
-        println(f,join(logger.correlations," "))
-        close(f)
-    end
-    
+    @. logger.correlations=logger.uncentered_correlations - logger.avg_A*logger.avg_B    
 end

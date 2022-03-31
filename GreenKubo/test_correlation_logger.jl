@@ -2,17 +2,15 @@ using Plots
 
 include("../molly/MollyExtend.jl")
 
-
-
-Npd = 10
+Npd = 15
 N = Npd^3
-ρ = 0.7
+ρ = 1.0
 L = (N / ρ)^(1 // 3)
-T = 1/3
+T = 0.1
 dt = 5e-3
 r_c = 2.5
 
-n_steps = 2000000
+n_steps = 20_000_000
 
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff=ShiftedForceCutoff(r_c), nl_only=true, force_units=NoUnits, energy_units=NoUnits)
@@ -24,9 +22,10 @@ velocities = [reduced_velocity_lj(T, atoms[i].mass) for i in 1:N]
 
 
 sys = System(atoms=atoms, coords=coords, velocities=velocities, pairwise_inters=(inter,), box_size=box_size, neighbor_finder=nf, force_units=NoUnits, energy_units=NoUnits, loggers=Dict{Symbol,Any}())
-sim=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
+sim_eq=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
+sim=LangevinSplitting(dt=dt,γ=0.0,T=T,splitting="BABO")
 
-simulate!(sys,sim,5000)
+simulate!(sys,sim_eq,20_000)
 
 ## color drift force field
 F=normalize(SVector(1.0,0,0))
@@ -44,5 +43,9 @@ R=MobilityObservable(ff)
 
 ## color drift force field
 
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLogger(R,5000))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLogger(R,2000))
 simulate!(sys,sim,n_steps)
+f=open("output.txt","w")
+println(f,join(sys.loggers[:atuocorrelation].correlations," "))
+println(f,sys.loggers[:autocorrelation].avg_A)
+close(f)
