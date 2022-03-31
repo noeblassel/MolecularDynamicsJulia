@@ -12,7 +12,7 @@ T = 1/3
 dt = 5e-3
 r_c = 2.5
 
-n_steps = 20000000
+n_steps = 3000
 
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff=ShiftedForceCutoff(r_c), nl_only=true, force_units=NoUnits, energy_units=NoUnits)
@@ -44,5 +44,5 @@ R=MobilityObservable(ff)
 
 ## color drift force field
 
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLogger(O,5000))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLogger(R,5000))
 simulate!(sys,sim,n_steps)
