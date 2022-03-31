@@ -2,17 +2,17 @@ using Plots
 
 include("../molly/MollyExtend.jl")
 
-O(s::System,neighbors=nothing)=s.coords[1][1]
+O(s::System,neighbors=nothing)=s.velocities[1][1]
 
-Npd = 12
+Npd = 10
 N = Npd^3
-ρ = 0.3
+ρ = 0.4
 L = (N / ρ)^(1 // 3)
 T = 1.5
 dt = 5e-3
 r_c = 4.0
 
-n_steps = 20000000
+n_steps = 2000000
 
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff=ShiftedForceCutoff(r_c), nl_only=true, force_units=NoUnits, energy_units=NoUnits)
@@ -27,12 +27,19 @@ sys = System(atoms=atoms, coords=coords, velocities=velocities, pairwise_inters=
 sim_eq=LangevinSplitting(dt=5e-3,γ=1.0,T=1.5,splitting="BAOAB")
 
 simulate!(sys,sim_eq,5000)
-sim=VelocityVerlet(dt=5e-3)
+sim=LangevinSplitting(dt=5e-3,γ=0.0,T=1.5,splitting="BAOAB")
 
 sys.loggers=Dict(:autocorrelation=>TimeCorrelationLogger(O,O,5000))
 simulate!(sys,sim,n_steps)
 
-ac=sys.loggers[:autocorrelation].correlations
-f=open("autocorrelations.out","w")
-print(f,join(ac," "))
-close(f)
+f=open("dump.out","r")
+n=countlines(f)
+seekstart(f)
+
+dt_range=0:5e-3:(4999*5e-3)
+anim=@animate for i=1:n
+    C=parse.((Float64,),split(readline(f)))
+    scatter(dt_range,C,markershape=:circle,color=:black,markersize=0.5,label="",ylims=(-0.2,1.2),size=(1024,768))
+end
+
+mp4(anim,"autocorrelations.mp4",fps=10)
