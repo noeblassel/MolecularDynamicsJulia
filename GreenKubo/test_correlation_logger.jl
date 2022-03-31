@@ -12,7 +12,7 @@ T = 1/3
 dt = 5e-3
 r_c = 2.5
 
-n_steps = 3000
+n_steps = 20000000
 
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff=ShiftedForceCutoff(r_c), nl_only=true, force_units=NoUnits, energy_units=NoUnits)
