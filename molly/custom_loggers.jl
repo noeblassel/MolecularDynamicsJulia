@@ -182,7 +182,6 @@ function Molly.log_property!(logger::TimeCorrelationLogger,s::System,neighbors=n
 
     logger.n_timesteps+=1
 
-    #update running averages
     logger.avg_A=((logger.n_timesteps-1)*logger.avg_A+A)/logger.n_timesteps
     logger.avg_B=((logger.n_timesteps-1)*logger.avg_B+B)/logger.n_timesteps
 
@@ -202,7 +201,7 @@ function Molly.log_property!(logger::TimeCorrelationLogger,s::System,neighbors=n
 
     @. logger.correlations=logger.uncentered_correlations - logger.avg_A*logger.avg_B
 
-    if (step_n-1)%250==0
+    if (step_n-1)%1000==0
         f=open("dump.out","a")
         println(f,join(logger.correlations," "))
         close(f)
