@@ -12,7 +12,7 @@ T = 1.5
 dt = 5e-3
 r_c = 4.0
 
-n_steps = 10000000
+n_steps = 20000000
 
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff=ShiftedForceCutoff(r_c), nl_only=true, force_units=NoUnits, energy_units=NoUnits)
@@ -29,7 +29,7 @@ sim_eq=LangevinSplitting(dt=5e-3,γ=1.0,T=1.5,splitting="BAOAB")
 simulate!(sys,sim_eq,5000)
 sim=VelocityVerlet(dt=5e-3)
 
-sys.loggers=Dict(:autocorrelation=>TimeCorrelationLogger(O,O,1000))
+sys.loggers=Dict(:autocorrelation=>TimeCorrelationLogger(O,O,5000))
 simulate!(sys,sim,n_steps)
 
 ac=sys.loggers[:autocorrelation].correlations
