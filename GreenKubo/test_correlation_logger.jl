@@ -2,7 +2,7 @@ using Plots
 
 include("../molly/MollyExtend.jl")
 
-O(s::System,neighbors=nothing)=s.velocities[1][1]
+O(s::System,neighbors=nothing)=s.coords[1][1]
 
 Npd = 12
 N = Npd^3
