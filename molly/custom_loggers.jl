@@ -160,16 +160,20 @@ mutable struct TimeCorrelationLogger{T}
     history_A::Vector{T}
     history_B::Vector{T}
 
-    uncentered_correlations::Vector{T}
+    offset_products::Vector{T}
     correlations::Vector{T}
 
     n_timesteps::Int64
 
     avg_A::T
     avg_B::T
+
+    avg_sq_A::T
+    avg_sq_B::T
+
 end
 
-TimeCorrelationLogger(T::DataType,observableA::Function,observableB::Function,n_correlation::Integer)=TimeCorrelationLogger{T}(observableA,observableB,n_correlation,T[],T[],zeros(T,n_correlation),zeros(T,n_correlation),0,zero(T),zero(T))
+TimeCorrelationLogger(T::DataType,observableA::Function,observableB::Function,n_correlation::Integer)=TimeCorrelationLogger{T}(observableA,observableB,n_correlation,T[],T[],zeros(T,n_correlation),zeros(T,n_correlation),0,zero(T),zero(T),zero(T),zero(T))
 TimeCorrelationLogger(observableA::Function,observableB::Function,n_correlation::Integer)=TimeCorrelationLogger(Float64,observableA,observableB,n_correlation)
 
 AutoCorrelationLogger(T::DataType,observable::Function,n_correlation::Integer)=TimeCorrelationLogger(T,observable,observable,n_correlation)
@@ -185,19 +189,23 @@ function Molly.log_property!(logger::TimeCorrelationLogger,s::System,neighbors=n
     logger.avg_A=((logger.n_timesteps-1)*logger.avg_A+A)/logger.n_timesteps
     logger.avg_B=((logger.n_timesteps-1)*logger.avg_B+B)/logger.n_timesteps
 
+    logger.avg_sq_A=((logger.n_timesteps-1)*logger.avg_sq_A+A^2)/logger.n_timesteps
+    logger.avg_sq_B=((logger.n_timesteps-1)*logger.avg_sq_B+B^2)/logger.n_timesteps
+
+    (logger.n_timesteps > logger.n_correlation) && (popfirst!(logger.history_A) ; popfirst!(logger.history_B))
+
     push!(logger.history_A,A)
     push!(logger.history_B,B)
 
-    (length(logger.history_A) > logger.n_correlation) && (popfirst!(logger.history_A) ; popfirst!(logger.history_B))
     B1=first(logger.history_B)
 
     for (i,Ai)=enumerate(logger.history_A)
         n_sampled=logger.n_timesteps-i
 
         if n_sampled>=0
-            logger.uncentered_correlations[i]=(logger.uncentered_correlations[i]*n_sampled + Ai*B1)/(n_sampled+1)
+            logger.offset_products[i]=(logger.offset_products[i]*n_sampled + Ai*B1)/(n_sampled+1)
+            logger.correlations[i]=(logger.offset_products[i]-logger.avg_A*logger.avg_B)/sqrt(logger.avg_sq_A*logger.avg_sq_B)
         end
     end
-
-    @. logger.correlations=logger.uncentered_correlations - logger.avg_A*logger.avg_B    
+   
 end
