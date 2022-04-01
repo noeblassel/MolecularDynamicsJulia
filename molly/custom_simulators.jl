@@ -383,6 +383,8 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
 
     step_arg_pairs = zip(steps, arguments)
 
+    d_start=Dates.now()
+
     for step_n = 1:n_steps
 
         run_loggers!(sys, neighbors, step_n)
@@ -394,7 +396,10 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
         end
 
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
-        (log_progress && (step_n%log_every==0)) && println("$(step_n) out of $(n_steps) integration steps completed.")
+        if (log_progress && (step_n%log_every==0))
+            est_t_per_step=Dates.Millisecond(round((Dates.now()-d_start).value/step_n))
+            println("$(step_n) out of $(n_steps) integration steps completed. Expected completion: $(d_start+n_steps*est_t_per_step)")
+        end
     end
 end
 
