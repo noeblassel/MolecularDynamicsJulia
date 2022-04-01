@@ -1,4 +1,6 @@
-using Plots
+using Pkg
+
+Pkg.instantiate()
 
 include("../molly/MollyExtend.jl")
 
@@ -30,7 +32,7 @@ simulate!(sys,sim_eq,20_000)
 R(s::System,neighbors=nothing)=s.velocities[1][1]
 
 #sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,1000))
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLogger(R,8000))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLogger(R,32000))
 simulate!(sys,sim,n_steps;log_progress=true,log_every=10000)
 f=open("output.txt","w")
 println(f,join(sys.loggers[:autocorrelation].correlations," "))
