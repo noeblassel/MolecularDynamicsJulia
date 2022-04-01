@@ -2,11 +2,11 @@ using Plots
 
 include("../molly/MollyExtend.jl")
 
-Npd = 20
+Npd = 12
 N = Npd^3
-ρ = 1.0
+ρ = 0.8
 L = (N / ρ)^(1 // 3)
-T = 0.1
+T = 0.7
 dt = 1e-3
 r_c = 2.5
 
@@ -23,13 +23,13 @@ velocities = [reduced_velocity_lj(T, atoms[i].mass) for i in 1:N]
 
 sys = System(atoms=atoms, coords=coords, velocities=velocities, pairwise_inters=(inter,), box_size=box_size, neighbor_finder=nf, force_units=NoUnits, energy_units=NoUnits, loggers=Dict{Symbol,Any}())
 sim_eq=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
-sim=LangevinSplitting(dt=dt,γ=0.0,T=T,splitting="BABO")
+sim=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
 
 simulate!(sys,sim_eq,20_000)
 
-R(s::System,neighbors=nothing)=s.velocities[1][1]
+R(s::System,neighbors=nothing)=s.coords[1][1]
 
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLogger(R,1000))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLogger(R,30000))
 simulate!(sys,sim,n_steps)
 f=open("output.txt","w")
 println(f,join(sys.loggers[:autocorrelation].correlations," "))
