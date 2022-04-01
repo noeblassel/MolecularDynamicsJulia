@@ -21,7 +21,7 @@ function Molly.simulate!(sys::System{D},
 
     accels = zero(sys.velocities)
 
-    @showprogress for step_n in 1:n_steps
+    for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
 
         @. sys.coords += sys.velocities * sim.dt
@@ -47,7 +47,7 @@ function Molly.simulate!(sys::System{D},
     neighbors = find_neighbors(sys, sys.neighbor_finder, parallel=parallel)
     accels = zero(sys.velocities)
 
-    @showprogress for step_n in 1:n_steps
+    for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
 
         accels = Molly.remove_molar.(accelerations(sys, neighbors, parallel=parallel))
@@ -76,7 +76,7 @@ function Molly.simulate!(sys::System{D,false},
 
     neighbors = find_neighbors(sys, sys.neighbor_finder)
 
-    @showprogress for step_n in 1:n_steps
+    for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
         accels = Molly.remove_molar.(accelerations(sys, neighbors, parallel=parallel))
         @. sys.coords += sys.velocities * sim.dt
@@ -122,7 +122,7 @@ function Molly.simulate!(sys::System{D},
 
     accels_t = accelerations(sys, neighbors; parallel=parallel)
     dW = zero(sys.velocities)
-    @showprogress for step_n in 1:n_steps
+    for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
 
         @. sys.velocities += accels_t * sim.dt#B
@@ -174,7 +174,7 @@ function Molly.simulate!(sys::System{D},
     accels_t = accelerations(sys, neighbors; parallel=parallel)
     dW = zero(sys.velocities)
 
-    @showprogress for step_n in 1:n_steps
+    for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
         @. sys.velocities += accels_t * sim.dt#B
         @. sys.coords += sys.velocities * sim.dt / 2#A
@@ -226,7 +226,7 @@ function Molly.simulate!(sys::System{D},
 
     accels_t = accelerations(sys, neighbors; parallel=parallel)
     dW = zero(sys.velocities)
-    @showprogress for step_n in 1:n_steps
+    for step_n in 1:n_steps
 
       run_loggers!(sys, neighbors, step_n)
 
@@ -285,7 +285,7 @@ function Molly.simulate!(sys::System{D},
     accels_t = accelerations(sys, neighbors; parallel=parallel)
     dW = zero(sys.velocities)
 
-    @showprogress for step_n in 1:n_steps
+    for step_n in 1:n_steps
         run_loggers!(sys, neighbors, step_n)
 
 
@@ -328,7 +328,7 @@ function LangevinSplitting(; dt, γ, T, splitting, rseed=UInt32(round(time())), 
 end
 
 
-function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Integer, parallel::Bool=true) where {D}
+function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Integer, parallel::Bool=true;log_progress::Bool=false,log_every::Integer=1) where {D}
 
     M_inv = inv.(ustrip.(mass.(sys.atoms)))
 
@@ -383,7 +383,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
 
     step_arg_pairs = zip(steps, arguments)
 
-    @showprogress for step_n = 1:n_steps
+    for step_n = 1:n_steps
 
         run_loggers!(sys, neighbors, step_n)
 
@@ -394,10 +394,11 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
         end
 
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
+        (log_progress && (step_n%log_every==0)) && println("$(step_n) out of $(n_steps) integration steps completed.")
     end
 end
 
-function O_step!(s::System{D}, α_eff::Vector{T}, σ_eff::Vector{T}, rng::AbstractRNG, noise_vec::Vector{SVector{D,T}}) where {D,T}
+function O_step!(s::System{D}, α_eff::V, σ_eff::V, rng::AbstractRNG, noise_vec::N) where {D,T,N<:AbstractVector{SVector{D,T}},V<:AbstractVector{T}}
     noise_vec .= SVector{D}.(eachrow(randn(rng, Float64, (length(sys), D))))
     @. s.velocities = α_eff * s.velocities + σ_eff * noise_vec
 end
@@ -407,7 +408,7 @@ function A_step!(s::System, dt_eff::Real)
     s.coords .= wrap_coords_vec.(s.coords, (s.box_size,))
 end
 
-function B_step!(s::System{D}, dt_eff::Real, acceleration_vector::Vector{SVector{D,T}}, neighbors, compute_forces::Bool, parallel::Bool) where {D,T}
+function B_step!(s::System{D}, dt_eff::Real, acceleration_vector::A, neighbors, compute_forces::Bool, parallel::Bool) where {D,T,A<:AbstractVector{SVector{D,T}}}
     compute_forces && (acceleration_vector .= accelerations(s, neighbors, parallel=parallel)) 
 
     @. s.velocities += dt_eff * acceleration_vector

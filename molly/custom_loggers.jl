@@ -150,34 +150,74 @@ function Molly.log_property!(logger::GeneralObservableLogger,s::System,neighbors
     push!(logger.history,logger.observable(s,neighbors))
 end
 
-mutable struct TimeCorrelationLogger{T}
+
+"""
+A time correlation logger, which estimates the time correlation function
+C(t)=[⟨A(t)B(0)⟩-⟨A(0)B(0)⟩]/√[⟨A(0)²⟩⟨B(0)²⟩]
+for observables A and B, which are functions of the form f(sys::System,neighbors=nothing)
+the output of A and B can be numeric or array-like, in which case the products inside the brackets are dot products.
+If A and B are array-like, static arrays must be used:
+for instance, if A(sys,neighbors)=sys.velocities, then typeof(sys.velocities) should be MVector{N,SVector{D,T}},
+to both allow the computation to work and not break the force calculation.
+where N is the number of atoms, D is the dimension and T is the type of each velocity component.
+A and B must return values of the same type. 
+In particular, the same units must be used when using dimensionally compatible Unitful types.
+"""
+mutable struct TimeCorrelationLogger{T,TA,TAA}
 
     observableA::Function
     observableB::Function
 
     n_correlation::Integer
     
-    history_A::Vector{T}
-    history_B::Vector{T}
+    history_A::Vector{TA}
+    history_B::Vector{TA}
 
-    offset_products::Vector{T}
+    sum_offset_products::Vector{TAA}
     correlations::Vector{T}
 
     n_timesteps::Int64
 
-    avg_A::T
-    avg_B::T
+    sum_A::TA
+    sum_B::TA
 
-    avg_sq_A::T
-    avg_sq_B::T
+    sum_sq_A::TAA
+    sum_sq_B::TAA
 
 end
 
-TimeCorrelationLogger(T::DataType,observableA::Function,observableB::Function,n_correlation::Integer)=TimeCorrelationLogger{T}(observableA,observableB,n_correlation,T[],T[],zeros(T,n_correlation),zeros(T,n_correlation),0,zero(T),zero(T),zero(T),zero(T))
+
+function TimeCorrelationLogger(TA::DataType,observableA::Function,observableB::Function,n_correlation::Integer)
+    __zero__=zero(TA)
+    TAA=typeof(dot(__zero__,__zero__))
+
+    T=typeof(__zero__)
+
+    #infers the bottom-most numerical type
+    while T<:AbstractArray 
+        T=eltype(T)
+        __zero__=zero(T)
+    end
+
+    T=typeof(ustrip(__zero__))
+    ##
+
+    return TimeCorrelationLogger{T,TA,TAA}(observableA,observableB,n_correlation,TA[],TA[],zeros(TAA,n_correlation),zeros(T,n_correlation),0,zero(TA),zero(TA),zero(TAA),zero(TAA))
+    
+end
+
+#Unspecified type defaults to floating-point valued observables
 TimeCorrelationLogger(observableA::Function,observableB::Function,n_correlation::Integer)=TimeCorrelationLogger(Float64,observableA,observableB,n_correlation)
 
+##Constructors for vector-valued observables
+TimeCorrelationLoggerVec(N_atoms::Integer,dim::Integer,T::DataType,observableA::Function,observableB::Function,n_correlation::Integer)=TimeCorrelationLogger(MVector{N_atoms,SVector{dim,T}},observableA,observableB,n_correlation)
+TimeCorrelationLoggerVec(N_atoms:: Integer, dim::Integer,observableA::Function,observableB::Function,n_correlation::Integer)=TimeCorrelationLoggerVec(N_atoms,dim,Float64,observableA,observableB,n_correlation)
+
+## Convenience constructors for autocorrelations
 AutoCorrelationLogger(T::DataType,observable::Function,n_correlation::Integer)=TimeCorrelationLogger(T,observable,observable,n_correlation)
 AutoCorrelationLogger(observable::Function,n_correlation::Integer)=TimeCorrelationLogger(Float64,observable,observable,n_correlation)
+AutoCorrelationLoggerVec(N_atoms::Integer,dim::Integer,T::DataType,observable::Function,n_correlation::Integer)=AutoCorrelationLogger(MVector{N_atoms,SVector{dim,T}},observable,n_correlation)
+AutoCorrelationLoggerVec(N_atoms::Integer,dim::Integer,observable::Function,n_correlation::Integer)=AutoCorrelationLoggerVec(N_atoms,dim,Float64,observable,n_correlation)
 
 
 function Molly.log_property!(logger::TimeCorrelationLogger,s::System,neighbors=nothing,step_n::Integer=0)
@@ -186,11 +226,11 @@ function Molly.log_property!(logger::TimeCorrelationLogger,s::System,neighbors=n
 
     logger.n_timesteps+=1
 
-    logger.avg_A=((logger.n_timesteps-1)*logger.avg_A+A)/logger.n_timesteps
-    logger.avg_B=((logger.n_timesteps-1)*logger.avg_B+B)/logger.n_timesteps
+    logger.sum_A += A
+    logger.sum_B += B
 
-    logger.avg_sq_A=((logger.n_timesteps-1)*logger.avg_sq_A+A^2)/logger.n_timesteps
-    logger.avg_sq_B=((logger.n_timesteps-1)*logger.avg_sq_B+B^2)/logger.n_timesteps
+    logger.sum_sq_A += dot(A,A)
+    logger.sum_sq_B += dot(B,B)
 
     (logger.n_timesteps > logger.n_correlation) && (popfirst!(logger.history_A) ; popfirst!(logger.history_B))
 
@@ -200,11 +240,10 @@ function Molly.log_property!(logger::TimeCorrelationLogger,s::System,neighbors=n
     B1=first(logger.history_B)
 
     for (i,Ai)=enumerate(logger.history_A)
-        n_sampled=logger.n_timesteps-i
-
-        if n_sampled>=0
-            logger.offset_products[i]=(logger.offset_products[i]*n_sampled + Ai*B1)/(n_sampled+1)
-            logger.correlations[i]=(logger.offset_products[i]-logger.avg_A*logger.avg_B)/sqrt(logger.avg_sq_A*logger.avg_sq_B)
+        n_sampled=logger.n_timesteps-i+1
+        if n_sampled>0
+            logger.sum_offset_products[i] += dot(Ai,B1)
+            logger.correlations[i]=(logger.sum_offset_products[i]*(logger.n_timesteps/n_sampled)-dot(logger.sum_A,logger.sum_B)/logger.n_timesteps)/sqrt(logger.sum_sq_A*logger.sum_sq_B)
         end
     end
    
