@@ -1,3 +1,18 @@
+export 
+    HamiltonianLogger,
+    KineticEnergyLoggerNoDims,
+    StateLogger,
+    TemperatureLoggerReduced,
+    VirialLogger,
+    PressureLoggerReduced,
+    PressureLoggerNVT,
+    SelfDiffusionLogger,
+    GeneralObservableLogger,
+    TimeCorrelationLogger,
+    TimeCorrelationLoggerVec,
+    AutoCorrelationLogger,
+    AutoCorrelationLoggerVec
+
 ###Total energy logger
 
 struct HamiltonianLogger{T}

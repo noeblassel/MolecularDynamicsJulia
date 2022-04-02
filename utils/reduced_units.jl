@@ -1,3 +1,16 @@
+export 
+    get_reduced_density,
+    get_reduced_energy,
+    get_reduced_length,
+    get_reduced_pressure,
+    get_reduced_temperature,
+    get_reduced_time,
+    get_physical_density,
+    get_physical_energy,
+    get_physical_length,
+    get_physical_pressure,
+    get_physical_temperature
+
 const kb= ustrip(Unitful.k) #Boltzmann's constant (J * K^-1)
 
 

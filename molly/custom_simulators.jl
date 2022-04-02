@@ -1,3 +1,14 @@
+export 
+    SymplecticEulerA,
+    SymplecticEulerB,
+    ExplicitEuler,
+    LangevinBAO,
+    LangevinBAOA,
+    LangevinBABO,
+    LangevinBAOAB,
+    LangevinSplitting,
+    LangevinGHMC
+
 struct SymplecticEulerA{T,C}
     dt::T
     coupling::C
@@ -404,7 +415,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
 end
 
 function O_step!(s::System{D}, α_eff::V, σ_eff::V, rng::AbstractRNG, noise_vec::N) where {D,T,N<:AbstractVector{SVector{D,T}},V<:AbstractVector{T}}
-    noise_vec .= SVector{D}.(eachrow(randn(rng, Float64, (length(sys), D))))
+    noise_vec .= SVector{D}.(eachrow(randn(rng, Float64, (length(s), D))))
     @. s.velocities = α_eff * s.velocities + σ_eff * noise_vec
 end
 

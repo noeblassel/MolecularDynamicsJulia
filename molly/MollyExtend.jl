@@ -1,18 +1,24 @@
-using ProgressMeter
-using Molly
-using Random
-using LinearAlgebra
-using Dates
+module MollyExtend
+    using Dates
+    using ProgressMeter
+    using Reexport
 
-#include("./custom_cutoffs.jl")
-include("./custom_loggers.jl")
-include("./custom_observables.jl")
-include("./custom_simulators.jl")
-include("./custom_interactions.jl")
+    @reexport using Molly
+    @reexport using Random
+    @reexport using LinearAlgebra
+    
 
-include("./sim_nve_lj.jl")
-include("./sim_nvt_lj.jl")
-include("./io.jl")
+    #include("./custom_cutoffs.jl")
+    include("./custom_loggers.jl")
+    include("./custom_observables.jl")
+    include("./custom_simulators.jl")
+    include("./custom_interactions.jl")
 
-include("../utils/place_atoms.jl")
-include("../utils/reduced_units.jl")
+    include("./sim_nve_lj.jl")
+    include("./sim_nvt_lj.jl")
+    include("./io.jl")
+
+    include("../utils/place_atoms.jl")
+    include("../utils/reduced_units.jl")
+
+end

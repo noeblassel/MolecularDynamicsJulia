@@ -1,3 +1,10 @@
+export
+    pair_virial,
+    pressure,
+    temperature_reduced,
+    long_range_virial_correction,
+    MobilityObservable
+
 function pair_virial(s::System, neighbors = nothing, lrc = false)
 
     W = 0.0 * s.energy_units

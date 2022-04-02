@@ -1,3 +1,7 @@
+export 
+    SingleDriftNEMD,
+    ColorDriftNEMD
+
 struct SingleDriftNEMD{D,T} 
     N_atoms::Integer
     ix::Integer

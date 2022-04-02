@@ -1,3 +1,7 @@
+export 
+    sim_lennard_jones_fluid_nve,
+    sim_lennard_jones_fluid_nve!
+
 log_dict = Dict(
     :position => n -> CoordinateLogger(Float64, n),
     :temperature => n -> TemperatureLoggerReduced(Float64, n),

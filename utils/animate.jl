@@ -1,3 +1,5 @@
+export animate_trajectories
+
 function animate_trajectories(coords,filename;ix=rand(1:length(coords[1])),camera=(30,30))
 
     l,l,l=sys.box_size

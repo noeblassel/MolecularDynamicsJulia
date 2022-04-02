@@ -1,3 +1,7 @@
+export 
+    save_reduced_lj_state,
+    read_reduced_lj_state
+
 function save_reduced_lj_state(s::System,filename::AbstractString)
 
     @assert length(s.pairwise_inters)==1 "Trying to save a system with more than one GeneralInteraction"

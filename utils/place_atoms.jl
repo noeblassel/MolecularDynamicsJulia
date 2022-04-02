@@ -1,3 +1,8 @@
+export 
+    place_atoms_on_lattice,
+    init_velocities,
+    reduced_velocity
+
 function place_atoms_on_lattice(N_per_dim::Integer,box_size)
     (lx,ly,lz)=box_size/N_per_dim
     ixs=[(i,j,k) for i=1:N_per_dim,j=1:N_per_dim,k=1:N_per_dim]
