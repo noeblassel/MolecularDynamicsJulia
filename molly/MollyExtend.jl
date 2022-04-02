@@ -1,9 +1,12 @@
+__precompile__()
+
 module MollyExtend
+    using Molly
+    
     using Dates
     using ProgressMeter
     using Reexport
 
-    @reexport using Molly
     @reexport using Random
     @reexport using LinearAlgebra
     

@@ -235,28 +235,36 @@ AutoCorrelationLoggerVec(N_atoms::Integer, dim::Integer, observable::Function, n
 
 
 function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors=nothing, step_n::Integer=0)
+
+    #compute observables
     A = logger.observableA(s, neighbors)
-    B = logger.observableB(s, neighbors)
-
-    logger.avg_A = (logger.n_timesteps * logger.avg_A + A) / (logger.n_timesteps + 1)
-    logger.avg_B = (logger.n_timesteps * logger.avg_B + B) / (logger.n_timesteps + 1)
-
-    logger.avg_sq_A = (logger.n_timesteps * logger.avg_sq_A + dot(A, A)) / (logger.n_timesteps + 1)
-    logger.avg_sq_B = (logger.n_timesteps * logger.avg_sq_B + dot(B, B)) / (logger.n_timesteps + 1)
+    B = (logger.observableA!=logger.observableB) ? logger.observableB(s, neighbors) : A
 
     logger.n_timesteps += 1
 
+    #update history lists
     (logger.n_timesteps > logger.n_correlation) && (popfirst!(logger.history_A); popfirst!(logger.history_B))
 
     push!(logger.history_A, A)
     push!(logger.history_B, B)
 
+    #update running averages (numerically stable method)
+    logger.avg_A += (A-logger.avg_A) / logger.n_timesteps
+    logger.avg_B += (B-logger.avg_B) / logger.n_timesteps
+
+    logger.avg_sq_A += (dot(A, A)-logger.avg_sq_A) / logger.n_timesteps
+    logger.avg_sq_B += (dot(B, B)-logger.avg_sq_B) / logger.n_timesteps
+
+
     B1 = first(logger.history_B)
 
     for (i, Ai) = enumerate(logger.history_A)
-        n_sampled = logger.n_timesteps - i
-        if n_sampled >= 0
-            logger.avg_offset_products[i] = (n_sampled * logger.avg_offset_products[i] + dot(Ai, B1)) / (n_sampled + 1)
+        n_samples = logger.n_timesteps - i + 1
+        if n_samples > 0
+            #update cross term averages
+            logger.avg_offset_products[i] += (dot(Ai, B1)-logger.avg_offset_products[i]) / n_samples
+            
+            #store normalized correlation
             logger.correlations[i] = (logger.avg_offset_products[i] - dot(logger.avg_A, logger.avg_B)) / sqrt(logger.avg_sq_A * logger.avg_sq_B)
         end
     end
