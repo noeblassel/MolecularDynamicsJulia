@@ -13,7 +13,7 @@ n_steps = 10_000_000
 
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff=ShiftedForceCutoff(r_c), nl_only=true, force_units=NoUnits, energy_units=NoUnits)
-nf = CellListMapMeighborFinder(nb_matrix=trues(N,N),dist_cutoff=r_c,unit_cell=box_size)
+nf = CellListMapNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=r_c,unit_cell=box_size)
 
 coords =place_atoms_on_lattice(Npd, box_size)
 atoms = [Atom(σ=1.0, ϵ=1.0, mass=1.0) for i in 1:N]
