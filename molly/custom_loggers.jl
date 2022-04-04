@@ -16,7 +16,7 @@ export
 ###Total energy logger
 
 struct HamiltonianLogger{T}
-    n_steps::Int
+    log_freq::Int
     energies::Vector{T}
 end
 
@@ -24,95 +24,95 @@ HamiltonianLogger(T, n_steps::Integer) = HamiltonianLogger(n_steps, T[])
 HamiltonianLogger(n_steps::Integer) = HamiltonianLogger(Float32, n_steps)
 
 function Molly.log_property!(logger::HamiltonianLogger, s::System, neighbors=nothing, step_n::Integer=0)
-    (step_n % logger.n_steps != 0) && return
+    (step_n % logger.log_freq != 0) && return
     push!(logger.energies, Molly.kinetic_energy_noconvert(s) + Molly.potential_energy(s, neighbors))
 end
 
 ###Dimensionless kinetic energy logger--- Molly version (as of now) requires physical units
 
 struct KineticEnergyLoggerNoDims{T}
-    n_steps::Int
+    log_freq::Int
     energies::Vector{T}
 end
 
-KineticEnergyLoggerNoDims(T, n_steps::Integer) = KineticEnergyLoggerNoDims(n_steps, T[])
-KineticEnergyLoggerNoDims(n_steps::Integer) = KineticEnergyLoggerNoDims(Float64, n_steps)
+KineticEnergyLoggerNoDims(T, log_freq::Integer) = KineticEnergyLoggerNoDims(log_freq, T[])
+KineticEnergyLoggerNoDims(log_freq::Integer) = KineticEnergyLoggerNoDims(Float64, log_freq)
 
 function Molly.log_property!(logger::KineticEnergyLoggerNoDims, s::System, neighbors=nothing, step_n::Integer=0)
-    (step_n % logger.n_steps != 0) && return
+    (step_n % logger.log_freq != 0) && return
     push!(logger.energies, Molly.kinetic_energy_noconvert(s))
 end
 
 ###State logger (writes state of system to external file --- NOT GENERAL)
 
 struct StateLogger
-    n_steps::Int
+    log_freq::Int
     prefix::AbstractString
 end
 
-StateLogger(n_steps::Integer) = StateLogger(n_steps, "logfile")
-StateLogger(n_steps::Integer, file_prefix::AbstractString) = StateLogger(n_steps, file_prefix)
+StateLogger(log_freq::Integer) = StateLogger(log_freq, "logfile")
+StateLogger(log_freq::Integer, file_prefix::AbstractString) = StateLogger(log_freq, file_prefix)
 
 function Molly.log_property!(logger::StateLogger, s::System, neighbors=nothing, step_n::Integer=0)
-    (step_n % logger.n_steps != 0) && return
+    (step_n % logger.log_freq != 0) && return
     save_reduced_lj_state(s, logger.prefix * "_$(step_n).txt")
 end
 
 ###reduced temperature logger (kb=1)
 struct TemperatureLoggerReduced{T}
-    n_steps::Int
+    log_freq::Int
     temperatures::Vector{T}
 end
 
-TemperatureLoggerReduced(T, n_steps::Integer) = TemperatureLoggerReduced(n_steps, T[])
-TemperatureLoggerReduced(n_steps::Integer) = TemperatureLoggerReduced(Float64, n_steps)
+TemperatureLoggerReduced(T, log_freq::Integer) = TemperatureLoggerReduced(log_freq, T[])
+TemperatureLoggerReduced(log_freq::Integer) = TemperatureLoggerReduced(Float64, log_freq)
 
 function Molly.log_property!(logger::TemperatureLoggerReduced, s::System, neighbors=nothing, step_n::Integer=0)
-    (step_n % logger.n_steps != 0) && return
+    (step_n % logger.log_freq != 0) && return
     push!(logger.temperatures, temperature_reduced(s))
 end
 
 ###virial logger
 
 struct VirialLogger{T}
-    n_steps::Int
+    log_freq::Int
     energies::Vector{T}
 end
 
-VirialLogger(T, n_steps::Integer) = VirialLogger{T}(n_steps, T[])
-VirialLogger(n_steps::Integer) = VirialLogger(n_steps, Float64[])
+VirialLogger(T, log_freq::Integer) = VirialLogger{T}(log_freq, T[])
+VirialLogger(log_freq::Integer) = VirialLogger(log_freq, Float64[])
 
 
-function Molly.log_property!(logger::VirialLogger, s::System, neighbors=nothing, step_n::Integer=0)
-    (step_n % logger.n_steps != 0) && return
+function Molly.log_property!(logger::VirialLogger, s::System, neighbors=nothing, log_freq::Integer=0)
+    (step_n % logger.log_freq != 0) && return
     push!(logger.energies, pair_virial(s, neighbors))
 end
 
 ###pressure logger
 struct PressureLoggerReduced{T}
-    n_steps::Int
+    log_freq::Int
     pressures::Vector{T}
 end
 
-PressureLoggerReduced(T, n_steps::Integer) = PressureLoggerReduced(n_steps, T[])
-PressureLoggerReduced(n_steps::Integer) = PressureLoggerReduced(n_steps, Float64[])
+PressureLoggerReduced(T, log_freq::Integer) = PressureLoggerReduced(log_freq, T[])
+PressureLoggerReduced(log_freq::Integer) = PressureLoggerReduced(log_freq, Float64[])
 
 function Molly.log_property!(logger::PressureLoggerReduced, s::System, neighbors=nothing, step_n::Integer=0)
-    (step_n % logger.n_steps != 0) && return
+    (step_n % logger.log_freq != 0) && return
     push!(logger.pressures, pressure(s, neighbors))
 end
 
 struct PressureLoggerNVT{P,K}
-    n_steps::Int
+    log_freq::Int
     T::K
     pressures::Vector{P}
 end
 
-PressureLoggerNVT(T, P, n_steps::Integer) = PressureLoggerNVT(n_steps, T, P[])
-PressureLoggerNVT(T, n_steps::Integer) = PressureLoggerNVT(n_steps, T, Float64[])
+PressureLoggerNVT(T, P, log_freq::Integer) = PressureLoggerNVT(log_freq, T, P[])
+PressureLoggerNVT(T, log_freq::Integer) = PressureLoggerNVT(log_freq, T, Float64[])
 
 function Molly.log_property!(logger::PressureLoggerNVT, s::System, neighbors=nothing, step_n::Integer=0)
-    if step_n % logger.n_steps == 0
+    if step_n % logger.log_freq == 0
         W = pair_virial(s, neighbors)
         V = s.box_size[1] * s.box_size[2] * s.box_size[3]
         push!(logger.pressures, (length(s) * logger.T + W / 3) / V)
@@ -120,22 +120,15 @@ function Molly.log_property!(logger::PressureLoggerNVT, s::System, neighbors=not
 end
 
 mutable struct SelfDiffusionLogger{T}
-    n_steps::Int
     last_coords::T
     self_diffusion_coords::T
-    self_diffusion_history::Vector{T}
-    record_history::Bool
 end
 
-SelfDiffusionLogger(n_steps, initial_coords; record_history::Bool=false) = SelfDiffusionLogger{length(initial_coords[1]),typeof(initial_coords)}(n_steps, deepcopy(initial_coords), zero(initial_coords), typeof(initial_coords)[], record_history)
+SelfDiffusionLogger(initial_coords) = SelfDiffusionLogger{typeof(initial_coords)}(deepcopy(initial_coords), zero(initial_coords))
 
 function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer=0)
-
     @. logger.self_diffusion_coords += unwrap_coords_vec.(logger.last_coords, s.coords, (s.box_size,)) - logger.last_coords
     @. logger.last_coords = s.coords
-
-    (step_n % logger.n_steps != 0) && return
-    push!(logger.self_diffusion_history, deepcopy(logger.self_diffusion_coords))
 end
 
 """
@@ -153,7 +146,7 @@ unwrap_coords_vec(c1, c2, box_size) = unwrap_coords.(c1, c2, box_size)
 
 struct GeneralObservableLogger{T}
     observable::Function
-    n_steps::Int64
+    log_freq::Int64
     history::Vector{T}
 end
 
@@ -161,7 +154,7 @@ GeneralObservableLogger(T::DataType, observable::Function, n_steps::Integer) = G
 GeneralObservableLogger(observable::Function, n_steps::Integer) = GeneralObservableLogger(Float64, observable, n_steps)
 
 function Molly.log_property!(logger::GeneralObservableLogger, s::System, neighbors=nothing, step_n::Integer=0)
-    (step_n % logger.n_steps != 0) && return
+    (step_n % logger.log_freq != 0) && return
     push!(logger.history, logger.observable(s, neighbors))
 end
 
@@ -261,4 +254,49 @@ function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors
         end
     end
 
+end
+
+
+struct ElapsedTimeLogger
+    initial_time::Dates.Date
+end
+
+ElapsedTimeLogger()=ElapsedTimeLogger(Dates.now())
+
+struct LogLogger{T}
+    Vector{Tuple{T,Any,AbstractString,Integer,Bool}} logger_table
+end
+
+function LogLogger(logger_names::Vector{T},logging_files::Vector{AbstractString},logging_freqs::Vector{Integer},decorate_outputs::Vector{Bool}) where{T}
+    return LogLogger{T}(zip(logger_names,logging_files,logging_freqs,decorate_outputs))
+end
+
+function log_property!(logger::LogLogger,s::System,neighbors=nothing,step_n::Integer=0)
+    for (name,file,freq,decorate)=logger.logger_table
+        if step_n%freq==0
+            f=open(file,"a")
+            (decorate) && println(f,"---- Step : $(step_n) ---- Logger : $(name) ----")
+            log_to_file!(s.loggers[name],f)
+            close(f)
+        end
+    end
+end
+
+function log_to_file!(logger::GeneralObservableLogger,file::IOStream)
+    println(file,last(logger.history))
+    empty!(logger.history)
+end
+
+function log_to_file!(logger::TimeCorrelationLogger,file::IOStream)
+    println(file,logger.correlations)
+    println(file,logger.avg_sq_A)
+    println(file,logger.avg_sq_B)
+end
+
+function log_to_file!(logger::ElapsedTimeLogger,file::IOStream)
+    println(file,Dates.now()-logger.initial_time)
+end
+
+function log_to_file!(logger::SelfDiffusionLogger,file::IOStream)
+    println(file,logger.self_diffusion_coords)
 end
