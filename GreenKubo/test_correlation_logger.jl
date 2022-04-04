@@ -27,7 +27,7 @@ simulate!(sys,sim_eq,10_000)
 
 R(s::System,neighbors=nothing)=copy(s.coords)
 
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,4000))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,4000),:time=>ElapsedTimeLogger(),:log_log=>LogLogger([(:autocorrelation,"autocorrelation_history.txt",1000,false),(:time,"elapsed_times.txt",100,true)]))
 
 simulate!(sys,sim,n_steps;log_progress=true,log_every=1000)
 f=open("output_alt.txt","w")

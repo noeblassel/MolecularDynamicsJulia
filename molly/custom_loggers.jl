@@ -258,13 +258,13 @@ end
 
 
 struct ElapsedTimeLogger
-    initial_time::Dates.Date
+    initial_time::Dates.DateTime
 end
 
 ElapsedTimeLogger()=ElapsedTimeLogger(Dates.now())
 
 struct LogLogger{T}
-    Vector{Tuple{T,Any,AbstractString,Integer,Bool}} logger_table
+    logger_table::Vector{Tuple{T,AbstractString,Integer,Bool}} 
 end
 
 function LogLogger(logger_names::Vector{T},logging_files::Vector{AbstractString},logging_freqs::Vector{Integer},decorate_outputs::Vector{Bool}) where{T}
