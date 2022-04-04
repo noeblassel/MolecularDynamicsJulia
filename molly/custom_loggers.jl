@@ -11,7 +11,9 @@ export
     TimeCorrelationLogger,
     TimeCorrelationLoggerVec,
     AutoCorrelationLogger,
-    AutoCorrelationLoggerVec
+    AutoCorrelationLoggerVec,
+    ElapsedTimeLogger,
+    LogLogger
 
 ###Total energy logger
 
@@ -257,21 +259,23 @@ function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors
 end
 
 
+
 struct ElapsedTimeLogger
     initial_time::Dates.DateTime
 end
 
 ElapsedTimeLogger()=ElapsedTimeLogger(Dates.now())
+Molly.log_property!(logger::ElapsedTimeLogger,S::System,neighbors=nothing,step_n::Integer=0)=nothing
 
-struct LogLogger{T}
-    logger_table::Vector{Tuple{T,AbstractString,Integer,Bool}} 
+struct LogLogger
+    logger_table::Vector{Tuple{Symbol,String,Int64,Bool}} 
 end
 
-function LogLogger(logger_names::Vector{T},logging_files::Vector{AbstractString},logging_freqs::Vector{Integer},decorate_outputs::Vector{Bool}) where{T}
-    return LogLogger{T}(zip(logger_names,logging_files,logging_freqs,decorate_outputs))
+function LogLogger(logger_names::Vector{Symbol},logging_files::Vector{String},logging_freqs::Vector{Int64},decorate_outputs::Vector{Bool})
+    return LogLogger([zip(logger_names,logging_files,logging_freqs,decorate_outputs)...])
 end
 
-function log_property!(logger::LogLogger,s::System,neighbors=nothing,step_n::Integer=0)
+function Molly.log_property!(logger::LogLogger,s::System,neighbors=nothing,step_n::Integer=0)
     for (name,file,freq,decorate)=logger.logger_table
         if step_n%freq==0
             f=open(file,"a")
@@ -294,7 +298,7 @@ function log_to_file!(logger::TimeCorrelationLogger,file::IOStream)
 end
 
 function log_to_file!(logger::ElapsedTimeLogger,file::IOStream)
-    println(file,Dates.now()-logger.initial_time)
+    println(file,Dates.CompoundPeriod(Dates.now()-logger.initial_time))
 end
 
 function log_to_file!(logger::SelfDiffusionLogger,file::IOStream)

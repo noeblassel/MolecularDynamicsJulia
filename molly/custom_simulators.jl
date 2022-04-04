@@ -339,7 +339,7 @@ function LangevinSplitting(; dt, γ, T, splitting, rseed=UInt32(round(time())), 
 end
 
 
-function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Integer, parallel::Bool=true;log_progress::Bool=false,log_every::Integer=1) where {D}
+function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Integer, parallel::Bool=true) where {D}
 
     M_inv = inv.(ustrip.(mass.(sys.atoms)))
 
@@ -407,10 +407,6 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
         end
 
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
-        if (log_progress && (step_n%log_every==0))
-            println("$(step_n) out of $(n_steps) integration steps completed. Expected completion: $(d_start+n_steps*Dates.Millisecond(round((Dates.now()-d_start).value/step_n)))")
-            flush(stdout)
-        end
     end
 end
 

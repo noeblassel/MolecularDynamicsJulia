@@ -1,19 +1,19 @@
 include("../molly/MollyExtend.jl")
 using .MollyExtend
 
-Npd = 4
+Npd = 12
 N = Npd^3
-ρ = 1.0;
+ρ = 0.8;
 L = (N / ρ)^(1 // 3)
-T = 0.1
-dt = 2e-3
+T = 0.2
+dt = 1e-3
 r_c = 3.0
 
-n_steps = 500_000
+n_steps = 5_000_000
 
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff=ShiftedForceCutoff(r_c), nl_only=true, force_units=NoUnits, energy_units=NoUnits)
-nf = DistanceNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=r_c)
+nf = CellListMapNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=r_c,unit_cell=box_size)
 coords =place_atoms_on_3D_lattice(Npd, box_size)
 atoms = [Atom(σ=1.0, ϵ=1.0, mass=1.0) for i in 1:N]
 M=[a.mass for a=atoms]
@@ -21,15 +21,15 @@ velocities = init_velocities(T,M,1.0)
 
 sys = System(atoms=atoms, coords=coords, velocities=velocities, pairwise_inters=(inter,), box_size=box_size, neighbor_finder=nf, force_units=NoUnits, energy_units=NoUnits, loggers=Dict{Symbol,Any}())
 sim_eq=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
-sim=LangevinSplitting(dt=dt,γ=0.1,T=T,splitting="BAOAB")
+#sim=LangevinSplitting(dt=dt,γ=0.1,T=T,splitting="BAOAB")
 sim=sim_eq
-simulate!(sys,sim_eq,10_000)
+simulate!(sys,sim_eq,50_000)
 
-R(s::System,neighbors=nothing)=copy(s.coords)
+R(s::System,neighbors=nothing)=s.velocities/N
 
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,4000),:time=>ElapsedTimeLogger(),:log_log=>LogLogger([(:autocorrelation,"autocorrelation_history.txt",1000,false),(:time,"elapsed_times.txt",100,true)]))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,4000),:time=>ElapsedTimeLogger(),:log_log=>LogLogger([:autocorrelation,:time],["autocorrelation_history.out","elapsed_times.out"],[100_000,1000],[false,true]))
 
-simulate!(sys,sim,n_steps;log_progress=true,log_every=1000)
+simulate!(sys,sim,n_steps)
 f=open("output_alt.txt","w")
 println(f,join(sys.loggers[:autocorrelation].correlations," "))
 close(f)
