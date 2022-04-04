@@ -409,6 +409,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
         if (log_progress && (step_n%log_every==0))
             println("$(step_n) out of $(n_steps) integration steps completed. Expected completion: $(d_start+n_steps*Dates.Millisecond(round((Dates.now()-d_start).value/step_n)))")
+            flush(stdout)
         end
     end
 end
