@@ -170,67 +170,59 @@ end
 A time correlation logger, which estimates the time correlation function
 C(t)=[⟨A(t)B(0)⟩-⟨A(0)B(0)⟩]/√[⟨A(0)²⟩⟨B(0)²⟩]
 for observables A and B, which are functions of the form f(sys::System,neighbors=nothing)
-the output of A and B can be numeric or array-like, in which case the products inside the brackets are dot products.
-If A and B are array-like, static arrays must be used:
-for instance, if A(sys,neighbors)=sys.velocities, then typeof(sys.velocities) should be MVector{N,SVector{D,T}}, or some other statically-sized mutable array of SVectors.
-where N is the number of atoms, D is the dimension and T is the type of each velocity component.
-A and B must return values of the same type. 
-In particular, the same units must be used when using dimensionally compatible Unitful types.
+the output of A and B can be numeric or vectors (including vectors of SVectors, like the positions or velocities), in which case the products inside the brackets are dot products.
 """
-mutable struct TimeCorrelationLogger{T,TA,TAA}
+mutable struct TimeCorrelationLogger{T,T_avg_A,T_avg_sq_A}
 
     observableA::Function
     observableB::Function
 
     n_correlation::Integer
 
-    history_A::Vector{TA}
-    history_B::Vector{TA}
+    history_A::Vector{T_avg_A}
+    history_B::Vector{T_avg_A}
 
-    avg_offset_products::Vector{TAA}
+    avg_offset_products::Vector{T_avg_sq_A}
     correlations::Vector{T}
 
     n_timesteps::Int64
 
-    avg_A::TA
-    avg_B::TA
+    avg_A::T_avg_A
+    avg_B::T_avg_A
 
-    avg_sq_A::TAA
-    avg_sq_B::TAA
+    avg_sq_A::T_avg_sq_A
+    avg_sq_B::T_avg_sq_A
 
 end
 
 
-function TimeCorrelationLogger(TA::DataType, observableA::Function, observableB::Function, n_correlation::Integer)
-    __zero__ = zero(TA)
-    TAA = typeof(dot(__zero__, __zero__))
+function TimeCorrelationLogger(TA::DataType, observableA::Function, observableB::Function, observable_length::Integer,n_correlation::Integer)
+    T=typeof(ustrip(zero(eltype(TA))))
 
-    T = typeof(__zero__)
+    ini_avg_A= (observable_length>1) ? zeros(TA,observable_length) : zero(TA)
+    ini_avg_B= zero(ini_avg_A)
+    
+    ini_avg_sq_A=dot(ini_avg_A,ini_avg_A)
+    ini_avg_sq_B=zero(ini_avg_sq_A)
 
-    #infers the bottom-most numerical type -- interested in better way to do this
-    while T <: AbstractArray
-        T = eltype(T)
-        __zero__ = zero(T)
-    end
+    T_avg_A=typeof(ini_avg_A)
+    T_avg_sq_A=typeof(ini_avg_sq_A)
 
-    T = typeof(ustrip(__zero__))
-    ##
-
-    return TimeCorrelationLogger{T,TA,TAA}(observableA, observableB, n_correlation, TA[], TA[], zeros(TAA, n_correlation), zeros(T, n_correlation), 0, zero(TA), zero(TA), zero(TAA), zero(TAA))
+    return TimeCorrelationLogger{T,T_avg_A,T_avg_sq_A}(observableA, observableB, n_correlation, T_avg_A[], T_avg_A[], zeros(T_avg_sq_A, n_correlation), zeros(T, n_correlation), 0, ini_avg_A, ini_avg_B, ini_avg_sq_A, ini_avg_sq_B)
 
 end
 
 #Unspecified type defaults to floating-point valued observables
-TimeCorrelationLogger(observableA::Function, observableB::Function, n_correlation::Integer) = TimeCorrelationLogger(Float64, observableA, observableB, n_correlation)
+TimeCorrelationLogger(observableA::Function, observableB::Function, n_correlation::Integer) = TimeCorrelationLogger(Float64, observableA, observableB,1,n_correlation)
 
 ##Constructors for vector-valued observables
-TimeCorrelationLoggerVec(N_atoms::Integer, dim::Integer, T::DataType, observableA::Function, observableB::Function, n_correlation::Integer) = TimeCorrelationLogger(MVector{N_atoms,SVector{dim,T}}, observableA, observableB, n_correlation)
+TimeCorrelationLoggerVec(N_atoms::Integer, dim::Integer, T::DataType, observableA::Function, observableB::Function, n_correlation::Integer) = (dim>1) ? TimeCorrelationLogger(SVector{dim,T}, observableA, observableB,N_atoms, n_correlation) : TimeCorrelationLogger(T, observableA, observableB,N_atoms, n_correlation)
 TimeCorrelationLoggerVec(N_atoms::Integer, dim::Integer, observableA::Function, observableB::Function, n_correlation::Integer) = TimeCorrelationLoggerVec(N_atoms, dim, Float64, observableA, observableB, n_correlation)
 
 ## Convenience constructors for autocorrelations
-AutoCorrelationLogger(T::DataType, observable::Function, n_correlation::Integer) = TimeCorrelationLogger(T, observable, observable, n_correlation)
-AutoCorrelationLogger(observable::Function, n_correlation::Integer) = TimeCorrelationLogger(Float64, observable, observable, n_correlation)
-AutoCorrelationLoggerVec(N_atoms::Integer, dim::Integer, T::DataType, observable::Function, n_correlation::Integer) = AutoCorrelationLogger(MVector{N_atoms,SVector{dim,T}}, observable, n_correlation)
+AutoCorrelationLogger(T::DataType, observable::Function, n_correlation::Integer) = TimeCorrelationLogger(T, observable, observable,observable_length, 1,n_correlation)
+AutoCorrelationLogger(observable::Function, n_correlation::Integer) = TimeCorrelationLogger(Float64, observable, n_correlation)
+AutoCorrelationLoggerVec(N_atoms::Integer, dim::Integer, T::DataType, observable::Function, n_correlation::Integer) = TimeCorrelationLoggerVec(N_atoms, dim, T,observable, observable, n_correlation)
 AutoCorrelationLoggerVec(N_atoms::Integer, dim::Integer, observable::Function, n_correlation::Integer) = AutoCorrelationLoggerVec(N_atoms, dim, Float64, observable, n_correlation)
 
 

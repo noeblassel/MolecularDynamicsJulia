@@ -1,15 +1,14 @@
 __precompile__()
 
 module MollyExtend
-    using Molly
-    
+
     using Dates
     using ProgressMeter
     using Reexport
 
     @reexport using Random
     @reexport using LinearAlgebra
-    
+    @reexport using Molly
 
     #include("./custom_cutoffs.jl")
     include("./custom_loggers.jl")
