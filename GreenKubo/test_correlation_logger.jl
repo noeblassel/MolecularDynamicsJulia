@@ -9,7 +9,7 @@ T = 0.5
 dt = 1e-3
 r_c = 3.0
 
-n_steps = 100_000
+n_steps = 10_000_000
 
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff=ShiftedForceCutoff(r_c), nl_only=true, force_units=NoUnits, energy_units=NoUnits)
@@ -23,7 +23,7 @@ sys = System(atoms=atoms, coords=coords, velocities=velocities, pairwise_inters=
 sim_eq=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
 #sim=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
 sim=sim_eq
-simulate!(sys,sim_eq,10000)
+simulate!(sys,sim_eq,10_000)
 
 R(s::System,neighbors=nothing)=s.velocities/N
 
