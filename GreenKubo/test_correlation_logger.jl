@@ -29,7 +29,7 @@ R(s::System,neighbors=nothing)=s.velocities/N
 
 sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,4000))
 
-simulate!(sys,sim,n_steps;log_progress=true,log_every=10000)
+simulate!(sys,sim,n_steps;log_progress=true,log_every=100000)
 f=open("output_alt.txt","w")
 println(f,join(sys.loggers[:autocorrelation].correlations," "))
 close(f)
