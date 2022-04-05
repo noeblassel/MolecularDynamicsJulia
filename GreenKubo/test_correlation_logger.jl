@@ -27,7 +27,7 @@ simulate!(sys,sim_eq,50_000)
 
 R(s::System,neighbors=nothing)=s.velocities/N
 
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,2000),:time=>ElapsedTimeLogger(),:state=>StateLogger(sys),:log_log=>LogLogger([:autocorrelation,:time,:state],["autocorrelation_history.out","elapsed_times.out","states.out"],[100_000,1000,1000000],[false,true]))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,2000),:time=>ElapsedTimeLogger(),:state=>StateLogger(sys),:log_log=>LogLogger([:autocorrelation,:time,:state],["autocorrelation_history.out","elapsed_times.out","states.out"],[100_000,1000,1000000],[false,true,false]))
 
 simulate!(sys,sim,n_steps)
 f=open("output_alt.txt","w")
