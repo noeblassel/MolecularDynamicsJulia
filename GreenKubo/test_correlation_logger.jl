@@ -6,7 +6,7 @@ N = Npd^3
 ρ = 0.8;
 L = (N / ρ)^(1 // 3)
 T = 0.2
-dt = 1e-3
+dt = 2e-3
 r_c = 3.0
 
 n_steps = 5_000_000
@@ -27,7 +27,7 @@ simulate!(sys,sim_eq,50_000)
 
 R(s::System,neighbors=nothing)=s.velocities/N
 
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,4000),:time=>ElapsedTimeLogger(),:log_log=>LogLogger([:autocorrelation,:time],["autocorrelation_history.out","elapsed_times.out"],[100_000,1000],[false,true]))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,2000),:time=>ElapsedTimeLogger(),:log_log=>LogLogger([:autocorrelation,:time],["autocorrelation_history.out","elapsed_times.out"],[100_000,1000],[false,true]))
 
 simulate!(sys,sim,n_steps)
 f=open("output_alt.txt","w")
