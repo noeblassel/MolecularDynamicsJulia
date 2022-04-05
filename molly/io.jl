@@ -1,21 +1,44 @@
 export 
-    save_reduced_lj_state,
-    read_reduced_lj_state
+    save_reduced_state,
+    read_reduced_state
 
-function save_reduced_lj_state(s::System,filename::AbstractString)
+"""
+Writes the state of a system to a given file-- only suitable for simple systems with general and pairwise interactions. For complex systems, use Molly's PDB writing utility.
+"""
+function save_reduced_state(s::System,file::IOStream)
 
-    @assert length(s.pairwise_inters)==1 "Trying to save a system with more than one GeneralInteraction"
-    @assert isempty(s.specific_inter_lists) "Trying to save a system with specific interactions"
-    @assert typeof(s.pairwise_inters[1])<:LennardJones "Trying to save a non Lennard-Jones system"
+    (length(s.general_inters)>0) && println(file,"---- General Interactions ----")
+    for inter in values(s.general_inters)
+        println(file,typeof(inter))
+        dump(file,inter)
+    end
+    (length(s.pairwise_inters)>0) && println(file,"---- Pairwise Interactions -----")
+    for inter in values(s.pairwise_inters)
+        println(file,typeof(inter))
+        dump(file,inter)
+    end
+    println(file,"---- Physical parameters ----")
+    println(file,"N atoms : $(length(s))")
+    println(file,"Box size : $(s.box_size)")
     
-    file=open(filename,"w")
-    println(file,"$(s.box_size[1]) $(s.box_size[2]) $(s.box_size[3]) $(s.pairwise_inters[1].cutoff.dist_cutoff)")
+    println(file,"---- Atoms ----")
+    for i=1:length(s)
+        dump(file,s.atoms[i])
+    end
+    println(file,"---- Coordinates ----")
     for i = 1:length(s)
         x=s.coords[i]
-        v=s.velocities[i]
-        println(file,"$(x[1]) $(x[2]) $(x[3]) $(v[1]) $(v[2]) $(v[3])")
+        print(file,"[")
+        println(file,"$(x[1]), $(x[2]), $(x[3]),")
     end
-    close(file)
+    print(file,"]")
+    println(file,"---- Velocities ----")
+    for i = 1:length(s)
+        v=s.coords[i]
+        print(file,"[")
+        println(file,"$(v[1]), $(v[2]), $(v[3]),")
+    end
+    print(file,"]")
 end
 
 function read_reduced_lj_state(filename::AbstractString)

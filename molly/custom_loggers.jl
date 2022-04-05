@@ -45,21 +45,6 @@ function Molly.log_property!(logger::KineticEnergyLoggerNoDims, s::System, neigh
     push!(logger.energies, Molly.kinetic_energy_noconvert(s))
 end
 
-###State logger (writes state of system to external file --- NOT GENERAL)
-
-struct StateLogger
-    log_freq::Int
-    prefix::AbstractString
-end
-
-StateLogger(log_freq::Integer) = StateLogger(log_freq, "logfile")
-StateLogger(log_freq::Integer, file_prefix::AbstractString) = StateLogger(log_freq, file_prefix)
-
-function Molly.log_property!(logger::StateLogger, s::System, neighbors=nothing, step_n::Integer=0)
-    (step_n % logger.log_freq != 0) && return
-    save_reduced_lj_state(s, logger.prefix * "_$(step_n).txt")
-end
-
 ###reduced temperature logger (kb=1)
 struct TemperatureLoggerReduced{T}
     log_freq::Int
@@ -303,4 +288,16 @@ end
 
 function log_to_file!(logger::SelfDiffusionLogger,file::IOStream)
     println(file,logger.self_diffusion_coords)
+end
+
+###State logger (writes state of system to external file --- NOT GENERAL)
+
+struct StateLogger
+    s::System
+end
+
+Molly.log_property!(logger::StateLogger,s::System,neighbors=nothing)=nothing
+
+function log_to_file!(logger::StateLogger, file::IOStream)
+    save_reduced_state(logger.s, file)
 end
