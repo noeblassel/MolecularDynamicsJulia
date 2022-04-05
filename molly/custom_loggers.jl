@@ -13,7 +13,8 @@ export
     AutoCorrelationLogger,
     AutoCorrelationLoggerVec,
     ElapsedTimeLogger,
-    LogLogger
+    LogLogger,
+    AverageObservableLogger
 
 ###Total energy logger
 
@@ -272,7 +273,7 @@ function Molly.log_property!(logger::LogLogger,s::System,neighbors=nothing,step_
 end
 
 function log_to_file!(logger::GeneralObservableLogger,file::IOStream)
-    println(file,last(logger.history))
+    println(file,join(logger.history,","),",")
     empty!(logger.history)
 end
 
@@ -296,8 +297,32 @@ struct StateLogger
     s::System
 end
 
-Molly.log_property!(logger::StateLogger,s::System,neighbors=nothing)=nothing
+Molly.log_property!(logger::StateLogger,s::System,neighbors=nothing,step_n::Integer=0)=nothing
 
 function log_to_file!(logger::StateLogger, file::IOStream)
     save_reduced_state(logger.s, file)
+end
+
+mutable struct AverageObservableLogger{T}
+    observable::Function
+    log_freq::Int64
+    average::T
+    n_samples::Int64
+end
+
+AverageObservableLogger(T::DataType,observable::Function,log_freq::Integer=1)=AverageObservableLogger{T}(observable,log_freq,zero(T),0)
+AverageObservableLogger(observable::Function,log_freq::Integer=1)=AverageObservableLogger(Float64,observable,log_freq)
+
+function Molly.log_property!(logger::AverageObservableLogger,s::System,neighbors=nothing,step_n::Integer=0)
+
+    if step_n % logger.log_freq ==0
+        O=logger.observable(s,neighbors)
+        logger.n_samples+=1
+        logger.average+=(O-logger.average)/logger.n_samples
+    end
+
+end
+
+function log_to_file!(logger::AverageObservableLogger,file::IOStream)
+    println(file,logger.n_samples," ",logger.average)
 end

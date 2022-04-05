@@ -126,6 +126,6 @@ end
 
 
 function MobilityObservable(ff::Vector)
-    R(s::System,neighbors=nothing)=sum(dot.(ff,s.velocities))
+    R(s::System,neighbors=nothing)=dot(ff,s.velocities)
     return R
 end
