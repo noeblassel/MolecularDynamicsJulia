@@ -22,7 +22,7 @@ box_size=SVector(L,L,L)
 
 @assert 2r_c<= L "Cutoff radius too large relative to domain"
 
-nf = (4.5r_c < L) ? CellListMapNeighborFinder(nb_matrix=trues(N,N),dist_cutoff= 1.5r_c,unit_cell=box_size) : DistanceNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=1.5r_c)
+nf = (3.6r_c < L) ? CellListMapNeighborFinder(nb_matrix=trues(N,N),dist_cutoff= 1.2r_c,unit_cell=box_size) : DistanceNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=1.2r_c)
 
 
 atoms=[Atom(index=i,ϵ=1.0,σ=1.0,mass=1.0) for i=1:N]
@@ -44,5 +44,5 @@ sim=LangevinSplitting(dt=dt,γ=γ,T=T,splitting=splitting)
 sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inter,),general_inters=(forcing,),box_size=box_size,neighbor_finder=nf,loggers=Dict{Symbol,Any}(),force_units=NoUnits,energy_units=NoUnits)
 
 simulate!(sys,sim_eq,n_steps_eq)
-sys.loggers=Dict(:mobility=>AverageObservableLogger(R),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:mobility,:elapsed_time],["mobility_estimates$(η).out","elapsed_time.out"],[1000,10000],[false,true]))
+sys.loggers=Dict(:mobility=>AverageObservableLogger(R),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:mobility,:elapsed_time],["mobility_estimates$(η).out","elapsed_time.out"],[100_000,10000],[false,true]))
 simulate!(sys,sim,n_steps_sim)
