@@ -298,7 +298,7 @@ function log_to_file!(logger::TimeCorrelationLogger,file::IOStream)
 end
 
 function log_to_file!(logger::ElapsedTimeLogger,file::IOStream)
-    println(file,Dates.CompoundPeriod(Dates.now()-logger.initial_time))
+    println(file,Dates.canonicalize(Dates.now()-logger.initial_time))
 end
 
 function log_to_file!(logger::SelfDiffusionLogger,file::IOStream)
