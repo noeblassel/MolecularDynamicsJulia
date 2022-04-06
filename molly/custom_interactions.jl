@@ -38,11 +38,11 @@ function ColorDriftNEMD(N_atoms::Integer,η::Real,F::SVector{D,T}) where {D,T}
     ff=zeros(SVector{D,T},N_atoms)
 
     for ix=1:2:length(ff)
-        ff[ix]=η*F_norm/N_atoms
+        ff[ix]=η*F_norm
     end
 
     for ix=2:2:length(ff)
-        ff[ix]=-η*F_norm/N_atoms
+        ff[ix]=-η*F_norm
     end
 
     return ColorDriftNEMD{D,T}(N_atoms,η,F_norm,ff)
