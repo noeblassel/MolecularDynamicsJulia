@@ -5,7 +5,7 @@ include("hist_utils.jl")
 include("potential.jl")
 
 
-println("usage: dt N_particles N_integration_steps N_equilibration_steps splitting N_bins potential=PERIODIC|QUADRATIC|DOUBLE_WELL")
+println("usage: dt N_particles N_integration_steps N_equilibration_steps log_frequency splitting N_bins potential=PERIODIC|QUADRATIC|DOUBLE_WELL")
 
 potential_dict=Dict("PERIODIC"=>periodic_potential,"QUADRATIC"=>quadratic_potential,"DOUBLE_WELL"=>double_well_potential)
 force_dict=Dict("PERIODIC"=>minus_d_periodic_potential,"QUADRATIC"=>minus_d_quadratic_potential,"DOUBLE_WELL"=>minus_d_double_well_potential)
