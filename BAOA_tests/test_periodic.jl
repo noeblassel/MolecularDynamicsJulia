@@ -22,7 +22,7 @@ inters=(SinusoidalPotential(),)
 atoms=[Atom(mass=1.0,ϵ=1.0,σ=1.0) for i=1:N]
 
 sys=System(coords=coords,velocities=velocities,atoms=atoms,general_inters=inters,box_size=(L,),energy_units=NoUnits,force_units=NoUnits)
-sim=LangevinSplitting(dt=2e-2,γ=γ,T=T,splitting=splitting)
+sim=LangevinSplitting(dt=dt,γ=γ,T=T,splitting=splitting)
 simulate!(sys,sim,N_steps)# equilibration
 
 for i=1:N_reps-1
