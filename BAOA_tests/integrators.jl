@@ -29,15 +29,11 @@ function LangevinSplitting(; dt, γ, T, splitting, rseed=UInt32(round(time())), 
 end
 
 
-function simulate!(p_vec::Vector{Float64},q_vec::Vector{Float64},potential::Function,force::Function,hist::Array{Int64,2},qlims::Tuple{Float64,Float64},plims::Tuple{Float64,Float64},sim::LangevinSplitting, n_steps::Integer)
-    L= (isa(sim.bc,PeriodicBoundaryCondition)) ? sim.bc.L : nothing
-    V_sum=0
-    K_sum=0
+function simulate!(p_vec::Vector{Float64},q_vec::Vector{Float64},force::Function,hist::Array{Int64,2},qlims::Tuple{Float64,Float64},plims::Tuple{Float64,Float64},sim::LangevinSplitting, n_steps::Integer)
 
     α_eff = exp(-sim.γ * sim.dt/ count('O', sim.splitting))
     σ_eff = sqrt((1 - α_eff^2) / sim.β)
-    println(σ_eff)
-    force_vec=force.(q_vec,sim.bc.L)
+    force_vec=force.(q_vec,(sim.bc.L,))
     effective_dts = [sim.dt / count(c, sim.splitting) for c in sim.splitting]
 
     forces_known = true
@@ -85,9 +81,6 @@ function simulate!(p_vec::Vector{Float64},q_vec::Vector{Float64},potential::Func
             step!(args...)
         end
 
-        V_sum+=sum(potential.(q_vec,(sim.bc.L,)))
-        K_sum+=dot(p_vec,p_vec)/2
-
         (step_n%100000==0) && (println(step_n,"/",n_steps," steps done.");flush(stdout))
     end
 end
@@ -97,11 +90,11 @@ function O_step!(p_vec::Vector{Float64}, α_eff::Float64, σ_eff::Float64, rng::
 end
 
 function A_step!(q_vec::Vector{Float64}, p_vec::Vector{Float64}, dt_eff::Float64,bc::BoundaryCondition=InfiniteBox())
-    q_vec .= q_vec + p_vec * dt_eff
+    q_vec .+= p_vec * dt_eff
     (isa(bc,PeriodicBoundaryCondition)) && (q_vec .= mod1.(q_vec, (bc.L,)) )
 end
 
-function B_step!(q_vector::Vector{Float64},p_vec::Vector{Float64}, dt_eff::Float64, force_vec::Vector{Float64}, force_func::Function, compute_forces::Bool,bc::BoundaryCondition=InfiniteBox())
-    compute_forces && (force_vec .= force_func.(q_vector,(bc.L,))) 
-    p_vec += dt_eff * force_vec
+function B_step!(q_vec::Vector{Float64},p_vec::Vector{Float64}, dt_eff::Float64, force_vec::Vector{Float64}, force_func::Function, compute_forces::Bool,bc::BoundaryCondition=InfiniteBox())
+    compute_forces && (force_vec .= force_func.(q_vec,(bc.L,))) 
+    p_vec .+= dt_eff * force_vec
 end
