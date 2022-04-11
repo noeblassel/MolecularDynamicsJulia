@@ -14,11 +14,12 @@ dt=parse(Float64,ARGS[1])
 N=parse(Int64,ARGS[2])
 N_steps=parse(Int64,ARGS[3])
 N_eq=parse(Int64,ARGS[4])
-splitting=ARGS[5]
-N_bins=parse(Int64,ARGS[6])
+log_every=parse(Int64,ARGS[5])
+splitting=ARGS[6]
+N_bins=parse(Int64,ARGS[7])
 
-potential=potential_dict[ARGS[7]]
-force=potential_dict[ARGS[7]]
+potential=potential_dict[ARGS[8]]
+force=potential_dict[ARGS[9]]
 
 ps=zeros(N)
 qs=zeros(N)
@@ -37,6 +38,8 @@ hist=zeros(Int64,N_bins,N_bins)
 simulate!(ps,qs,potential,force,hist,qlims,plims,sim,N_eq)
 hist=zeros(Int64,N_bins,N_bins)
 
-simulate!(ps,qs,potential,force,hist,qlims,plims,sim,N_steps)
 
-write_hist2D(hist,"bins_$(splitting)_$(ARGS[7])_$(dt).out")
+for i=1:log_every:N_steps
+    simulate!(ps,qs,potential,force,hist,qlims,plims,sim,log_every)
+    write_hist2D(hist,"bins_$(splitting)_$(ARGS[7])_$(dt).out")
+end
