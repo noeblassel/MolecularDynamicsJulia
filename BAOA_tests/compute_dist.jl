@@ -25,8 +25,8 @@ qs=zeros(N)
 
 
 L=1.0
-qlims = (ARGS[7]=="PERIODIC" ) ? (0.0,L) : (-7.0,7.0) 
-plims= (-7.0,7.0)
+qlims = (ARGS[7]=="PERIODIC" ) ? (0.0,L) : (-10.0,10.0) 
+plims= (-10.0,10.0)
 
 
 bc = (ARGS[7]=="PERIODIC" ) ? PeriodicBoundaryCondition(L) : InfiniteBox()

@@ -5,10 +5,10 @@ struct PeriodicBoundaryCondition <: BoundaryCondition
 end
 
 struct InfiniteBox<: BoundaryCondition
-    L::Nothing
+    L::Float64
 end
 
-InfiniteBox()=InfiniteBox(nothing)
+InfiniteBox()=InfiniteBox(Inf)
 
 struct LangevinSplitting
     dt::Float64
@@ -98,12 +98,10 @@ end
 
 function A_step!(q_vec::Vector{Float64}, p_vec::Vector{Float64}, dt_eff::Float64,bc::BoundaryCondition=InfiniteBox())
     q_vec .= q_vec + p_vec * dt_eff
-    (isa(bc,PeriodicBoundaryCondition)) && q_vec .= wrap_coords.(q_vec, (bc.L,))
+    (isa(bc,PeriodicBoundaryCondition)) && (q_vec .= mod1.(q_vec, (bc.L,)) )
 end
 
 function B_step!(q_vector::Vector{Float64},p_vec::Vector{Float64}, dt_eff::Float64, force_vec::Vector{Float64}, force_func::Function, compute_forces::Bool,bc::BoundaryCondition=InfiniteBox())
     compute_forces && (force_vec .= force_func.(q_vector,(bc.L,))) 
     p_vec += dt_eff * force_vec
 end
-
-wrap_coords(q::Float64,L::Float64)=mod1(q,L)
