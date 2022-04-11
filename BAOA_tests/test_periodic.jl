@@ -2,6 +2,18 @@ include("../molly/MollyExtend.jl")
 using .MollyExtend,Molly
 include("periodic_potential.jl")
 
+
+function update_hist!(bins::Vector{Int64},pt::Float64,lims::Tuple{Float64,Float64})
+    N=length(bins)
+    (lm,lM)=lims
+    
+    (pt > lM) && return nothing
+    (pt < lm) && return nothing
+
+    bin_ix=Int64(ceil(N*(pt-lm)/(lM-lm)))
+    bins[bin_ix]+=1
+end
+
 println("usage: dt N N_steps(between samples) N_reps(number of samples) splitting")
 
 dt=parse(Float64,ARGS[1])
@@ -9,11 +21,18 @@ N=parse(Int64,ARGS[2])
 N_steps=parse(Int64,ARGS[3])
 N_reps=parse(Int64,ARGS[4])
 splitting=ARGS[5]
+N_bins=parse(Int64,ARGS[6])
 
-L=10.0
+L=1.0
 
 T=1.0
 γ=1.0
+
+p_lims=(-10.0,10.0)
+q_lims=(0.0,L)
+
+q_hist=zeros(Int64,N_bins)
+p_hist=zeros(Int64,N_bins)
 
 coords=range(0.0,L,N)
 coords=[SVector{1,Float64}(x) for x in coords]
@@ -26,51 +45,51 @@ sim=LangevinSplitting(dt=dt,γ=γ,T=T,splitting=splitting)
 simulate!(sys,sim,N_steps)# equilibration
 
 for i=1:N_reps-1
-
     println("$(i)/$(N_reps) steps completed")
     flush(stdout)
 
     Q=[first(q) for q in sys.coords]
-    P=[first(v) for v in sys.velocities]
-    
-    f=open("periodic_qs_$(splitting)_$(dt).out","a")
-    print(f,join(Q,'\n'))
-    print(f,'\n')
-    close(f)
+    P=[first(p) for p in sys.velocities]
 
-    f=open("periodic_ps_$(splitting)_$(dt).out","a")
-    print(f,join(P,'\n'))
-    print(f,'\n')
-    close(f)
+    update_hist!.((q_hist,),Q,(q_lims,))
+    update_hist!.((p_hist,),P,(p_lims,))
+
     simulate!(sys,sim,N_steps)
 end
 
 Q=[first(q) for q in sys.coords]
-P=[first(v) for v in sys.velocities]
+P=[first(p) for p in sys.velocities]
 
-f=open("periodic_qs_$(splitting)_$(dt).out","a")
-print(f,join(Q,'\n'))
-print(f,'\n')
+n_samples_q=N_reps*N
+n_samples_p=N_reps*N
+
+if isfile("periodic_qs_$(splitting)_$(dt).out")
+    r=readlines("periodic_qs_$(splitting)_$(dt).out")
+    if length(r)==N_bins+1
+        for i=1:N_bins
+            q_hist+=parse(Int64,r[i])
+        end
+        n_samples_q+=parse(Int64,last(r))
+    end
+end
+
+if isfile("periodic_ps_$(splitting)_$(dt).out")
+    r=readlines("periodic_ps_$(splitting)_$(dt).out")
+    if length(r)==N_bins+1
+        for i=1:N_bins
+            p_hist+=parse(Int64,r[i])
+        end
+        n_samples_p+=parse(Int64,last(r))
+    end
+end
+
+f=open("periodic_qs_$(splitting)_$(dt).out","w")
+print(f,join(q_hist,'\n'))
+print(f,"\n$(n_samples_q)")
 close(f)
 
-f=open("periodic_ps_$(splitting)_$(dt).out","a")
-print(f,join(P,'\n'))
-print(f,'\n')
+f=open("periodic_ps_$(splitting)_$(dt).out","w")
+print(f,join(p_hist,'\n'))
+print(f,"\n$(n_samples_p)")
 close(f)
-
-
-
-"""Z=12.660658777519801 #numerically computed normalization constant for dq=1e-6 with a trapezoidal rule
-ν(q)=exp(-sin(2π*q/L))/Z
-
-Q=[first(q) for q in sys.coords]
-using Plots
-histogram(Q,normalize=true)
-plot!(ν,0,L)
-"""
-
-
-
-
-
 
