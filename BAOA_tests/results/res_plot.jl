@@ -2,12 +2,11 @@
 
 include("../potential.jl")
 using Plots
-
 run(`./scp_files.sh`)
 
 dts=[0.1,0.15,0.2,0.25,0.3,0.35,0.4]
 methods=["BAOA","BAOAB"]
-potentials=["PERIODIC","QUADRATIC","DOUBLE_WEll"]
+potentials=["PERIODIC","QUADRATIC","DOUBLE_WELL"]
 
 h_margin=0.3
 v_margin=0.2
@@ -40,7 +39,7 @@ for potential in potentials
     elseif potential=="QUADRATIC"
         Z=sqrt(2π)
         V=quadratic_potential
-    elseif potential=="DOUBLE_WEll"
+    elseif potential=="DOUBLE_WELL"
         Z=1.0
         V=double_well_potential
     end
@@ -98,8 +97,10 @@ for potential in potentials
                 plot!(p_marginal_plot,prange,p_marginal,label=method,linestyle=:dot)
                 plot!(q_marginal_plot,qrange,q_marginal,label=method,linestyle=:dot)
         end
-        push!(joint_plots,plot(joint_subplots...,layout=(1,length(methods)),title="Δt=$(dt)"))
-        push!(marginal_plots,plot(p_marginal_plot,q_marginal_plot,layout=(1,2),title="Δt=$(dt)"))
+        push!(joint_plots,plot(joint_subplots...,layout=(1,length(methods)),plot_title="Δt=$(dt)"))
+        push!(marginal_plots,plot(p_marginal_plot,q_marginal_plot,layout=(1,2),plot_title="Δt=$(dt)"))
+        savefig(last(joint_plots),"./plots/joint/joint_$(potential)_$(dt).pdf")
+        savefig(last(marginal_plots),"./plots/marginal/marginal_$(potential)_$(dt).pdf")
     end
     plot(joint_plots...,layout=(length(dts),1),size=plotsize_joint)
     savefig("./plots/joint_distributions_$(potential).pdf")
