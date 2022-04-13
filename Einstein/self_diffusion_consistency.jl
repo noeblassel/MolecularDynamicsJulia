@@ -6,8 +6,8 @@ rseed=2022
 N=Npd^3
 T=1.0
 
-bs_1=SVector(60.0,60.0,60.0)
-bs_2=SVector(30.0,30.0,30.0)
+bs_1=SVector(2.0,2.0,2.0)
+bs_2=SVector(1.0,1.0,1.0)
 
 coords1=place_atoms_on_3D_lattice(Npd,bs_2)
 coords2=deepcopy(coords1)
@@ -17,8 +17,8 @@ velocities1=init_velocities(T,M,1.0)
 velocities2=deepcopy(velocities1)
 
 
-logger1=SelfDiffusionLogger(1,coords1)
-logger2=SelfDiffusionLogger(1,coords2)
+logger1=SelfDiffusionLogger(coords1)
+logger2=SelfDiffusionLogger(coords2)
 
 sys1=System(atoms=atoms,coords=coords1,velocities=velocities1,loggers=Dict(:sd=>logger1),box_size=bs_1,force_units=NoUnits,energy_units=NoUnits)
 sys2=System(atoms=atoms,coords=coords2,velocities=velocities2,loggers=Dict(:sd=>logger2),box_size=bs_2,force_units=NoUnits,energy_units=NoUnits)

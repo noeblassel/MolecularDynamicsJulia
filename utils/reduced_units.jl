@@ -9,7 +9,8 @@ export
     get_physical_energy,
     get_physical_length,
     get_physical_pressure,
-    get_physical_temperature
+    get_physical_temperature,
+    get_physical_time
 
 const kb= ustrip(Unitful.k) #Boltzmann's constant (J * K^-1)
 

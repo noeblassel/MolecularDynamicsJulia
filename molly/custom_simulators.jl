@@ -412,18 +412,17 @@ end
 
 function O_step!(s::System{D}, α_eff::V, σ_eff::V, rng::AbstractRNG, noise_vec::N) where {D,T,N<:AbstractVector{SVector{D,T}},V<:AbstractVector{T}}
     noise_vec .= SVector{D}.(eachrow(randn(rng, Float64, (length(s), D))))
-    @. s.velocities = α_eff * s.velocities + σ_eff * noise_vec
+    s.velocities = α_eff .* s.velocities + σ_eff .* noise_vec
 end
 
 function A_step!(s::System, dt_eff::Real)
-    @. s.coords += s.velocities * dt_eff
-    s.coords .= wrap_coords_vec.(s.coords, (s.box_size,))
+    s.coords += s.velocities * dt_eff
+    s.coords = wrap_coords_vec.(s.coords, (s.box_size,))
 end
 
 function B_step!(s::System{D}, dt_eff::Real, acceleration_vector::A, neighbors, compute_forces::Bool, parallel::Bool) where {D,T,A<:AbstractVector{SVector{D,T}}}
     compute_forces && (acceleration_vector .= accelerations(s, neighbors, parallel=parallel)) 
-
-    @. s.velocities += dt_eff * acceleration_vector
+    s.velocities += dt_eff * acceleration_vector
 end
 
 mutable struct LangevinGHMC
@@ -505,3 +504,4 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
     end
 
 end
+

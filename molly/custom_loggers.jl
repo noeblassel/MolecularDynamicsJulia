@@ -115,21 +115,14 @@ end
 SelfDiffusionLogger(initial_coords) = SelfDiffusionLogger{typeof(initial_coords)}(deepcopy(initial_coords), zero(initial_coords))
 
 function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer=0)
-    @. logger.self_diffusion_coords += unwrap_coords_vec.(logger.last_coords, s.coords, (s.box_size,)) - logger.last_coords
-    @. logger.last_coords = s.coords
+    logger.self_diffusion_coords .+= unwrap_coords_vec.(logger.last_coords, s.coords, (s.box_size,)) - logger.last_coords
+    logger.last_coords .= s.coords
 end
 
 """
 Compute the periodic image of c2 closest to c1 (modulo the side_length), useful for tracking unperiodized coordinates.
 """
-function unwrap_coords(c1, c2, side_length)
-    if c1 < c2
-        return (c1 - c2 + side_length < c2 - c1) ? c2 - side_length : c2
-    else
-        return (c2 + side_length - c1 < c1 - c2) ? c2 + side_length : c2
-    end
-end
-
+unwrap_coords(c1, c2, side_length)=c2+round((c1-c2)/side_length)*side_length
 unwrap_coords_vec(c1, c2, box_size) = unwrap_coords.(c1, c2, box_size)
 
 struct GeneralObservableLogger{T}

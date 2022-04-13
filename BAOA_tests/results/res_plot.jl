@@ -6,7 +6,7 @@ run(`./scp_files.sh`)
 
 dts=[0.1,0.15,0.2,0.25,0.3,0.35,0.4]
 methods=["BAOA","BAOAB"]
-potentials=["PERIODIC","QUADRATIC","DOUBLE_WELL"]
+potentials=["PERIODIC","QUADRATIC","DOUBLE_WELL","TILTED_DOUBLE_WELL"]
 
 N_ref_pts=1000
 
@@ -22,6 +22,8 @@ L=1.0
 
 
 color_lims_dict=Dict("PERIODIC"=>(0.0,1.0),"QUADRATIC"=>(0.0,0.2),"DOUBLE_WELL"=>(0.0,0.25),"TILTED_DOUBLE_WELL"=>(0.0,0.25))
+linestyle_dict=Dict("BAOA"=>:dash,"BAOAB"=>:dot)
+
 
 h_margin=0.3
 v_margin=0.2
@@ -61,7 +63,7 @@ for potential in potentials
     marginal_plots=[]
     joint_plots=[]
 
-    ar=(last(qlims)-first(qlims))/(last(plims)-first(plims))    
+    ar=(last(plims)-first(plims))/(last(qlims)-first(qlims))
 
     for dt in dts
         println("\t",dt)
@@ -90,7 +92,7 @@ for potential in potentials
                 prange=range(plims...,Np)
                 qrange=range(qlims...,Nq)
 
-                push!(joint_subplots,heatmap(qrange,prange,D,c=:hsv,xlabel="q",ylabel="p",aspect_ratio=ar,title="$(method)",size=(w_side,w_side/aspect_ratio),clims=color_lims_dict[potential]))#
+                push!(joint_subplots,heatmap(prange,qrange,D,c=:hsv,xlabel="p",ylabel="q",aspect_ratio=ar,title="$(method)",size=(w_side,w_side/aspect_ratio),clims=color_lims_dict[potential]))#
 
                 q_marginal=zeros(Nq)
                 p_marginal=zeros(Np)
@@ -113,17 +115,17 @@ for potential in potentials
                     p_marginal[i]=I
                 end
 
-                plot!(p_marginal_plot,prange,p_marginal,label=method,linestyle=:dot)
-                plot!(q_marginal_plot,qrange,q_marginal,label=method,linestyle=:dot)
+                plot!(p_marginal_plot,prange,p_marginal,label=method,linestyle=linestyle_dict[method])
+                plot!(q_marginal_plot,qrange,q_marginal,label=method,linestyle=linestyle_dict[method])
         end
-        push!(joint_subplots,heatmap(ref_qrange,ref_prange,MU+dt*FOT,c=:hsv,xlabel="q",ylabel="p",aspect_ratio=ar,title="theoretical BAOA first order",size=(w_side,w_side/aspect_ratio),clims=color_lims_dict[potential]))
+        push!(joint_subplots,heatmap(ref_prange,ref_qrange,MU+dt*FOT,c=:hsv,xlabel="p",ylabel="q",aspect_ratio=ar,title="theoretical BAOA first order",size=(w_side,w_side/aspect_ratio),clims=color_lims_dict[potential]))
 
         push!(joint_plots,plot(joint_subplots...,layout=(1,length(methods)+1),plot_title="Δt=$(dt)"))
         push!(marginal_plots,plot(p_marginal_plot,q_marginal_plot,layout=(1,2),plot_title="Δt=$(dt)"))
         savefig(last(joint_plots),"./plots/joint/joint_$(potential)_$(dt).pdf")
         savefig(last(marginal_plots),"./plots/marginal/marginal_$(potential)_$(dt).pdf")
     end
-    plot(joint_plots...,layout=(length(dts),1),size=plotsize_joint)
+    plot(joint_plots...,layout=(length(dts),1),size=plotsize_joint,plot_title="")
     savefig("./plots/joint_distributions_$(potential).pdf")
     plot(marginal_plots...,layout=(length(dts),1),size=plotsize_marginal)
     savefig("./plots/marginal_distributions_$(potential).pdf")
