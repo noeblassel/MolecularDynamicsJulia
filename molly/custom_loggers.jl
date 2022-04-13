@@ -266,7 +266,7 @@ function Molly.log_property!(logger::LogLogger,s::System,neighbors=nothing,step_
 end
 
 function log_to_file!(logger::GeneralObservableLogger,file::IOStream)
-    println(file,join(logger.history,","),",")
+    println(file,join(logger.history,"\n"))
     empty!(logger.history)
 end
 

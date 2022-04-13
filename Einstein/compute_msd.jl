@@ -1,5 +1,5 @@
 include("../molly/MollyExtend.jl")
-using .MollyExtend
+using .MollyExtend,LinearAlgebra
 
 println("Usage: T ρ dt γ t_equilibration t_simulation logging_frequency N_atoms_per_dimension scheme cutoff_radius")
 
@@ -14,6 +14,7 @@ log_freq=parse(Float64,ARGS[7])
 Npd=parse(Int64,ARGS[8])
 splitting=ARGS[9]
 r_c=parse(Float64,ARGS[10])
+output_file=ARGS[11]
 
 N=Npd^3
 L=(N/ρ)^(1//3)
@@ -36,10 +37,11 @@ n_log_freq=Int64(floor(log_freq/dt))
 sim_eq=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
 sim=LangevinSplitting(dt=dt,γ=γ,T=T,splitting=splitting)
 
+msd(s::System,neighbors=nothing)=dot(s.loggers[:sd].self_diffusion_coords,s.loggers[:sd].self_diffusion_coords)
+
 sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inter,),box_size=box_size,neighbor_finder=nf,loggers=Dict{Symbol,Any}(),force_units=NoUnits,energy_units=NoUnits)
 
 simulate!(sys,sim_eq,n_steps_eq)
-sys.loggers=Dict(:self_diffusion=>SelfDiffusionLogger(sys.coords),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:self_diffusion,:elapsed_time],["self_diffusion_coords.out","elapsed_time.out"],[n_log_freq,10000],[false,true]))
-
+sys.loggers=Dict(:sd=>SelfDiffusionLogger(sys.coords),:msd=>GeneralObservableLogger(msd,1),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:elapsed_time,:msd],["elapsed_time.out",output_file],[10000,n_log_freq],[true,false]))
 simulate!(sys,sim,n_steps_sim)
 
