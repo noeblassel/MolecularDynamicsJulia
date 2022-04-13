@@ -44,5 +44,5 @@ sim=LangevinSplitting(dt=dt,γ=γ,T=T,splitting=splitting)
 sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inter,),general_inters=(forcing,),box_size=box_size,neighbor_finder=nf,loggers=Dict{Symbol,Any}(),force_units=NoUnits,energy_units=NoUnits)
 
 simulate!(sys,sim_eq,n_steps_eq)
-sys.loggers=Dict(:mobility=>AverageObservableLogger(R),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:mobility,:elapsed_time],["mobility_estimates$(η).out","elapsed_time.out"],[100_000,10000],[false,true],["w","a"]))
+sys.loggers=Dict(:mobility=>AverageObservableLogger(R),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:mobility,:elapsed_time],["mobility_estimates$(η)_$(forcing_type).out","elapsed_time.out"],[100_000,10000],[false,true],["w","a"]))
 simulate!(sys,sim,n_steps_sim)
