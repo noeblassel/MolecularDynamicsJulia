@@ -146,43 +146,40 @@ C(t)=[⟨A(t)B(0)⟩-⟨A(0)B(0)⟩]/√[⟨A(0)²⟩⟨B(0)²⟩]
 for observables A and B, which are functions of the form f(sys::System,neighbors=nothing)
 the output of A and B can be numeric or vectors (including vectors of SVectors, like the positions or velocities), in which case the products inside the brackets are dot products.
 """
-mutable struct TimeCorrelationLogger{T,T_avg_A,T_avg_sq_A}
+mutable struct TimeCorrelationLogger{T_A,T_sq_A}
 
     observableA::Function
     observableB::Function
 
     n_correlation::Integer
 
-    history_A::Vector{T_avg_A}
-    history_B::Vector{T_avg_A}
+    history_A::Vector{T_A}
+    history_B::Vector{T_A}
 
-    avg_offset_products::Vector{T_avg_sq_A}
-    correlations::Vector{T}
+    sum_offset_products::Vector{T_sq_A}
 
     n_timesteps::Int64
 
-    avg_A::T_avg_A
-    avg_B::T_avg_A
+    sum_A::T_A
+    sum_B::T_A
 
-    avg_sq_A::T_avg_sq_A
-    avg_sq_B::T_avg_sq_A
+    sum_sq_A::T_sq_A
+    sum_sq_B::T_sq_A
 
 end
 
 
 function TimeCorrelationLogger(TA::DataType, observableA::Function, observableB::Function, observable_length::Integer,n_correlation::Integer)
-    T=typeof(ustrip(zero(eltype(TA))))
-
-    ini_avg_A= (observable_length>1) ? zeros(TA,observable_length) : zero(TA)
-    ini_avg_B= zero(ini_avg_A)
+    ini_sum_A= (observable_length>1) ? zeros(TA,observable_length) : zero(TA)
+    ini_sum_B= zero(ini_sum_A)
     
-    ini_avg_sq_A=dot(ini_avg_A,ini_avg_A)
-    ini_avg_sq_B=zero(ini_avg_sq_A)
+    ini_sum_sq_A=dot(ini_sum_A,ini_sum_A)
+    ini_sum_sq_B=zero(ini_sum_sq_A)
 
-    T_avg_A=typeof(ini_avg_A)
-    T_avg_sq_A=typeof(ini_avg_sq_A)
+    T_sum_A=typeof(ini_sum_A)
+    T_sum_sq_A=typeof(ini_sum_sq_A)
 
-    return TimeCorrelationLogger{T,T_avg_A,T_avg_sq_A}(observableA, observableB, n_correlation, T_avg_A[], T_avg_A[], zeros(T_avg_sq_A, n_correlation), zeros(T, n_correlation), 0, ini_avg_A, ini_avg_B, ini_avg_sq_A, ini_avg_sq_B)
+    return TimeCorrelationLogger{T_sum_A,T_sum_sq_A}(observableA, observableB, n_correlation, T_sum_A[], T_sum_A[], zeros(T_sum_sq_A, n_correlation), 0, ini_sum_A, ini_sum_B, ini_sum_sq_A, ini_sum_sq_B)
 
 end
 
@@ -215,11 +212,11 @@ function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors
     push!(logger.history_B, B)
 
     #update running averages (numerically stable method)
-    logger.avg_A += (A-logger.avg_A) / logger.n_timesteps
-    logger.avg_B += (B-logger.avg_B) / logger.n_timesteps
+    logger.sum_A += A
+    logger.sum_B += B
 
-    logger.avg_sq_A += (dot(A, A)-logger.avg_sq_A) / logger.n_timesteps
-    logger.avg_sq_B += (dot(B, B)-logger.avg_sq_B) / logger.n_timesteps
+    logger.sum_sq_A += dot(A, A)
+    logger.sum_sq_B += dot(B, B)
 
 
     B1 = first(logger.history_B)
@@ -227,12 +224,8 @@ function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors
     for (i, Ai) = enumerate(logger.history_A)
         n_samples = logger.n_timesteps - i + 1
         if n_samples > 0
-            #update cross term averages
-            logger.avg_offset_products[i] += (dot(Ai, B1)-logger.avg_offset_products[i]) / n_samples
-            
-            #store normalized correlation
-            logger.correlations[i] = (logger.avg_offset_products[i] - dot(logger.avg_A, logger.avg_B)) / sqrt(logger.avg_sq_A * logger.avg_sq_B)
-        end
+            logger.sum_offset_products[i] += dot(Ai, B1)
+            end
     end
 
 end
@@ -247,17 +240,17 @@ ElapsedTimeLogger()=ElapsedTimeLogger(Dates.now())
 Molly.log_property!(logger::ElapsedTimeLogger,S::System,neighbors=nothing,step_n::Integer=0)=nothing
 
 struct LogLogger
-    logger_table::Vector{Tuple{Symbol,String,Int64,Bool}} 
+    logger_table::Vector{Tuple{Symbol,String,Int64,Bool,String}} 
 end
 
-function LogLogger(logger_names::Vector{Symbol},logging_files::Vector{String},logging_freqs::Vector{Int64},decorate_outputs::Vector{Bool})
-    return LogLogger([zip(logger_names,logging_files,logging_freqs,decorate_outputs)...])
+function LogLogger(logger_names::Vector{Symbol},logging_files::Vector{String},logging_freqs::Vector{Int64},decorate_outputs::Vector{Bool},write_modes::Vector{String})
+    return LogLogger([zip(logger_names,logging_files,logging_freqs,decorate_outputs,write_modes)...])
 end
 
 function Molly.log_property!(logger::LogLogger,s::System,neighbors=nothing,step_n::Integer=0)
-    for (name,file,freq,decorate)=logger.logger_table
+    for (name,file,freq,decorate,mode)=logger.logger_table
         if step_n%freq==0
-            f=open(file,"a")
+            f=open(file,mode)
             (decorate) && println(f,"---- Step : $(step_n) ---- Logger : $(name) ----")
             log_to_file!(s.loggers[name],f)
             close(f)
@@ -266,14 +259,18 @@ function Molly.log_property!(logger::LogLogger,s::System,neighbors=nothing,step_
 end
 
 function log_to_file!(logger::GeneralObservableLogger,file::IOStream)
-    println(file,join(logger.history,"\n"))
+    write(file,logger.history)
     empty!(logger.history)
 end
 
-function log_to_file!(logger::TimeCorrelationLogger,file::IOStream)
-    println(file,logger.correlations)
-    println(file,logger.avg_sq_A)
-    println(file,logger.avg_sq_B)
+function log_to_file!(logger::TimeCorrelationLogger,file::IOStream)#write input utility
+    write(file,length(logger.sum_A))
+    write(file,logger.sum_A)
+    write(file,length(logger.sum_B))
+    write(file,logger.sum_B)
+    write(file,length(logger.sum_offset_products))
+    write(file,logger.sum_offset_products)
+    write(file,logger.n_timesteps)
 end
 
 function log_to_file!(logger::ElapsedTimeLogger,file::IOStream)
@@ -281,7 +278,7 @@ function log_to_file!(logger::ElapsedTimeLogger,file::IOStream)
 end
 
 function log_to_file!(logger::SelfDiffusionLogger,file::IOStream)
-    println(file,logger.self_diffusion_coords)
+    write(file,logger.self_diffusion_coords)
 end
 
 ###State logger (writes state of system to external file --- NOT GENERAL)
@@ -299,7 +296,7 @@ end
 mutable struct AverageObservableLogger{T}
     observable::Function
     log_freq::Int64
-    average::T
+    sum::T
     n_samples::Int64
 end
 
@@ -311,11 +308,12 @@ function Molly.log_property!(logger::AverageObservableLogger,s::System,neighbors
     if step_n % logger.log_freq ==0
         O=logger.observable(s,neighbors)
         logger.n_samples+=1
-        logger.average+=(O-logger.average)/logger.n_samples
+        logger.sum+=O
     end
 
 end
 
 function log_to_file!(logger::AverageObservableLogger,file::IOStream)
-    println(file,logger.n_samples," ",logger.average)
+    write(file,logger.n_samples)
+    write(file,logger.sum/logger.n_samples)
 end

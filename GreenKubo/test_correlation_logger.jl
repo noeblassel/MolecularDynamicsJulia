@@ -1,15 +1,15 @@
 include("../molly/MollyExtend.jl")
 using .MollyExtend
 
-Npd = 12
+Npd = 10
 N = Npd^3
-ρ = 0.8;
+ρ = 0.7
 L = (N / ρ)^(1 // 3)
-T = 0.2
-dt = 2e-3
+T = 2.5
+dt = 5e-3
 r_c = 3.0
 
-n_steps = 5_000_000
+n_steps =50_000_000
 
 box_size = SVector(L, L, L)
 inter = LennardJones(cutoff=ShiftedForceCutoff(r_c), nl_only=true, force_units=NoUnits, energy_units=NoUnits)
@@ -24,10 +24,9 @@ sim_eq=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
 #sim=LangevinSplitting(dt=dt,γ=0.1,T=T,splitting="BAOAB")
 sim=sim_eq
 simulate!(sys,sim_eq,50_000)
+R(s::System,neighbors=nothing)=s.velocities/1.0#1.0 to copy
 
-R(s::System,neighbors=nothing)=s.velocities/N
-
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,2000),:time=>ElapsedTimeLogger(),:state=>StateLogger(sys),:log_log=>LogLogger([:autocorrelation,:time,:state],["autocorrelation_history.out","elapsed_times.out","states.out"],[100_000,1000,1000000],[false,true,false]))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,2000),:time=>ElapsedTimeLogger(),:state=>StateLogger(sys),:log_log=>LogLogger([:autocorrelation,:time,:state],["autocorrelation_history.out","elapsed_times.out","states.out"],[1000,10000,1000000],[false,true,false],["w","a","w"]))
 
 simulate!(sys,sim,n_steps)
 f=open("output_alt.txt","w")
