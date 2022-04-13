@@ -37,11 +37,11 @@ n_log_freq=Int64(floor(log_freq/dt))
 sim_eq=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
 sim=LangevinSplitting(dt=dt,γ=γ,T=T,splitting=splitting)
 
-msd(s::System,neighbors=nothing)=dot(s.loggers[:sd].self_diffusion_coords,s.loggers[:sd].self_diffusion_coords)
+msd(s::System,neighbors=nothing)=dot(s.loggers[:sd].self_diffusion_coords,s.loggers[:sd].self_diffusion_coords)/N
 
 sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inter,),box_size=box_size,neighbor_finder=nf,loggers=Dict{Symbol,Any}(),force_units=NoUnits,energy_units=NoUnits)
 
 simulate!(sys,sim_eq,n_steps_eq)
-sys.loggers=Dict(:sd=>SelfDiffusionLogger(sys.coords),:msd=>GeneralObservableLogger(msd,1),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:elapsed_time,:msd],["elapsed_time.out",output_file],[10000,n_log_freq],[true,false]))
+sys.loggers=Dict(:sd=>SelfDiffusionLogger(sys.coords),:msd=>GeneralObservableLogger(msd,n_log_freq),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:elapsed_time,:msd],["elapsed_time.out",output_file],[10000,n_log_freq],[true,false]))
 simulate!(sys,sim,n_steps_sim)
 
