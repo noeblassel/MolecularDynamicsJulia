@@ -24,7 +24,7 @@ sim_eq=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
 #sim=LangevinSplitting(dt=dt,γ=0.1,T=T,splitting="BAOAB")
 sim=sim_eq
 simulate!(sys,sim_eq,50_000)
-R(s::System,neighbors=nothing)=s.velocities/N
+R(s::System,neighbors=nothing)=s.velocities/sqrt(3N)
 
 sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,2000),:time=>ElapsedTimeLogger(),:state=>StateLogger(sys),:log_log=>LogLogger([:autocorrelation,:time,:state],["autocorrelation_history.out","elapsed_times.out","states.out"],[1000,10000,1000000],[false,true,false],["w","a","w"]))
 
