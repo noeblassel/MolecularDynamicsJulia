@@ -37,5 +37,5 @@ hist=zeros(Int64,N_bins,N_bins)
 
 for i=1:log_every:N_steps
     simulate!(ps,qs,force,hist,qlims,plims,sim,log_every)
-    write_hist2D(hist,"bins_$(splitting)_$(ARGS[8])_$(dt).out")
+    write_hist2D(hist,"bins_$(splitting)_$(ARGS[8])_$(dt)_$(γ).out")
 end
