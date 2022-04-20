@@ -17,6 +17,7 @@ splitting=ARGS[6]
 N_bins=parse(Int64,ARGS[7])
 
 force=force_dict[ARGS[8]]
+γ=parse(Float64,ARGS[9])
 
 ps=zeros(N)
 qs=zeros(N)
@@ -27,7 +28,7 @@ plims= (-5.0,5.0)
 
 
 bc = (ARGS[8]=="PERIODIC" ) ? PeriodicBoundaryCondition(L) : InfiniteBox()
-sim=LangevinSplitting(dt=dt,γ=1.0,T=1.0,splitting=splitting,bc=bc)
+sim=LangevinSplitting(dt=dt,γ=γ,T=1.0,splitting=splitting,bc=bc)
 
 hist=zeros(Int64,N_bins,N_bins)
 
