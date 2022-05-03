@@ -7,7 +7,7 @@ using .MollyExtend
 
 metropolis=parse(Bool,ARGS[1])
 
-Npd=2
+Npd=4
 N=Npd^3
 
 dt=5e-7
@@ -43,7 +43,7 @@ sim_eq=MALA(dt=1e-6,T=1.0)
 simulate!(sys,sim_eq,n_steps_eq)
 
 
-n_steps_sim=100_000
+n_steps_sim=10_000_000
 for lg_dt in range(-7,-6.5,20)
     dt=10^lg_dt
     sim=MALA(dt=dt,T=1.0,is_metropolis=metropolis)
