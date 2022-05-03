@@ -1,13 +1,12 @@
 include("../molly/MollyExtend.jl")
 using .MollyExtend
 
-@assert length(ARGS) == 6 "Error(Wrong Argument Count) expected 6, got $(length(ARGS)).\n Usage: test_rejection_scaling_hmc.jl T ρ Δt teq tfin Npd"
+@assert length(ARGS) == 5 "Error(Wrong Argument Count) expected 5, got $(length(ARGS)).\n Usage: test_rejection_scaling_hmc.jl T ρ teq tfin Npd"
 T = parse(Float64, ARGS[1])
 ρ = parse(Float64, ARGS[2])
-dt = parse(Float64, ARGS[3])
-teq = parse(Float64, ARGS[4])
-tfin = parse(Float64, ARGS[5])
-Npd = parse(Int64, ARGS[6])
+teq = parse(Float64, ARGS[3])
+tfin = parse(Float64, ARGS[4])
+Npd = parse(Int64, ARGS[5])
 r_c_inter=1.6
 
 
@@ -19,7 +18,6 @@ box_size = SVector(L, L, L)
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c_inter), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
 #nf = nothing
-n_steps = Int64(round(tfin / dt))
 r_c=1.8
 if (L > 3 * r_c) && N>900
     nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c, unit_cell = box_size)
@@ -36,9 +34,14 @@ sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_i
 
 γ = 1.0
 
-simulator = LangevinGHMC(T = T, γ = γ, dt = dt)
 simulator_eq= LangevinSplitting(T=T, γ=γ, dt= dt_eq, splitting="BAOAB")
 simulate!(sys,simulator_eq,eq_nsteps)
 
-simulate!(sys,simulator,n_steps)
-println(1-simulator.n_accepted/simulator.n_total)
+lg_dt_range=range(-5,-4,20)
+dts= 10 .^lg_dt_range
+for dt in reverse(dts)
+    n_steps = round(Int64,tfin / dt)    
+    simulator = LangevinGHMC(T = T, γ = γ, dt = dt)
+    simulate!(sys,simulator,n_steps)
+    println(dt," ",1-simulator.n_accepted/simulator.n_total)
+end
