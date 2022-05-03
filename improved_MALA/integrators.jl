@@ -36,7 +36,6 @@ function simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=t
 
         ## propose candidate position according to Euler-Maruyama scheme ##
         @. candidate_coords = sys.coords - sim.β * accels * sim.dt + σ * dW
-        candidate_coords = wrap_coords_vec.(candidate_coords, (sys.box_size,))
 
         ## temporarily swap candidate position in the system's field to compute candidate potential and gradient ##
         sys.coords, candidate_coords = candidate_coords, sys.coords
@@ -57,9 +56,6 @@ function simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=t
         exp_α=exp(α)
         accepted = (sim.is_metropolis) ? (log(U) < α) : (U < (exp_α / (1 + exp_α)))
 
-        #println()
-       # println("H: $(H)   |H_tilde: $(H_tilde)  | α: $(α) | accept : $(accepted)")
-
         sim.n_total += 1
 
         if accepted
@@ -67,6 +63,7 @@ function simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=t
             neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel) #recompute neighbors
             accels, accels_tilde = accels_tilde, accels #reuse candidate gradient as new gradient
             H = H_tilde #reuse candidate potential as new potential
+            sys.coords=wrap_coords_vec.(sys.coords, (sys.box_size,)) #enforce boundary conditions
         else
             sys.coords, candidate_coords = candidate_coords, sys.coords #swap back original coordinates
         end
