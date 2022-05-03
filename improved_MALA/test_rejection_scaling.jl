@@ -39,14 +39,15 @@ inter = LennardJones(cutoff = ShiftedForceCutoff(r_c_inter), nl_only = true, for
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = Dict{Symbol,Any}())
 
 n_steps_eq=100_000
-sim=MALA(dt=1e-6,T=1.0)
-simulate!(sys,sim,n_steps_eq)
+sim_eq=MALA(dt=1e-6,T=1.0)
+simulate!(sys,sim_eq,n_steps_eq)
 
 
 n_steps_sim=10_000_000
 for lg_dt in range(-7,-5,20)
     dt=10^lg_dt
     sim=MALA(dt=dt,T=1.0,is_metropolis=metropolis)
+    simulate!(sys,sim,n_steps_sim)
     println(dt," ",sim.n_accepted/sim.n_total)
     flush(stdout)
 end
