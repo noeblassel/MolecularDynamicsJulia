@@ -5,7 +5,7 @@ include("integrators.jl")
 
 using .MollyExtend
 
-barker=parse(Bool,ARGS[1])
+metropolis=parse(Bool,ARGS[1])
 
 Npd=4
 N=Npd^3
@@ -46,7 +46,7 @@ simulate!(sys,sim,n_steps_eq)
 n_steps_sim=10_000_000
 for lg_dt in range(-7,-5,20)
     dt=10^lg_dt
-    sim=MALA(dt=dt,T=1.0)
+    sim=MALA(dt=dt,T=1.0,is_metropolis=metropolis)
     println(dt," ",sim.n_accepted/sim.n_total)
     flush(stdout)
 end
