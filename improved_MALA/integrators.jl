@@ -18,14 +18,14 @@ function MALA(; dt, T, is_metropolis=true, rseed=UInt32(round(time())), rng=Mers
     MALA(dt, β, is_metropolis, rseed, rng, 0, 0)
 end
 
-function simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=true) where {D}
+function Molly.simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=true) where {D}
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
     dW = zero(sys.coords)
     candidate_coords = zero(sys.coords)
     accels = accelerations(sys, neighbors; parallel=parallel)
     accels_tilde = zero(accels)
-    H = potential_energy(sys, neighbors)
-    H_tilde = zero(H)
+    V = potential_energy(sys, neighbors)
+    V_tilde = zero(V)
     σ = sqrt(2 * sim.dt)
 
     reverse_deviation = zero(sys.coords)
@@ -36,18 +36,20 @@ function simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=t
 
         ## propose candidate position according to Euler-Maruyama scheme ##
         @. candidate_coords = sys.coords + sim.β * accels * sim.dt + σ * dW
+        @. reverse_deviation = sys.coords - candidate_coords #aperiodic part of the reverse displacement
 
         ## temporarily swap candidate position in the system's field to compute candidate potential and gradient ##
+        candidate_coords.=wrap_coords_vec.(candidate_coords,(sys.box_size,))#enforce boundary conditions
         sys.coords, candidate_coords = candidate_coords, sys.coords
-        H_tilde = potential_energy(sys, neighbors)
-        accels_tilde = accelerations(sys, neighbors; parallel=parallel)
 
-        ## compute deviation of previous position relative to average of EM move from candidate position ##
-        reverse_deviation = (sys.coords + sim.β * sim.dt * accels_tilde) - candidate_coords
-        #note sys.coords is actually the candidate position and candidate_coords the original position
+        V_tilde = potential_energy(sys, neighbors)
+        accels_tilde .= accelerations(sys, neighbors; parallel=parallel)
+
+        ## update reverse displacement with gradient part ##
+       @. reverse_deviation -= sim.β * sim.dt * accels_tilde
 
         ## compute log of metropolis ratio ##
-        α = -sim.β * (H_tilde - H) # potential part
+        α = -sim.β * (V_tilde - V) # potential part
         +dot(dW, dW) / 2 # forward transition term
         -dot(reverse_deviation, reverse_deviation) / (4 * sim.dt) #reverse transition term
 
@@ -55,15 +57,13 @@ function simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=t
         U = rand(sim.rng)
         exp_α=exp(α)
         accepted = (sim.is_metropolis) ? (log(U) < α) : (U < (exp_α / (1 + exp_α)))
-
         sim.n_total += 1
 
         if accepted
             sim.n_accepted += 1
             neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel) #recompute neighbors
             accels, accels_tilde = accels_tilde, accels #reuse candidate gradient as new gradient
-            H = H_tilde #reuse candidate potential as new potential
-            sys.coords=wrap_coords_vec.(sys.coords, (sys.box_size,)) #enforce boundary conditions
+            V = V_tilde #reuse candidate potential as new potential
         else
             sys.coords, candidate_coords = candidate_coords, sys.coords #swap back original coordinates
         end
@@ -89,4 +89,4 @@ function ImprovedMALA(; dt, T, is_metropolis=true, rseed=UInt32(round(time())), 
     ImprovedMALA(dt, β, is_metropolis, rseed, rng, 0, 0)
 end
 
-function simulate!(sys::System{D}, sim::ImprovedMALA, n_steps::Integer; parallel::Bool=true) where {D} end
+function Molly.simulate!(sys::System{D}, sim::ImprovedMALA, n_steps::Integer; parallel::Bool=true) where {D} end
