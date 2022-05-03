@@ -35,7 +35,7 @@ function simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=t
         dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
 
         ## propose candidate position according to Euler-Maruyama scheme ##
-        @. candidate_coords = sys.coords - sim.β * accels * sim.dt + σ * dW
+        @. candidate_coords = sys.coords + sim.β * accels * sim.dt + σ * dW
 
         ## temporarily swap candidate position in the system's field to compute candidate potential and gradient ##
         sys.coords, candidate_coords = candidate_coords, sys.coords
@@ -43,7 +43,7 @@ function simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=t
         accels_tilde = accelerations(sys, neighbors; parallel=parallel)
 
         ## compute deviation of previous position relative to average of EM move from candidate position ##
-        reverse_deviation = (sys.coords - sim.β * sim.dt * accels_tilde) - candidate_coords
+        reverse_deviation = (sys.coords + sim.β * sim.dt * accels_tilde) - candidate_coords
         #note sys.coords is actually the candidate position and candidate_coords the original position
 
         ## compute log of metropolis ratio ##
