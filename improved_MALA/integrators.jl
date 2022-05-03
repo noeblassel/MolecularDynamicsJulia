@@ -54,6 +54,7 @@ function simulate!(sys::System{D}, sim::MALA, n_steps::Integer; parallel::Bool=t
 
         ## accept / reject step ##
         U = rand(sim.rng)
+        exp_α=exp(α)
         accepted = (sim.is_metropolis) ? (log(U) < α) : (U < (exp_α / (1 + exp_α)))
 
         #println()
