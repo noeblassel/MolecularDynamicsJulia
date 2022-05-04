@@ -5,13 +5,15 @@ include("integrators.jl")
 
 using .MollyExtend
 
-println(stderr,"Usage: Npd dt ρ Tfin Nsamps is_metropolis")
+println(stderr,"Usage: Npd log_dt_min log_dt_max num_dts ρ N_steps Nsamps is_metropolis")
 Npd=parse(Int64,ARGS[1])
-dt=parse(Float64,ARGS[2])
-ρ=parse(Float64,ARGS[3])
-Tfin=parse(Float64,ARGS[4])
-Nsamps=parse(Int64,ARGS[5])
-metropolis=parse(Bool,ARGS[6])
+lg_dt_min=parse(Float64,ARGS[2])
+lg_dt_max=parse(Float64,ARGS[3])
+N_dts=parse(Int64,ARGS[4])
+ρ=parse(Float64,ARGS[5])
+N_steps=parse(Int64,ARGS[6])
+Nsamps=parse(Int64,ARGS[7])
+metropolis=parse(Bool,ARGS[8])
 
 N=Npd^3
 
@@ -40,16 +42,22 @@ sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_i
 #---------------------------equilibriate---------------------------------------
 
 n_steps_eq=100_000
-sim_eq=LangevinSplitting(dt=5e-3,γ=1.0, T=1.0,splitting="BAOA")
+dt_eq=1e-3
+sim_eq=MALA(dt=dt_eq, T=1.0)
 simulate!(sys,sim_eq,n_steps_eq)
-
-R=0
 #---------- simulate --------------
+
+log_dts=range(lg_dt_min,lg_dt_max,N_dts)
+dts= 10 .^ log_dts
+Rs=zero(dts)
 for it=1:Nsamps
-        n_steps=ceil(Int64,Tfin/dt)
+    println("iteration $it/$Nsamps")
+    for (i,dt)=enumerate(dts)
         sim=MALA(dt=dt,T=1.0,is_metropolis=metropolis)
-        simulate!(sys,sim,n_steps)
-        global R+=1-(sim.n_accepted/sim.n_total)
+        simulate!(sys,sim,N_steps)
+        global Rs[i]+=1-(sim.n_accepted/sim.n_total)
+    end
 end
 
-println(R/Nsamps)
+println(dts)
+println(Rs/Nsamps)
