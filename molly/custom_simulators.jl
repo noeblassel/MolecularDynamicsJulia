@@ -442,9 +442,6 @@ function LangevinGHMC(; dt, γ, T, rseed=UInt32(round(time())), rng=MersenneTwis
     LangevinGHMC(dt, γ, β, rseed, rng, 0, 0)
 end
 
-
-
-
 function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; parallel::Bool=true) where {D}
     M_inv = inv.(ustrip.(mass.((sys.atoms))))
 
@@ -477,14 +474,13 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
         @. candidate_coords = sys.coords + candidate_velocities * sim.dt
         candidate_coords = wrap_coords_vec.(candidate_coords, (sys.box_size,))
         sys.coords, candidate_coords = candidate_coords, sys.coords
-
-        neighbors_tilde = find_neighbors(sys, sys.neighbor_finder,neighbors,i; parallel=parallel)
+        
         accels_tilde = accelerations(sys,neighbors; parallel=parallel)
         
         @. candidate_velocities += accels_tilde * sim.dt / 2
         sys.velocities, candidate_velocities = candidate_velocities, sys.velocities
 
-        H_tilde = total_energy(sys, neighbors_tilde)
+        H_tilde = total_energy(sys, neighbors)
 
         U = rand(sim.rng)
         
@@ -494,7 +490,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinGHMC, n_steps::Integer; pa
             sim.n_accepted += 1
             H=H_tilde
             accels,accels_tilde=accels_tilde,accels
-            neighbors,neighbors_tilde=neighbors_tilde,neighbors
+            neighbors=find_neighbors(sys, sys.neighbor_finder,neighbors,i; parallel=parallel)
         else
             sys.coords, candidate_coords = candidate_coords, sys.coords
             sys.velocities, candidate_velocities = candidate_velocities, sys.velocities

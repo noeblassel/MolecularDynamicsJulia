@@ -44,7 +44,7 @@ function pair_virial(s::System, neighbors = nothing, lrc = false)
                         end
                     end
 
-                    W += f_divr * r2
+                    W += 2*f_divr * r2 #counts twice since looping over pairs j<i
                 end
             end
 

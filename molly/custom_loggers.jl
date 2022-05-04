@@ -225,7 +225,7 @@ function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors
         n_samples = logger.n_timesteps - i + 1
         if n_samples > 0
             logger.sum_offset_products[i] += dot(Ai, B1)
-            end
+        end
     end
 
 end
@@ -266,8 +266,9 @@ end
 function log_to_file!(logger::TimeCorrelationLogger,file::IOStream)#write input utility
     write(file,length(logger.sum_A))
     write(file,logger.sum_A)
-    write(file,length(logger.sum_B))
     write(file,logger.sum_B)
+    write(file,logger.sum_sq_A)
+    write(file,logger.sum_sq_B)
     write(file,length(logger.sum_offset_products))
     write(file,logger.sum_offset_products)
     write(file,logger.n_timesteps)

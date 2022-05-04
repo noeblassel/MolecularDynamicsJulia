@@ -33,7 +33,7 @@ inter=LennardJones(cutoff=ShiftedForceCutoff(r_c),nl_only=true,force_units=NoUni
 forcing = (forcing_type== "COLOR") ? ColorDriftNEMD(N,η) : SingleDriftNEMD(N,1,η)
 
 ff=forcing.force_field
-R=MobilityObservable(ff)
+R= (forcing_type== "COLOR") ? MobilityObservable(ff) : (s::System,neighbors=nothing) -> s.velocities[1][1]
 
 n_steps_eq=Int64(floor(t_eq/dt))
 n_steps_sim=Int64(floor(t_sim/dt))
