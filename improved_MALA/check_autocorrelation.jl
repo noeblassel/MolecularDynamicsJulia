@@ -48,7 +48,7 @@ dt_eq=1e-3
 sim_eq=MALA(dt=dt_eq, T=1.0)
 simulate!(sys,sim_eq,n_steps_eq)
 #---------- simulate --------------
-sys.loggers=Dict(:autocorr=>AutoCorrelationLoggerVec(N,3,R,N_steps_corr),:log=>LogLogger([:autocorr],["autocorrelation_$rule_$proposal.out"],[1000000],[false],["w"]))
+sys.loggers=Dict(:autocorr=>AutoCorrelationLoggerVec(N,3,R,N_steps_corr),:log=>LogLogger([:autocorr],["autocorrelation_$(rule)_$proposal.out"],[1000000],[false],["w"]))
 metropolis= (rule=="METROPOLIS")
 
 for i in 1
