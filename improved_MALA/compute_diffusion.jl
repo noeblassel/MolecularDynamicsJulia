@@ -17,7 +17,6 @@ proposal=ARGS[7]
 N=Npd^3
 dt=10^lg_dt
 N_corr=ceil(Int64,T_corr/dt)
-(rule == "BARKER") && (N_corr*=2)
 R(sys::System,neighbors=nothing)=forces(sys,neighbors)/N #observable for autocorrelation,normalized by N for numerical stability
 
 #------------------------ setup neighbor list ----------------------------------
