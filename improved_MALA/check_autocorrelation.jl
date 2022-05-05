@@ -5,18 +5,19 @@ include("integrators.jl")
 
 using .MollyExtend
 
-println(stderr,"Usage: Npd log_dt_min log_dt_max num_dts ρ N_steps Nsamps rule(METROPOLIS|BAKER) proposal(EM|HMC)")
+println(stderr,"Usage: Npd dt ρ N_steps T_corr rule(METROPOLIS|BAKER) proposal(EM|HMC)")
 Npd=parse(Int64,ARGS[1])
-lg_dt_min=parse(Float64,ARGS[2])
-lg_dt_max=parse(Float64,ARGS[3])
-N_dts=parse(Int64,ARGS[4])
-ρ=parse(Float64,ARGS[5])
-N_steps=parse(Int64,ARGS[6])
-Nsamps=parse(Int64,ARGS[7])
-rule=ARGS[8]
-proposal=ARGS[9]
+dt=parse(Float64,ARGS[2])
+ρ=parse(Float64,ARGS[3])
+N_steps=parse(Int64,ARGS[4])
+T_corr=parse(Float64,ARGS[5])
+rule=ARGS[6]
+proposal=ARGS[7]
 
 N=Npd^3
+
+N_steps_corr=ceil(Int64,T_corr/dt)
+R(sys::System,neighbors=nothing)=forces(sys,neighbors)#observable for autocorrelation
 
 #------------------------ setup neighbor list ----------------------------------
 L = (N / ρ)^(1 // 3)
@@ -47,7 +48,7 @@ dt_eq=1e-3
 sim_eq=MALA(dt=dt_eq, T=1.0)
 simulate!(sys,sim_eq,n_steps_eq)
 #---------- simulate --------------
-
+sys.loggers=Dict(:autocorr=>AutoCorrelationLoggerVec(N,3,R,N_steps_corr),:log=>LogLogger([:autocorr],["autocorrelation_estimation.out"],[1000000],[false],["w"]))
 metropolis= (rule=="METROPOLIS")
 
 log_dts=range(lg_dt_min,lg_dt_max,N_dts)
@@ -55,29 +56,11 @@ dts= 10 .^ log_dts
 As=zero(dts)
 Rs_baker_abs=zero(dts)
 
-for it=1:Nsamps
-    println("iteration $it/$Nsamps")
-    flush(stdout)
-    for (i,dt)=enumerate(dts)
-
-        if proposal=="EM"
-            sim=MALA(dt=dt,T=1.0,is_metropolis=metropolis)
-        else
-            sim=MALA_HMC(dt=dt,T=1.0,is_metropolis=metropolis)
-        end
-
-        simulate!(sys,sim,N_steps)
-        global As[i]+=(sim.n_accepted/sim.n_total)
-        global Rs_baker_abs[i]+=sim.baker_abs_sum
+for i in 1
+    if proposal=="EM"
+        sim=MALA(dt=dt,T=1.0,is_metropolis=metropolis)
+    else
+        sim=MALA_HMC(dt=dt,T=1.0,is_metropolis=metropolis)
     end
-end
-
-println(dts)
-
-if metropolis
-    println(1 .- As/Nsamps)
-
-else
-    println(abs.(2*As/Nsamps .- 1))
-    println(Rs_baker_abs/(Nsamps*N_steps))
+    simulate!(sys,sim,N_steps)
 end
