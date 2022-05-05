@@ -34,7 +34,7 @@ end
 #----------------------- setup system -----------------------------------
 r_c_inter=1.6
 
-inter = SoftSphere(cutoff = ShiftedForceCutoff(r_c_inter), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
+inter = LennardJones(cutoff = ShiftedForceCutoff(r_c_inter), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
 
 atoms=[Atom(ϵ=1.0,mass=1.0,σ=1.0) for i=1:N]
