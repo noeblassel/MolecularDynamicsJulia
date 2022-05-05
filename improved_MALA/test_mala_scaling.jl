@@ -52,6 +52,7 @@ dts= 10 .^ log_dts
 Rs=zero(dts)
 for it=1:Nsamps
     println("iteration $it/$Nsamps")
+    flush(stdout)
     for (i,dt)=enumerate(dts)
         sim=MALA_HMC(dt=dt,T=1.0,is_metropolis=metropolis)
         simulate!(sys,sim,N_steps)
