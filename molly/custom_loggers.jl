@@ -279,7 +279,8 @@ function log_to_file!(logger::ElapsedTimeLogger,file::IOStream)
 end
 
 function log_to_file!(logger::SelfDiffusionLogger,file::IOStream)
-    write(file,logger.self_diffusion_coords)
+    write(file,dot(logger.self_diffusion_coords,logger.self_diffusion_coords)) #output square displacement
+    logger.self_diffusion_coords=zero(logger.self_diffusion_coords) #reset diffusion process
 end
 
 ###State logger (writes state of system to external file --- NOT GENERAL)
