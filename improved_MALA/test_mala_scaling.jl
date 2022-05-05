@@ -5,7 +5,7 @@ include("integrators.jl")
 
 using .MollyExtend
 
-println(stderr,"Usage: Npd log_dt_min log_dt_max num_dts ρ N_steps Nsamps rule(METROPOLIS|BAKER) proposal(EM|HMC)")
+println(stderr,"Usage: Npd log_dt_min log_dt_max num_dts ρ N_steps Nsamps rule(METROPOLIS|BARKER) proposal(EM|HMC)")
 Npd=parse(Int64,ARGS[1])
 lg_dt_min=parse(Float64,ARGS[2])
 lg_dt_max=parse(Float64,ARGS[3])
