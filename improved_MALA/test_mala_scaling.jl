@@ -51,7 +51,7 @@ log_dts=range(lg_dt_min,lg_dt_max,N_dts)
 dts= 10 .^ log_dts
 Rs=zero(dts)
 Rs_baker_rel=zero(dts)
-Rs_bakers_abs=zero(dts)
+Rs_baker_abs=zero(dts)
 
 for it=1:Nsamps
     println("iteration $it/$Nsamps")
@@ -74,5 +74,3 @@ else
     println(abs.(Rs_baker_rel))
     println(Rs_baker_abs)
 end
-
-julia test_mala_scaling.jl 4 -6 -3 20 0.4 100000 10 true
