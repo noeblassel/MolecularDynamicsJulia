@@ -48,13 +48,8 @@ dt_eq=1e-3
 sim_eq=MALA(dt=dt_eq, T=1.0)
 simulate!(sys,sim_eq,n_steps_eq)
 #---------- simulate --------------
-sys.loggers=Dict(:autocorr=>AutoCorrelationLoggerVec(N,3,R,N_steps_corr),:log=>LogLogger([:autocorr],["autocorrelation_estimation.out"],[1000000],[false],["w"]))
+sys.loggers=Dict(:autocorr=>AutoCorrelationLoggerVec(N,3,R,N_steps_corr),:log=>LogLogger([:autocorr],["autocorrelation_$rule_$proposal.out"],[1000000],[false],["w"]))
 metropolis= (rule=="METROPOLIS")
-
-log_dts=range(lg_dt_min,lg_dt_max,N_dts)
-dts= 10 .^ log_dts
-As=zero(dts)
-Rs_baker_abs=zero(dts)
 
 for i in 1
     if proposal=="EM"
