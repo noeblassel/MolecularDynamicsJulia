@@ -50,6 +50,9 @@ simulate!(sys,sim_eq,n_steps_eq)
 log_dts=range(lg_dt_min,lg_dt_max,N_dts)
 dts= 10 .^ log_dts
 Rs=zero(dts)
+Rs_baker_rel=zero(dts)
+Rs_bakers_abs=zero(dts)
+
 for it=1:Nsamps
     println("iteration $it/$Nsamps")
     flush(stdout)
@@ -57,10 +60,19 @@ for it=1:Nsamps
         sim=MALA_HMC(dt=dt,T=1.0,is_metropolis=metropolis)
         simulate!(sys,sim,N_steps)
         global Rs[i]+=1-(sim.n_accepted/sim.n_total)
+        global Rs_baker_rel[i]+=0.5-(sim.n_accepted/sim.n_total)
+        global Rs_baker_abs[i]+=abs(0.5-(sim.n_accepted/sim.n_total))
     end
 end
 
 println(dts)
-println(Rs/Nsamps)
+
+if metropolis
+    println(Rs/Nsamps)
+
+else
+    println(abs.(Rs_baker_rel))
+    println(Rs_baker_abs)
+end
 
 julia test_mala_scaling.jl 4 -6 -3 20 0.4 100000 10 true
