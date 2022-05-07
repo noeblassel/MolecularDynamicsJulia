@@ -1,62 +1,49 @@
+#!/usr/bin/env python3
+
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+
+from simulators import *
 
 
-def potential(q):
+_,rule,proposal=sys.argv
+
+simulator= simMALA if proposal=="EM" else simMALA_HMC
+def sin_potential(q):
     return np.sin(2*np.pi*q)
 
-
-def grad_potential(q):
+def grad_sin_potential(q):
     return 2*np.pi*np.cos(2*np.pi*q)
 
+lg_dts=np.linspace(-5,-3,20)
 
-def simMALA(q, potential, grad_potential, dt, beta, nsteps, histogram):
-    M = q.shape[0]
-    V = potential(q)
-    grad_V = grad_potential(q)
-    sigma = np.sqrt(2*dt)
+T_corr=0.3
+N_iter=1000000
 
-    N_bins=histogram.shape[0]
+M = 1000
 
-    n_accepted=0
-    for i in range(nsteps):
 
-        if N_bins:
-            ixs=np.floor(q*N_bins).astype('int32')
-            histogram[ixs]+=1
-        
-        G = np.random.standard_normal(M)
-        qtilde = q-beta*dt*grad_V+sigma*G
-        displacement = qtilde-q
-        qtilde=qtilde % 1
-        Vtilde = potential(qtilde)
-        grad_Vtilde = grad_potential(qtilde)
-        alpha=beta*(Vtilde-V)+((beta*dt*grad_Vtilde-displacement)**2)/(4*dt)-((displacement+beta*dt*grad_V)**2)/(4*dt)
-        U=np.random.uniform(size=M)
-        accepted=np.log(U)<-alpha
 
-        q[accepted]=qtilde[accepted]
-        V[accepted]=Vtilde[accepted]
-        grad_V[accepted]=grad_Vtilde[accepted]
-        n_accepted+=np.sum(accepted)
-    
-    return (n_accepted,nsteps*M)
+for i in range(N_iter):
 
-M = 100
-N_bins = 200
-log_dts = np.linspace(-4, -2, 10)
-dts = 10 ** log_dts
-hist = np.zeros_like(dts)
-ref_dts = 0
-hists=[np.zeros(N_bins) for dt in dts]
-
-for i,dt in enumerate(dts):
     q=np.zeros(M)
-    (nacc,ntot)=simMALA(q,potential,grad_potential,dt,1.0,100000,histogram=hists[i])
-    print(dt,nacc,ntot,1-nacc/ntot)
 
-qs=np.linspace(0,1,N_bins)
+    #equilibriate
+    simMALA(q,sin_potential,grad_sin_potential,1e-3,1.0,10000)
 
-for hist in hists:
-    plt.plot(qs,N_bins*hist/sum(hist))
-plt.show()
+    for lg_dt in lg_dts:
+        dt=10**lg_dt
+        N_corr=int(np.floor(T_corr/dt))
+        sd_coords=np.zeros_like(q)
+        grad_V_hist=np.zeros((N_corr,M))
+        n_steps=10*N_corr
+        C_sum=np.zeros((N_corr,M))
+        simulator(q,sin_potential,grad_sin_potential,dt,1.0,n_steps,rule=rule,sd_coords=sd_coords,hist=grad_V_hist,C_sum=C_sum)
+
+        C_hat=np.mean(C_sum/n_steps,axis=1)
+        msd=np.mean(sd_coords**2)
+        f=open(f"{rule}_{proposal}_{lg_dt}.out","a")
+        print(C_hat[0],dt*sum(C_hat),msd/(2*n_steps*dt),file=f)
+        f.close()
+
