@@ -16,14 +16,12 @@ def sin_potential(q):
 def grad_sin_potential(q):
     return 2*np.pi*np.cos(2*np.pi*q)
 
-lg_dts=np.linspace(-5,-3,20)
+lg_dts=np.linspace(-4,-2,20)
 
-T_corr=0.3
+T_corr=0.5
 N_iter=1000000
 
 M = 1000
-
-
 
 for i in range(N_iter):
 
