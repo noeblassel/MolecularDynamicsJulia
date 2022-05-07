@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
-import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
 from simulators import *
 
 
-_,rule,proposal=sys.argv
+_,rule,proposal,m_lg_dt,M_lg_dt=sys.argv
 
 simulator= simMALA if proposal=="EM" else simMALA_HMC
 def sin_potential(q):
@@ -16,12 +15,12 @@ def sin_potential(q):
 def grad_sin_potential(q):
     return 2*np.pi*np.cos(2*np.pi*q)
 
-lg_dts=np.linspace(-4,-2,20)
+lg_dts=np.linspace(int(m_lg_dt),int(M_lg_dt),20)
 
 T_corr=0.5
 N_iter=1000000
 
-M = 1000
+M = 64
 
 for i in range(N_iter):
 
