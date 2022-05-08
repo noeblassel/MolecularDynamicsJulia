@@ -20,7 +20,7 @@ def grad_sin_potential(q):
 lg_dts=np.linspace(float(m_lg_dt),float(M_lg_dt),int(N_dts))
 
 T_corr=0.5
-N_iter=4
+N_iter=1000000
 
 M = 512
 
