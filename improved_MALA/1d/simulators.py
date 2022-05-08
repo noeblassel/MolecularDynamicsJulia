@@ -1,22 +1,23 @@
 import numpy as np
 
 
-def simMALA(q, potential, grad_potential, dt, beta, nsteps,n_corr, rule="metropolis",hist=None,C_sum=None):
+def simMALA(q, potential, grad_potential, dt, beta, nsteps, rule="metropolis",hist=None,C_sum=None):
     M = q.shape[0]
     sd_coords=np.zeros_like(q)
+    sd_history=[]
     V = potential(q)
     F = -grad_potential(q)
     sigma = np.sqrt(2*dt)
     lambd = (beta*sigma)/2
-    msds=[]
-    ts=[]
+    msds=np.zeros(nsteps)
+    ts=np.zeros(nsteps)
 
-    for i in range(nsteps+1):
+    for i in range(nsteps):
 
         #store msd
-        if (i%n_corr)==0:
-            msds.append(np.mean(sd_coords**2))
-            ts.append(i*dt)
+        
+        msds[i]=np.mean(sd_coords**2)
+        ts[i]=i*dt
 
         ## update autocorrelation estimators 
         if hist is not None:
@@ -51,13 +52,13 @@ def simMALA(q, potential, grad_potential, dt, beta, nsteps,n_corr, rule="metropo
     return Dhat
 
 
-def simMALA_HMC(q, potential, grad_potential, dt, beta, nsteps,n_corr,rule="metropolis",hist=None,C_sum=None ):
+def simMALA_HMC(q, potential, grad_potential, dt, beta, nsteps,rule="metropolis",hist=None,C_sum=None ):
     M = q.shape[0]
     sd_coords=np.zeros_like(q)
     sigma = 1/np.sqrt(beta)
     h = np.sqrt(2*beta*dt)
-    msds=[]
-    ts=[]
+    msds=np.zeros(nsteps)
+    ts=np.zeros(nsteps)
     p = sigma*np.random.standard_normal(M)
     V=potential(q)
     
@@ -65,9 +66,8 @@ def simMALA_HMC(q, potential, grad_potential, dt, beta, nsteps,n_corr,rule="metr
     for i in range(nsteps):
         H = p**2/2+V
 
-        if (i%n_corr)==0:
-            msds.append(np.mean(sd_coords**2))
-            ts.append(i*dt)
+        msds[i]=np.mean(sd_coords**2)
+        ts[i]=i*dt
 
         ## update autocorrelation estimators 
         if hist is not None:
