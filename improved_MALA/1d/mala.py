@@ -15,7 +15,7 @@ def sin_potential(q):
 def grad_sin_potential(q):
     return 2*np.pi*np.cos(2*np.pi*q)
 
-lg_dts=np.linspace(int(m_lg_dt),int(M_lg_dt),int(N_dts))
+lg_dts=np.linspace(float(m_lg_dt),float(M_lg_dt),int(N_dts))
 
 T_corr=0.5
 N_iter=1000000
