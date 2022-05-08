@@ -1,15 +1,22 @@
 import numpy as np
 
 
-def simMALA(q, potential, grad_potential, dt, beta, nsteps, rule="metropolis",sd_coords=None,hist=None,C_sum=None):
+def simMALA(q, potential, grad_potential, dt, beta, nsteps,n_corr, rule="metropolis",hist=None,C_sum=None):
     M = q.shape[0]
+    sd_coords=np.zeros_like(q)
     V = potential(q)
     F = -grad_potential(q)
     sigma = np.sqrt(2*dt)
     lambd = (beta*sigma)/2
+    msds=[]
+    ts=[]
 
-    n_accepted = 0
-    for i in range(nsteps):
+    for i in range(nsteps+1):
+
+        #store msd
+        if (i%n_corr)==0:
+            msds.append(np.mean(sd_coords**2))
+            ts.append(i*dt)
 
         ## update autocorrelation estimators 
         if hist is not None:
@@ -21,15 +28,15 @@ def simMALA(q, potential, grad_potential, dt, beta, nsteps, rule="metropolis",sd
         qtilde = q+beta*dt*F+sigma*G
 
         #record displacement for self-diffusion
-        if sd_coords is not None: disp=qtilde-q
+        disp=qtilde-q
 
         qtilde = qtilde % 1
         Vtilde = potential(qtilde)
         Ftilde = -grad_potential(qtilde)
         alpha = beta*(Vtilde-V)+((G+lambd * (F+Ftilde))**2)/2-(G**2)/2
         U = np.random.uniform(size=M)
-        accepted = (np.log(U) < -alpha) if rule == "metropolis" else (U <
-                                                                      np.exp(-alpha)/(1+np.exp(-alpha)))
+        accepted = (np.log(U) < -alpha) if rule == "metropolis" else (np.log(U) < [-np.log(1+np.exp(alpha)),-alpha-np.log(1+np.exp(-alpha))][alpha>0])
+                                                                      
 
         q[accepted] = qtilde[accepted]
         V[accepted] = Vtilde[accepted]
@@ -37,25 +44,30 @@ def simMALA(q, potential, grad_potential, dt, beta, nsteps, rule="metropolis",sd
 
         #update self-diffusion
 
-        if sd_coords is not None: sd_coords[accepted]+=disp[accepted]
-        n_accepted += np.sum(accepted)
+        sd_coords[accepted]+=disp[accepted]
 
-    return (n_accepted, nsteps*M)
+    Dhat=np.dot(ts,msds)/np.dot(ts,ts)/2#linear fit
+
+    return Dhat
 
 
-def simMALA_HMC(q, potential, grad_potential, dt, beta, nsteps,rule="metropolis",sd_coords=None,hist=None,C_sum=None ):
+def simMALA_HMC(q, potential, grad_potential, dt, beta, nsteps,n_corr,rule="metropolis",hist=None,C_sum=None ):
     M = q.shape[0]
-    n_accepted = 0
-
+    sd_coords=np.zeros_like(q)
     sigma = 1/np.sqrt(beta)
     h = np.sqrt(2*beta*dt)
-
+    msds=[]
+    ts=[]
     p = sigma*np.random.standard_normal(M)
     V=potential(q)
     
 
     for i in range(nsteps):
         H = p**2/2+V
+
+        if (i%n_corr)==0:
+            msds.append(np.mean(sd_coords**2))
+            ts.append(i*dt)
 
         ## update autocorrelation estimators 
         if hist is not None:
@@ -69,7 +81,7 @@ def simMALA_HMC(q, potential, grad_potential, dt, beta, nsteps,rule="metropolis"
         grad = grad_potential(q_tilde)
         p -= h*grad
         q_tilde += h*p/2
-        if sd_coords is not None: disp=q_tilde-q
+        disp=q_tilde-q
         q_tilde = q_tilde % 1
 
         # the reverse transition term comes from the time symmetry property of the ABA scheme
@@ -83,13 +95,13 @@ def simMALA_HMC(q, potential, grad_potential, dt, beta, nsteps,rule="metropolis"
 
         q[accepted] = q_tilde[accepted]
         V[accepted] = V_tilde[accepted]
-        n_accepted += np.sum(accepted)
 
-        if sd_coords is not None: sd_coords[accepted]+=disp[accepted]
+        sd_coords[accepted]+=disp[accepted]
 
         p = sigma*np.random.standard_normal(M)
 
-    return (n_accepted, nsteps*M)
+    Dhat=np.dot(ts,msds)/np.dot(ts,ts)/2#linear fit
+    return Dhat
 
 
 def simMALA_implicit(q, potential, grad_potential, dt, beta, nsteps, histogram, rule="metropolis", fp_iter=5, tol=1e-3):
@@ -140,7 +152,7 @@ def simMALA_implicit(q, potential, grad_potential, dt, beta, nsteps, histogram, 
         U = np.random.uniform(size=M)
 
         metropolis_accepted = (np.log(
-            U) < -alpha) if rule == "metropolis" else (U < np.exp(-alpha)/(1+np.exp(-alpha)))
+            U) < -alpha) if rule == "metropolis" else (np.log(U) < [-np.log(1+np.exp(alpha)),-alpha-np.log(1+np.exp(-alpha))][alpha>0])
         accepted = converged  & metropolis_accepted & backward_converged
         #print(np.sum(accepted)/M)
         q[accepted] = q_tilde[accepted]
