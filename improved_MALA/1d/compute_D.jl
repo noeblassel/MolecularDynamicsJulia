@@ -3,8 +3,8 @@ using Base.Threads
 V(q::Float64)=sin(2π*q)
 grad_V(q::Float64)=2π*cos(2π*q)
 
-η=1e-2
-dq=1e-4
+η=1e-3
+dq=1e-5
 q_range=0.0:dq:1.0
 n=length(q_range)
 ψ=zero(q_range)
