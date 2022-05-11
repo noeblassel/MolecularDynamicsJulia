@@ -46,9 +46,9 @@ for dt in reverse(dts)
     N_samples = round(Int64, Tfin / dt)
 
     if proposal == "EM"
-        sim = MALA(dt=dt, T=T,is_metropolis=rule)
+        sim = MALA(dt=dt, T=T,is_metropolis=is_metropolis)
     else
-        sim = MALA_HMC(dt=dt, T=T,is_metropolis=rule)
+        sim = MALA_HMC(dt=dt, T=T,is_metropolis=is_metropolis)
     end
 
     simulate!(sys, sim, N_samples)
