@@ -110,13 +110,15 @@ end
 mutable struct SelfDiffusionLogger{T}
     last_coords::T
     self_diffusion_coords::T
+    msds::Vector{Float64}
 end
 
-SelfDiffusionLogger(initial_coords) = SelfDiffusionLogger{typeof(initial_coords)}(deepcopy(initial_coords), zero(initial_coords))
+SelfDiffusionLogger(initial_coords) = SelfDiffusionLogger{typeof(initial_coords)}(deepcopy(initial_coords), zero(initial_coords),Float64[])
 
 function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer=0)
     logger.self_diffusion_coords .+= unwrap_coords_vec.(logger.last_coords, s.coords, (s.box_size,)) - logger.last_coords
     logger.last_coords .= s.coords
+    push!(logger.msds,ustrip(dot(logger.self_diffusion_coords,logger.self_diffusion_coords))/length(logger.self_diffusion_coords))
 end
 
 """
@@ -279,8 +281,8 @@ function log_to_file!(logger::ElapsedTimeLogger,file::IOStream)
 end
 
 function log_to_file!(logger::SelfDiffusionLogger,file::IOStream)
-    write(file,dot(logger.self_diffusion_coords,logger.self_diffusion_coords)) #output square displacement
-    logger.self_diffusion_coords=zero(logger.self_diffusion_coords) #reset diffusion process
+    write(file,logger.msds)
+    empty!(logger.msds)
 end
 
 ###State logger (writes state of system to external file --- NOT GENERAL)
