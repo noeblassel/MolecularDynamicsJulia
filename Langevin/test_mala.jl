@@ -36,7 +36,7 @@ Rs = Float64[]
 println("equilibriating")
 eq_sim = MALA(dt=dt_eq, T=T)
 simulate!(sys, eq_sim, N_steps_eq)
-f = open("mala_output_$(proposal)_$(ARGS[2]).out", "w")
+f = open("mala_output_$(proposal)_$(ARGS[3]).out", "w")
 println(f, "dt V grad_V R")
 
 for dt in reverse(dts)
