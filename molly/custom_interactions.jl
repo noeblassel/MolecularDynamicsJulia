@@ -33,9 +33,9 @@ struct ColorDriftNEMD{D,T}
     force_field::Vector{SVector{D,T}}
 end
 
-function ColorDriftNEMD(N_atoms::Integer,η::Real) where {D,T}
-    F=SVector{D}(vcat(one(T),zeros(T,D-1)))
-    ff=zeros(SVector{D,T},N_atoms)
+function ColorDriftNEMD(N_atoms::Integer,η::Real,D::Int64)
+    F=SVector{D}(vcat(1.0,zeros(D-1)))
+    ff=zeros(SVector{D,Float64},N_atoms)
 
     for ix=1:2:length(ff)
         ff[ix]=η*F

@@ -30,7 +30,7 @@ coords=place_atoms_on_3D_lattice(Npd,box_size)
 velocities=init_velocities(T,[a.mass for a=atoms],1.0)
 inter=LennardJones(cutoff=ShiftedForceCutoff(r_c),nl_only=true,force_units=NoUnits,energy_units=NoUnits)
 
-forcing = (forcing_type== "COLOR") ? ColorDriftNEMD(N,η) : SingleDriftNEMD(N,1,η)
+forcing = (forcing_type== "COLOR") ? ColorDriftNEMD(N,η,3) : SingleDriftNEMD(N,1,η)
 
 ff=forcing.force_field
 R= (forcing_type== "COLOR") ? MobilityObservable(ff) : (s::System,neighbors=nothing) -> s.velocities[1][1]
