@@ -33,22 +33,20 @@ struct ColorDriftNEMD{D,T}
     force_field::Vector{SVector{D,T}}
 end
 
-function ColorDriftNEMD(N_atoms::Integer,η::Real,F::SVector{D,T}) where {D,T}
-    F_norm=normalize(F)
+function ColorDriftNEMD(N_atoms::Integer,η::Real) where {D,T}
+    F=SVector{D}(vcat(one(T),zeros(T,D-1)))
     ff=zeros(SVector{D,T},N_atoms)
 
     for ix=1:2:length(ff)
-        ff[ix]=η*F_norm
+        ff[ix]=η*F
     end
 
     for ix=2:2:length(ff)
-        ff[ix]=-η*F_norm
+        ff[ix]=-η*F
     end
 
-    return ColorDriftNEMD{D,T}(N_atoms,η,F_norm,ff)
+    return ColorDriftNEMD{D,T}(N_atoms,η,F,ff*inv(sqrt(N_atoms)))
 
 end
-
-ColorDriftNEMD(N_atoms::Integer,η::Float64)=ColorDriftNEMD(N_atoms,η,SVector(1.0,0.0,0.0))
 
 Molly.forces(inter::ColorDriftNEMD, s::System, neighbors)=inter.force_field

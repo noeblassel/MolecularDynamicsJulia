@@ -9,7 +9,10 @@ export
     LangevinSplitting,
     LangevinGHMC,
     MALA,
-    MALA_HMC
+    MALA_HMC,
+    NortonTest,
+    NortonHomogeneousSplitting,
+    NortonColorDriftSplitting
 
 log_barker(α::Float64) = (α > 0) ? (-α - log(1 + exp(-α))) : (-log(1 + exp(α)))
 sq_norm(v::Vector{SVector{3,Float64}}) = dot(v, v)
@@ -337,7 +340,7 @@ struct LangevinSplitting{T}
     splitting::AbstractString
 end
 
-function LangevinSplitting(; dt, γ, T, splitting, rseed=UInt32(round(time())), rng=MersenneTwister(rseed))
+function LangevinSplitting(; dt, γ, T, splitting, rseed=round(UInt32,time()), rng=MersenneTwister(rseed))
     β = ustrip.(inv.(T))
     @assert (all(x ∈ "ABO" for x ∈ splitting) && all(x ∈ splitting for x ∈ "ABO")) "Invalid splitting descriptor: use only and all letters A, B and O."
     LangevinSplitting{typeof(β)}(dt, γ, β, rseed, rng, splitting)
@@ -398,8 +401,6 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
     end
 
     step_arg_pairs = zip(steps, arguments)
-
-    d_start=Dates.now()
 
     for step_n = 1:n_steps
 
@@ -640,3 +641,164 @@ function Molly.simulate!(sys::System{D}, sim::MALA_HMC, n_steps::Integer; parall
 
 end
 
+struct NortonTest #simple BAO test in the one drift diagonal mass case
+    dt::Real
+    γ::Real
+    β::Real
+    v::Real
+
+    rseed::UInt32
+    rng::AbstractRNG
+end
+
+function NortonTest(;dt,γ,T,v,rseed=round(UInt32,time()), rng=MersenneTwister(rseed))
+    β=inv(T)
+    return NortonTest(dt,γ,β,v,rseed,rng)
+end
+
+function Molly.simulate!(sys::System{D},sim::NortonTest,n_steps::Integer;parallel::Bool=true) where {D}
+    sys.velocities[1]=SVector(sim.v,0.0,0.0) + sys.velocities[1].*SVector(0.0,1.0,1.0) #initialize state
+    neighbors=find_neighbors(sys,sys.neighbor_finder;parallel=parallel)
+    α=exp(-sim.γ*sim.dt)
+    σ=sqrt((1-α^2)/sim.β)
+    N=length(sys)
+    dΛ_hist=Float64[]
+    for step_n=1:n_steps
+        run_loggers!(sys,neighbors,step_n)
+        accels=accelerations(sys,neighbors;parallel=parallel)
+        for i=2:N
+            sys.velocities[i]+=sim.dt*accels[i]
+        end
+        sys.velocities[1]+=sim.dt*(accels[1].*SVector(0.0,1.0,1.0))
+        sys.coords+=sim.dt*sys.velocities
+        sys.coords=wrap_coords_vec.(sys.coords,(sys.box_size,))
+
+        dW = SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
+
+        for i=2:N
+            sys.velocities[i]=α*sys.velocities[i]+σ*dW[i]
+        end
+        sys.velocities[1]=(sys.velocities[1].*SVector(1.0,0.0,0.0))+((α*sys.velocities[1]+σ*dW[1]).*SVector(0.0,1.0,1.0))
+        push!(dΛ_hist,sim.v-first(first(accels)))
+        neighbors=find_neighbors(sys,sys.neighbor_finder,neighbors,step_n;parallel=parallel)
+    end
+    return dΛ_hist
+end
+
+struct NortonHomogeneousSplitting
+    dt::Real
+    γ::Real
+    β::Real
+    v::Real
+
+    F::Vector{SVector{3,Float64}}
+    rseed::UInt32
+    rng::AbstractRNG
+
+    splitting::AbstractString
+end
+
+function NortonHomogeneousSplitting(; dt, γ, T,v,F, splitting, rseed=round(UInt32,time()), rng=MersenneTwister(rseed))
+    β = ustrip.(inv.(T))
+    @assert (all(x ∈ "ABO" for x ∈ splitting) && all(x ∈ splitting for x ∈ "ABO")) "Invalid splitting descriptor: use only and all letters A, B and O."
+    NortonHomogeneousSplitting(dt, γ, β,v,F, rseed, rng, splitting)
+end
+
+function NortonColorDriftSplitting(;N,dt,γ,T,v,splitting,rseed=round(UInt32,time()), rng=MersenneTwister(rseed))
+    F=[SVector((-1.0)^(i+1),0.0,0.0) for i=1:N]
+    return NortonHomogeneousSplitting(dt=dt,γ=γ,T=T,v=v,F=F*inv(sqrt(N)),splitting=splitting,rseed=rseed,rng=rng)#normalize F
+end
+
+
+"""Splitting scheme for mobility Norton dynamics, in the case of identity mass matrix."""
+function Molly.simulate!(sys::System{D}, sim::NortonHomogeneousSplitting, n_steps::Integer, parallel::Bool=true) where {D}
+
+    O_count=count('O',sim.splitting)
+    B_count=count('B',sim.splitting)
+    A_count=count('A',sim.splitting)
+
+    dt_O=sim.dt / O_count
+    dt_A=sim.dt / B_count
+    dt_B=sim.dt / A_count
+
+    α_eff = exp(-sim.γ * dt_O)
+    σ_eff = sqrt((1 - α_eff^2) / sim.β)
+
+    dΛ=0
+    dΛ_hist=Float64[]
+
+    neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
+    accels = accelerations(sys, neighbors; parallel=parallel)
+    inv_sq_norm_F=inv(dot(sim.F,sim.F))
+    P(v::Vector{SVector{D,Float64}})=sim.F*(dot(sim.F,v))*inv_sq_norm_F#projector onto F
+    P_perp(v::Vector{SVector{D,Float64}})=v-P(v)#projector orthogonal to F
+    F_coord(v::Vector{SVector{D,Float64}})=dot(sim.F,v)*inv_sq_norm_F
+    sys.velocities = sim.v*sim.F+P_perp(sys.velocities) #project initial state onto constant response hyperplane
+
+    function A_step_F!()
+        sys.coords+=dt_A*sys.velocities
+        sys.coords=wrap_coords_vec.(sys.coords,(sys.box_size,))
+    end
+
+    function O_step_F!()
+        G=SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
+        sys.velocities=sim.v*sim.F + α_eff*P_perp(sys.velocities)+σ_eff*P_perp(G)
+    end
+
+    function B_step_F!(compute_forces::Bool,parallel::Bool=true)
+        compute_forces && (accels .= accelerations(sys, neighbors, parallel=parallel))
+        sys.velocities+=dt_B*P_perp(accels)
+        dΛ-=F_coord(accels)
+    end
+
+    forces_known = true
+    force_computation_steps = Bool[]
+
+    occursin(r"^.*B[^B]*A[^B]*$",sim.splitting) && (forces_known = false) #determine the need to recompute accelerations before B steps
+
+    for op in sim.splitting
+        if op == 'O'
+            push!(force_computation_steps, false)
+        elseif op == 'A'
+            push!(force_computation_steps, false)
+            forces_known = false
+        elseif op == 'B'
+            if forces_known
+                push!(force_computation_steps, false)
+            else
+                push!(force_computation_steps, true)
+                forces_known = true
+            end
+        end
+    end
+
+    steps = []
+    arguments = []
+
+    for (j, op) in enumerate(sim.splitting)
+        if op == 'A'
+            push!(steps, A_step_F!)
+            push!(arguments,())
+        elseif op == 'B'
+            push!(steps, B_step_F!)
+            push!(arguments, (force_computation_steps[j], parallel))
+        elseif op == 'O'
+            push!(steps, O_step_F!)
+            push!(arguments, ())
+        end
+    end
+
+    step_arg_pairs = zip(steps, arguments)
+
+    for step_n = 1:n_steps
+        dΛ=0
+        run_loggers!(sys, neighbors, step_n)
+        for (step!, args) = step_arg_pairs
+            step!(args...)
+        end
+        dΛ=dΛ/B_count+sim.v
+        push!(dΛ_hist,dΛ)
+        neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
+    end
+    return dΛ_hist
+end

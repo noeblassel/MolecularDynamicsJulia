@@ -5,6 +5,7 @@ module MollyExtend
     using Dates
     using ProgressMeter
     using Reexport
+   # using Plots
 
     @reexport using Random
     @reexport using LinearAlgebra
@@ -22,5 +23,6 @@ module MollyExtend
 
     include("../utils/place_atoms.jl")
     include("../utils/reduced_units.jl")
+   # include("../utils/animate.jl")
 
 end
