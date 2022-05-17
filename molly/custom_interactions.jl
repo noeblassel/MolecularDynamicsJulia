@@ -45,7 +45,7 @@ function ColorDriftNEMD(N_atoms::Integer,η::Real,D::Int64)
         ff[ix]=-η*F
     end
 
-    return ColorDriftNEMD{D,T}(N_atoms,η,F,ff*inv(sqrt(N_atoms)))
+    return ColorDriftNEMD{D,Float64}(N_atoms,η,F,ff*inv(sqrt(N_atoms)))
 
 end
 
