@@ -742,7 +742,7 @@ function Molly.simulate!(sys::System{D}, sim::NortonHomogeneousSplitting, n_step
 
     function O_step_F!()
         G=SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
-        sys.velocities=sim.v*sim.F + α_eff*P_perp(sys.velocities)+σ_eff*P_perp(G)
+        sys.velocities=sim.v*sim.F + P_perp(α_eff*sys.velocities+σ_eff*G)
     end
 
     function B_step_F!(compute_forces::Bool,parallel::Bool=true)
