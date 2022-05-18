@@ -10,7 +10,7 @@ run(`scp $node_single:$path_orig $path_end`)
 η_dict=Dict("COLOR"=>(0.01:0.01:0.1),"SINGLE"=>(0.1:0.1:1.0))
 
 methods=["SINGLE","COLOR"]
-
+joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 for m in methods
     println(m)
        Rs=[]
@@ -32,5 +32,8 @@ for m in methods
   println(a)
   scatter(ηs,Rs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
   plot!(x->a*x,0,last(ηs),linestyle=:dot,color=:red,label="fit")
+  scatter!(joint_plot,ηs,Rs,markershape=:xcross,label=m)
+  plot!(joint_plot,x->a*x,0,last(ηs),linestyle=:dot,label="slope $(round(a,digits=3))")
   savefig("$(m).pdf")
 end
+savefig(joint_plot,"joint.pdf")
