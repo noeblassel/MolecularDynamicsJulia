@@ -7,14 +7,14 @@ node_color="clustern15"
 node_single="clustern16"
 run(`scp $node_color:$path_orig $path_end`)
 run(`scp $node_single:$path_orig $path_end`)
-
-ηs=0.1:0.1:1.0
+η_dict=("COLOR"=>(0.05:0.05:0.5),"SINGLE"=>(0.1:0.1:1.0))
 
 methods=["SINGLE","COLOR"]
 
 for m in methods
     println(m)
        Rs=[]
+       ηs=η_dict(m)
        for η in ηs
         println("\t",η)
         f=open("mobility_estimates$(η)_$(m).out","r")
