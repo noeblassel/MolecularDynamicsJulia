@@ -5,8 +5,8 @@ path_orig="/libre/blasseln/MolecularDynamicsJulia/Norton/*.out"
 path_end="."
 node_color="clustern23"
 node_single="clustern19"
-#run(`scp $node_color:$path_orig $path_end`)
-#run(`scp $node_single:$path_orig $path_end`)
+run(`scp $node_color:$path_orig $path_end`)
+run(`scp $node_single:$path_orig $path_end`)
 v_dict=Dict("COLOR"=>(0.1:0.1:1.0),"SINGLE"=>(0.1:0.1:1.0))
 
 methods=["SINGLE","COLOR"]
