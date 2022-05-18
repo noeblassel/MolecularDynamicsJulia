@@ -1,36 +1,36 @@
 using Plots,LinearAlgebra
 #TODO add error bars using block averaging
 
-path_orig="/libre/blasseln/MolecularDynamicsJulia/NEMD/*.out"
+path_orig="/libre/blasseln/MolecularDynamicsJulia/Norton/*.out"
 path_end="."
 node_color="clustern23"
 node_single="clustern19"
-run(`scp $node_color:$path_orig $path_end`)
-run(`scp $node_single:$path_orig $path_end`)
-η_dict=Dict("COLOR"=>(0.01:0.01:0.1),"SINGLE"=>(0.1:0.1:1.0))
+#run(`scp $node_color:$path_orig $path_end`)
+#run(`scp $node_single:$path_orig $path_end`)
+v_dict=Dict("COLOR"=>(0.1:0.1:1.0),"SINGLE"=>(0.1:0.1:1.0))
 
 methods=["SINGLE","COLOR"]
 
 for m in methods
     println(m)
-       Rs=[]
-       ηs=η_dict[m]
-       for η in ηs
-        println("\t",η)
-        f=open("norton_mobility_estimates$(η)_$(m).out","r")
+       d_lambdas=[]
+       vs=v_dict[m]
+       for v in vs
+        println("\t",v)
+        f=open("norton_mobility_estimates$(v)_$(m).out","r")
         n_samps=0
-        sum_R=0.0
+        sum_lambda=0.0
         while !eof(f)
-          sum_R+=read(f,Float64)
+          sum_lambda+=read(f,Float64)
           n_samps+=1
         end
         close(f)
-        push!(Rs,sum_R/n_samps)
+        push!(d_lambdas,sum_lambda/n_samps)
        end
-  (m=="COLOR") && (Rs*=1000)
-  a=inv(dot(ηs,ηs))*dot(ηs,Rs)#least squares slope fit
+  #(m=="COLOR") && (vs*=1000)
+  a=inv(dot(d_lambdas,d_lambdas))*dot(d_lambdas,vs)#least squares slope fit
   println(a)
-  scatter(ηs,Rs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
-  plot!(x->a*x,0,last(ηs),linestyle=:dot,color=:red,label="fit")
+  scatter(d_lambdas,vs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
+  plot!(x->a*x,0,maximum(d_lambdas),linestyle=:dot,color=:red,label="fit")
   savefig("$(m).pdf")
 end

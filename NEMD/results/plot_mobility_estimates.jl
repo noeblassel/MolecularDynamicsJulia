@@ -7,7 +7,7 @@ node_color="clustern15"
 node_single="clustern16"
 run(`scp $node_color:$path_orig $path_end`)
 run(`scp $node_single:$path_orig $path_end`)
-η_dict=Dict("COLOR"=>(0.001:0.001:0.01),"SINGLE"=>(0.1:0.1:1.0))
+η_dict=Dict("COLOR"=>(0.003:0.003:0.03),"SINGLE"=>(0.1:0.1:1.0))
 
 methods=["SINGLE","COLOR"]
 
@@ -27,7 +27,7 @@ for m in methods
         close(f)
         push!(Rs,sum_R/n_samps)
        end
-  (m=="COLOR") && (Rs*=1000)
+  #(m=="COLOR") && (Rs*=1000)
   a=inv(dot(ηs,ηs))*dot(ηs,Rs)#least squares slope fit
   println(a)
   scatter(ηs,Rs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
