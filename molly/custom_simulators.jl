@@ -662,7 +662,6 @@ function Molly.simulate!(sys::System{D},sim::NortonTest,n_steps::Integer;paralle
     α=exp(-sim.γ*sim.dt)
     σ=sqrt((1-α^2)/sim.β)
     N=length(sys)
-    dΛ_hist=Float64[]
     for step_n=1:n_steps
         run_loggers!(sys,neighbors,step_n)
         accels=accelerations(sys,neighbors;parallel=parallel)
@@ -679,10 +678,8 @@ function Molly.simulate!(sys::System{D},sim::NortonTest,n_steps::Integer;paralle
             sys.velocities[i]=α*sys.velocities[i]+σ*dW[i]
         end
         sys.velocities[1]=(sys.velocities[1].*SVector(1.0,0.0,0.0))+((α*sys.velocities[1]+σ*dW[1]).*SVector(0.0,1.0,1.0))
-        push!(dΛ_hist,sim.v-first(first(accels)))
         neighbors=find_neighbors(sys,sys.neighbor_finder,neighbors,step_n;parallel=parallel)
     end
-    return dΛ_hist
 end
 
 struct NortonHomogeneousSplitting
@@ -724,9 +721,6 @@ function Molly.simulate!(sys::System{D}, sim::NortonHomogeneousSplitting, n_step
     α_eff = exp(-sim.γ * dt_O)
     σ_eff = sqrt((1 - α_eff^2) / sim.β)
 
-    dΛ=0
-    dΛ_hist=Float64[]
-
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
     accels = accelerations(sys, neighbors; parallel=parallel)
     inv_sq_norm_F=inv(dot(sim.F,sim.F))
@@ -748,7 +742,6 @@ function Molly.simulate!(sys::System{D}, sim::NortonHomogeneousSplitting, n_step
     function B_step_F!(compute_forces::Bool,parallel::Bool=true)
         compute_forces && (accels .= accelerations(sys, neighbors, parallel=parallel))
         sys.velocities+=dt_B*P_perp(accels)
-        dΛ-=F_coord(accels)
     end
 
     forces_known = true
@@ -791,14 +784,10 @@ function Molly.simulate!(sys::System{D}, sim::NortonHomogeneousSplitting, n_step
     step_arg_pairs = zip(steps, arguments)
 
     for step_n = 1:n_steps
-        dΛ=0
         run_loggers!(sys, neighbors, step_n)
         for (step!, args) = step_arg_pairs
             step!(args...)
         end
-        dΛ=dΛ/B_count+sim.v
-        push!(dΛ_hist,dΛ)
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
     end
-    return dΛ_hist
 end

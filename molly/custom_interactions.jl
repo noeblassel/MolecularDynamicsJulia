@@ -36,7 +36,7 @@ end
 function ColorDriftNEMD(N_atoms::Integer,η::Real,D::Int64)
     F=SVector{D}(vcat(1.0,zeros(D-1)))
     ff=zeros(SVector{D,Float64},N_atoms)
-    norm_cst=inv(sqrt(N_atoms))
+    norm_cst=inv(N_atoms)
     for ix=1:2:length(ff)
         ff[ix]=η*F*norm_cst
     end
