@@ -14,7 +14,7 @@ methods=["SINGLE","COLOR"]
 for m in methods
     println(m)
        Rs=[]
-       ηs=η_dict(m)
+       ηs=η_dict[m]
        for η in ηs
         println("\t",η)
         f=open("mobility_estimates$(η)_$(m).out","r")
