@@ -27,7 +27,7 @@ for m in methods
         close(f)
         push!(Rs,sum_R/n_samps)
        end
-  (m=="COLOR") && (Rs*=sqrt(1000))
+  (m=="COLOR") && (Rs*=1000)
   a=inv(dot(ηs,ηs))*dot(ηs,Rs)#least squares slope fit
   println(a)
   scatter(ηs,Rs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
