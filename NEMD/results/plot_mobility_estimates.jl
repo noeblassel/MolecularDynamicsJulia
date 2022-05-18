@@ -7,7 +7,7 @@ node_color="clustern15"
 node_single="clustern16"
 run(`scp $node_color:$path_orig $path_end`)
 run(`scp $node_single:$path_orig $path_end`)
-η_dict=Dict("COLOR"=>(0.1:0.1:1.0),"SINGLE"=>(0.1:0.1:1.0))
+η_dict=Dict("COLOR"=>(0.01:0.01:0.1),"SINGLE"=>(0.1:0.1:1.0))
 
 methods=["SINGLE","COLOR"]
 
