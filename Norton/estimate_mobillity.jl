@@ -44,5 +44,5 @@ sim= NortonHomogeneousSplitting(dt=dt,γ=1.0,T=T,v=v,F=ff,splitting="BAOAB")
 sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inter,),box_size=box_size,neighbor_finder=nf,loggers=Dict{Symbol,Any}(),force_units=NoUnits,energy_units=NoUnits)
 
 simulate!(sys,sim,n_steps_eq)
-sys.loggers=Dict(:mobility=>GeneralObservableLogger(R,1),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:mobility,:elapsed_time],["mobility_estimates$(v)_$(forcing_type).out","elapsed_time.out"],[100_000,10000],[false,true],["a","a"]))
+sys.loggers=Dict(:mobility=>GeneralObservableLogger(R,1),:elapsed_time=>ElapsedTimeLogger(),:meta=>LogLogger([:mobility,:elapsed_time],["norton_mobility_estimates$(v)_$(forcing_type).out","elapsed_time.out"],[100_000,10000],[false,true],["a","a"]))
 simulate!(sys,sim,n_steps_sim)
