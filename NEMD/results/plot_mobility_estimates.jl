@@ -5,8 +5,8 @@ path_orig="/libre/blasseln/MolecularDynamicsJulia/NEMD/*.out"
 path_end="."
 node_color="clustern15"
 node_single="clustern16"
-run(`scp $node_color $path_orig $path_end`)
-run(`scp $node_single $path_orig $path_end`)
+run(`scp $node_color:$path_orig $path_end`)
+run(`scp $node_single:$path_orig $path_end`)
 
 ηs=0.1:0.1:1.0
 
