@@ -10,8 +10,9 @@ run(`scp $node_single:$path_orig $path_end`)
 v_dict=Dict("COLOR"=>(0.1:0.1:1.0),"SINGLE"=>(0.1:0.1:1.0))
 
 methods=["SINGLE","COLOR"]
-
+joint_plot=plot(xlims=(0,1.0),xlabel="Forcing",ylim="Response",legend=:topleft)
 for m in methods
+    normal_plot=plot(xlims=(0,1.0),xlabel="Forcing",ylim="Response",legend=:topleft)
     println(m)
        d_lambdas=[]
        vs=v_dict[m]
@@ -30,7 +31,10 @@ for m in methods
   #(m=="COLOR") && (vs*=1000)
   a=inv(dot(d_lambdas,d_lambdas))*dot(d_lambdas,vs)#least squares slope fit
   println(a)
-  scatter(d_lambdas,vs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
-  plot!(x->a*x,0,maximum(d_lambdas),linestyle=:dot,color=:red,label="fit")
-  savefig("$(m).pdf")
+  scatter(normal_plot,d_lambdas,vs,markershape=:xcross,label=m,color=:blue)
+  plot!(normal_plot,x->a*x,0,maximum(d_lambdas),linestyle=:dot,color=:red,label="slope: $(round(a,digits=2))")
+  scatter!(joint_plot,d_lambdas,vs,markershape=:xcross,label=m)
+  plot!(joint_plot,x->a*x,0,maximum(d_lambdas),linestyle=:dot,label="slope: $(round(a,digits=2))")
+  savefig(normal_plot,"$(m).pdf")
 end
+savefig(joint_plot,"joint_plot.pdf")
