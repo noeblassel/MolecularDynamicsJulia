@@ -1,8 +1,8 @@
 export animate_trajectories
 
-function animate_trajectories(coords,filename;ix=rand(1:length(coords[1])),camera=(30,30))
+function animate_trajectories(coords,box_size,filename;ix=rand(1:length(coords[1])),camera=(30,30))
 
-    l,l,l=sys.box_size
+    l,l,l=box_size
     P=coords
     n_steps=length(P)
     N=length(first(P))

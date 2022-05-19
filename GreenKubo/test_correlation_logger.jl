@@ -3,11 +3,11 @@ using .MollyExtend
 
 Npd = 10
 N = Npd^3
-ρ = 0.7
+ρ = 0.6
 L = (N / ρ)^(1 // 3)
-T = 2.5
+T = 1.25
 dt = 1e-3
-r_c = 3.0
+r_c = 2.5
 
 n_steps =50_000_000
 
@@ -24,9 +24,9 @@ sim_eq=LangevinSplitting(dt=dt,γ=1.0,T=T,splitting="BAOAB")
 #sim=LangevinSplitting(dt=dt,γ=0.1,T=T,splitting="BAOAB")
 sim=sim_eq
 simulate!(sys,sim_eq,50_000)
-R(s::System,neighbors=nothing)=s.velocities/sqrt(3N)
+R(s::System,neighbors=nothing)=s.velocities[1][1]
 
-sys.loggers=Dict(:autocorrelation=>AutoCorrelationLoggerVec(N,3,R,20000),:time=>ElapsedTimeLogger(),:state=>StateLogger(sys),:log_log=>LogLogger([:autocorrelation,:time,:state],["autocorrelation_history.out","elapsed_times.out","states.out"],[1000,10000,1000000],[false,true,false],["w","a","w"]))
+sys.loggers=Dict(:autocorrelation=>AutoCorrelationLogger(R,20000),:time=>ElapsedTimeLogger(),:state=>StateLogger(sys),:log_log=>LogLogger([:autocorrelation,:time,:state],["autocorrelation_history.out","elapsed_times.out","states.out"],[1000,10000,1000000],[false,true,false],["w","a","w"]))
 
 simulate!(sys,sim,n_steps)
 f=open("output_alt.txt","w")

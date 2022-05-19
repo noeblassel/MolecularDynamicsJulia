@@ -7,11 +7,13 @@ node_color="clustern15"
 node_single="clustern16"
 run(`scp $node_color:$path_orig $path_end`)
 run(`scp $node_single:$path_orig $path_end`)
+
 η_dict=Dict("COLOR"=>(0.1:0.1:1.0),"SINGLE"=>(0.1:0.1:1.0))
 
 methods=["SINGLE","COLOR"]
 joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 for m in methods
+    single_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
     println(m)
        Rs=[]
        ηs=η_dict[m]
@@ -30,10 +32,10 @@ for m in methods
   #(m=="COLOR") && (Rs*=1000)
   a=inv(dot(ηs,ηs))*dot(ηs,Rs)#least squares slope fit
   println(a)
-  scatter(ηs,Rs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
-  plot!(x->a*x,0,last(ηs),linestyle=:dot,color=:red,label="fit")
+  scatter(single_plot,ηs,Rs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
+  plot!(single_plot,x->a*x,0,last(ηs),linestyle=:dot,color=:red,label="fit")
   scatter!(joint_plot,ηs,Rs,markershape=:xcross,label=m)
   plot!(joint_plot,x->a*x,0,last(ηs),linestyle=:dot,label="slope $(round(a,digits=3))")
-  savefig("$(m).pdf")
+  savefig(single_plot,"$(m).pdf")
 end
 savefig(joint_plot,"joint.pdf")

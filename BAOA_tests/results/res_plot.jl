@@ -2,16 +2,16 @@
 
 include("../potential.jl")
 using Plots
-#run(`./scp_files.sh`)
+run(`./scp_files.sh`)
 
-dts=[0.1,0.15,0.2,0.25,0.3,0.35,0.4]
+dts=[0.02, 0.04, 0.06, 0.08, 0.1, 0.12, 0.14]
 methods=["BAOA","BAOAB"]
-potentials=["PERIODIC","QUADRATIC","DOUBLE_WELL","TILTED_DOUBLE_WELL"]
+potentials=["PERIODIC"]#"QUADRATIC","DOUBLE_WELL","TILTED_DOUBLE_WELL"]
 
 N_ref_pts=1000
 
 potential_dict=Dict("PERIODIC"=>periodic_potential,"QUADRATIC"=>quadratic_potential,"DOUBLE_WELL"=>double_well_potential,"TILTED_DOUBLE_WELL"=>tilted_double_well_potential)
-force_dict=Dict("PERIODIC"=>minus_d_periodic_potential,"QUADRATIC"=>minus_d_quadratic_potential,"DOUBLE_WELL"=>minus_d_double_well_potential,"TILTED_DOUBLE_WELL"=>minus_d_tilted_double_well_potential)
+force_dict=Dict("PERIODIC"=>grad_periodic_potential,"QUADRATIC"=>grad_quadratic_potential,"DOUBLE_WELL"=>grad_double_well_potential,"TILTED_DOUBLE_WELL"=>grad_tilted_double_well_potential)
 d2_dict=Dict("PERIODIC"=>d2_periodic_potential,"QUADRATIC"=>d2_quadratic_potential,"DOUBLE_WELL"=>d2_double_well_potential,"TILTED_DOUBLE_WELL"=>d2_tilted_double_well_potential)
 Z_dict=Dict("PERIODIC"=>1.2660648774739363,"QUADRATIC"=>sqrt(2π),"DOUBLE_WELL"=>0.9423576216810029,"TILTED_DOUBLE_WELL"=>2.3080545166317865) #numerically computed using a trapezoid rule with dq=1e-6
 
@@ -22,7 +22,7 @@ q_lims_plot_dict=Dict("PERIODIC"=>(0.0,1.0),"QUADRATIC"=>(-3.0,3.0),"DOUBLE_WELL
 p_lims_plot_dict=Dict("PERIODIC"=>(-3.0,3.0),"QUADRATIC"=>(-3.0,3.0),"DOUBLE_WELL"=>(-3.0,3.0),"TILTED_DOUBLE_WELL"=>(-3.0,3.0))
 
 
-κ(p)=exp(-0.5p^2)/sqrt(2π)
+κ(p)=exp(-abs(p^3)/3)/2.57579863371
 L=1.0
 
 
@@ -42,11 +42,11 @@ for potential in potentials
     
     println(potential)
     V=potential_dict[potential]
-    F=force_dict[potential]
+    F=(q,L)->force_dict[potential](q,L)
     d2=d2_dict[potential]
-    ν(q)=exp(-V(q,L))/Z_dict[potential]
+    ν(q)=exp(V(q,L))/Z_dict[potential]
     μ(q,p)=ν(q)*κ(p)
-    first_order_term(q,p)=-p*F(q,L)*μ(q,p)/2#from TU lemma knowing BAOAB is second order + Taylor expansion 
+    first_order_term(q,p)=-p^2*F(q,L)*μ(q,p)/2#from TU lemma knowing BAOAB is second order + Taylor expansion 
     qlims=qlims_dict[potential]
 
     MU=zeros(N_ref_pts,N_ref_pts)
@@ -116,7 +116,7 @@ for potential in potentials
 
         for method in methods
                 println("\t\t",method)
-                rows=readlines("bins_$(method)_$(potential)_$(dt).out")
+                rows=readlines("bins_$(method)_$(potential)_$(dt)_1.0.out")
                 M=reduce(vcat,[transpose(parse.(Int64,split(r))) for r in rows])
                 sum_M=sum(M)
                 (Nq,Np)=size(M)

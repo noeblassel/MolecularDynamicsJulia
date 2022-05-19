@@ -32,9 +32,9 @@ for bod in file_bodies
     n_samples=read(dump,Int64)
     println(n_samples)
     for i=1:n_corr
-        corr[i]/=(N*D)*(n_samples-i+1)
+        corr[i]#/=(N*D)*(n_samples-i+1)
     end
-
+    println(sum_sq_A," ",corr[1])
     dt_range=dt*(0:(n_corr-1))
     plot!(norm_plot,dt_range[1:N_plot],corr[1:N_plot],label=bod,linewidth=0.5)
     plot!(log_plot,dt_range[2:N_plot],abs.(corr[2:N_plot]),yaxis=:log,label=bod,linewidth=0.5)

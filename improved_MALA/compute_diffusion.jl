@@ -46,7 +46,9 @@ dt_eq=1e-4
 sim_eq=MALA(dt=dt_eq, T=1.0)
 simulate!(sys,sim_eq,n_steps_eq)
 #---------- simulate --------------
-sys.loggers=Dict(:autocorr=>AutoCorrelationLoggerVec(N,3,R,N_corr),:msd=>SelfDiffusionLogger(coords),:log=>LogLogger([:autocorr,:msd],["output/autocorrelation_$(rule)_$(proposal)_$(lg_dt).out","output/sd_increments_$(rule)_$(proposal)_$(lg_dt)"],[10*N_corr,10*N_corr],[false,false],["a","a"]))
+sys.loggers=Dict(:autocorr=>AutoCorrelationLoggerVec(N,3,R,N_corr),
+                 :msd=>SelfDiffusionLogger(coords),
+                 :log=>LogLogger([:autocorr,:msd],["output/autocorrelation_$(rule)_$(proposal)_$(lg_dt).out","output/sd_increments_$(rule)_$(proposal)_$(lg_dt).out"],[10*N_corr,10*N_corr],[false,false],["a","a"]))
 metropolis = (rule=="METROPOLIS")
 N_sim_steps=N_steps*N_corr
 for i in 1 #to have access to sim in local scope

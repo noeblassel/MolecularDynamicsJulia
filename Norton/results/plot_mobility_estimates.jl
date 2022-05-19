@@ -31,7 +31,7 @@ for m in methods
   #(m=="COLOR") && (vs*=1000)
   a=inv(dot(d_lambdas,d_lambdas))*dot(d_lambdas,vs)#least squares slope fit
   println(a)
-  scatter(normal_plot,d_lambdas,vs,markershape=:xcross,label=m,color=:blue)
+  scatter!(normal_plot,d_lambdas,vs,markershape=:xcross,label=m,color=:blue)
   plot!(normal_plot,x->a*x,0,maximum(d_lambdas),linestyle=:dot,color=:red,label="slope: $(round(a,digits=2))")
   scatter!(joint_plot,d_lambdas,vs,markershape=:xcross,label=m)
   plot!(joint_plot,x->a*x,0,maximum(d_lambdas),linestyle=:dot,label="slope: $(round(a,digits=2))")
