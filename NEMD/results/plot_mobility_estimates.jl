@@ -35,7 +35,7 @@ for m in methods
   scatter(single_plot,ηs,Rs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
   plot!(single_plot,x->a*x,0,last(ηs),linestyle=:dot,color=:red,label="fit")
   scatter!(joint_plot,ηs,Rs,markershape=:xcross,label=m)
-  plot!(joint_plot,x->a*x,0,last(ηs),linestyle=:dot,label="slope $(round(a,digits=3))")
+  plot!(joint_plot,x->a*x,0,last(ηs),linestyle=:dot,label="slope $(round(a,digits=2))")
   savefig(single_plot,"$(m).pdf")
 end
 savefig(joint_plot,"joint.pdf")
