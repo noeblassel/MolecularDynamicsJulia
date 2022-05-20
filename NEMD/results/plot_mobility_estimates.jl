@@ -40,10 +40,10 @@ end
 for m in ["COLOR","SINGLE"]
   single_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
   #(m=="COLOR") && (Rs*=1000)
-  perm=sortperm(ηs)
-  ηs=ηs[perm]
-  Rs=Rs[perm]
-  
+  perm=sortperm(ηs[m])
+  ηs[m]=ηs[m][perm]
+  Rs[m]=Rs[m][perm]
+
   a=inv(dot(ηs[m][1:n_regr],ηs[m][1:n_regr]))*dot(ηs[m][1:n_regr],Rs[m][1:n_regr])#least squares slope fit
   println(a)
   scatter!(single_plot,ηs[m],Rs[m],markershape=:xcross,label=m,color=:blue,legend=:topleft)
