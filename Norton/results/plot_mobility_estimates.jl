@@ -7,6 +7,9 @@ node_color="clustern23"
 node_single="clustern19"
 run(`scp $node_color:$path_orig $path_end`)
 run(`scp $node_single:$path_orig $path_end`)
+
+n_regr=5
+
 file_regex=r"norton_mobility_estimates(.+)_(.+)\.out"
 files=readdir()
 files=[f for f in files if occursin(file_regex,f)]
@@ -35,8 +38,12 @@ end
 
 for m in ["COLOR","SINGLE"]
   single_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
-  #(m=="COLOR") && (Rs*=1000)
-  a=inv(dot(Lambdas[m],Lambdas[m]))*dot(Lambdas[m],vs[m])#least squares slope fit
+  perm=sortperm(Lambdas[m])
+
+  Lambdas[m]=Lambdas[m][perm]
+  vs[m]=vs[m][perm]
+  
+  a=inv(dot(Lambdas[m][1:n_regr],Lambdas[m][1:n_regr]))*dot(Lambdas[m][1:n_regr],vs[m][1:n_regr])#least squares slope fit
   println(a)
   scatter!(single_plot,Lambdas[m],vs[m],markershape=:xcross,label=m,color=:blue,legend=:topleft)
   plot!(single_plot,x->a*x,0,maximum(Lambdas[m]),linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
