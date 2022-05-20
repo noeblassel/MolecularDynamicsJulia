@@ -9,6 +9,7 @@ run(`scp $node_color:$path_orig $path_end`)
 run(`scp $node_single:$path_orig $path_end`)
 
 n_regr=5
+n_linear_regime=20
 
 file_regex=r"norton_mobility_estimates(.+)_(.+)\.out"
 files=readdir()
@@ -17,7 +18,8 @@ files=[f for f in files if occursin(file_regex,f)]
 vs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[])
 Lambdas=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[])
 methods=["SINGLE","COLOR"]
-joint_plot=plot(ylims=(0,1.0),xlabel="Forcing",ylabel="Response",legend=:topleft)
+joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
+joint_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 
 for (i,f)=enumerate(files)
   println("$i/$(length(files))")
@@ -38,6 +40,7 @@ end
 
 for m in ["COLOR","SINGLE"]
   single_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
+  single_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
   perm=sortperm(Lambdas[m])
 
   Lambdas[m]=Lambdas[m][perm]
@@ -46,9 +49,11 @@ for m in ["COLOR","SINGLE"]
   a=inv(dot(Lambdas[m][1:n_regr],Lambdas[m][1:n_regr]))*dot(Lambdas[m][1:n_regr],vs[m][1:n_regr])#least squares slope fit
   println(a)
   scatter!(single_plot,Lambdas[m],vs[m],markershape=:xcross,label=m,color=:blue,legend=:topleft)
-  #plot!(single_plot,x->a*x,0,maximum(Lambdas[m]),linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
+  scatter!(single_plot_linear_regime,Lambdas[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label=m,color=:blue,legend=:topleft)
+  plot!(single_plot_linear_regime,x->a*x,linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
   scatter!(joint_plot,Lambdas[m],vs[m],markershape=:xcross,label=m)
-  #plot!(joint_plot,x->a*x,0,maximum(Lambdas[m]),linestyle=:dot,label="slope $(round(a,digits=2))")
+  scatter!(joint_plot_linear_regime,Lambdas[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label=m)
+  plot!(joint_plot_linear_regime,x->a*x,linestyle=:dot,label="slope $(round(a,digits=2))")
   savefig(single_plot,"$(m).pdf")
 end
 savefig(joint_plot,"joint.pdf")
