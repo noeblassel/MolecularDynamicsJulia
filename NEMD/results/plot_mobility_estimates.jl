@@ -42,7 +42,7 @@ for m in ["COLOR","SINGLE"]
   a=inv(dot(ηs[m],ηs[m]))*dot(ηs[m],Rs[m])#least squares slope fit
   println(a)
   scatter!(single_plot,ηs[m],Rs[m],markershape=:xcross,label=m,color=:blue,legend=:topleft)
-  plot!(single_plot,x->a*x,0,maximum(ηs)[m],linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
+  plot!(single_plot,x->a*x,0,maximum(ηs[m]),linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
   scatter!(joint_plot,ηs[m],Rs[m],markershape=:xcross,label=m)
   plot!(joint_plot,x->a*x,0,maximum(ηs[m]),linestyle=:dot,label="slope $(round(a,digits=2))")
   savefig(single_plot,"$(m).pdf")
