@@ -2,51 +2,31 @@ export
     SingleDriftNEMD,
     ColorDriftNEMD
 
-struct SingleDriftNEMD{D,T} 
+struct NonGradientForceNEMD{D,T}
     N_atoms::Integer
-    ix::Integer
-
     η::Real
-    F::SVector{D,T}
-
     force_field::Vector{SVector{D,T}}
 end
 
-function SingleDriftNEMD(N_atoms::Integer,ix::Integer,η::Real,F::SVector{D,T}) where {D,T}
-    F_norm=normalize(F)
+function Molly.forces(inter::NonGradientForceNEMD,s::System,neighbors)=inter.η*inter.force_field
+
+function SingleDriftNEMD(N_atoms::Integer,η::Real;D::Integer=3,T::DataType=Float64)
     ff=zeros(SVector{D,T},N_atoms)
-    ff[ix]=η*F_norm
-    return SingleDriftNEMD{D,T}(N_atoms,ix,η,F_norm,ff)
-
+    ff[1]=SVector{D,T}(vcat(one(T),zeros(T,D-1)))
+    normalize!(ff)
+    return NonGradientForceNEMD{D,T}(N_atoms,η,ff)
 end
 
-SingleDriftNEMD(N_atoms::Integer,ix::Integer,η::Float64)=SingleDriftNEMD(N_atoms,ix,η,SVector(1.0,0.0,0.0))
-
-Molly.forces(inter::SingleDriftNEMD, s::System, neighbors)=inter.force_field
-
-struct ColorDriftNEMD{D,T}
-    N_atoms::Int64
-
-    η::Real
-    F::SVector{D,T}
-
-    force_field::Vector{SVector{D,T}}
+function TwoDriftNEMD(N_atoms::Integer,η::Reall;D::Integer=3,T::DataType=Float64)
+    ff=zeros(SVector{D,T},N_atoms)
+    ff[1]=SVector{D,T}(vcat(one(T),zeros(T,D-1)))
+    ff[2]=SVector{D,T}(vcat(-one(T),zeros(T,D-1)))
+    normalize!(ff)
+    return NonGradientForceNEMD{D,T}(N_atoms,η,ff)
 end
 
-function ColorDriftNEMD(N_atoms::Integer,η::Real,D::Int64)
-    F=SVector{D}(vcat(1.0,zeros(D-1)))
-    ff=zeros(SVector{D,Float64},N_atoms)
-    norm_cst=inv(sqrt(N_atoms))
-    for ix=1:2:length(ff)
-        ff[ix]=η*F*norm_cst
-    end
-
-    for ix=2:2:length(ff)
-        ff[ix]=-η*F*norm_cst
-    end
-    shuffle!(ff)
-    return ColorDriftNEMD{D,Float64}(N_atoms,η,F,ff)
-
+function ColorDriftNEMD(N_atoms::Integer,η::Reall;D::Integer=3,T::DataType=Float64)
+    ff=[SVector{D,T}(vcat(one(T)*(-1.0)^(i+1),zeros(T,D-1)))for i=1:N]
+    normalize!(ff)
+    return NonGradientForceNEMD{D,T}(N_atoms,η,ff)
 end
-
-Molly.forces(inter::ColorDriftNEMD, s::System, neighbors)=inter.force_field
