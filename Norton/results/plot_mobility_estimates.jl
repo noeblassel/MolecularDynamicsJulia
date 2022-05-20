@@ -10,9 +10,9 @@ run(`scp $node_single:$path_orig $path_end`)
 v_dict=Dict("COLOR"=>(0.1:0.1:1.0),"SINGLE"=>(0.1:0.1:1.0))
 
 methods=["SINGLE","COLOR"]
-joint_plot=plot(ylims=(0,1.0),xlabel="Forcing",ylim="Response",legend=:topleft)
+joint_plot=plot(ylims=(0,1.0),xlabel="Forcing",ylabel="Response",legend=:topleft)
 for m in methods
-    normal_plot=plot(ylims=(0,1.0),xlabel="Forcing",ylim="Response",legend=:topleft)
+    normal_plot=plot(ylims=(0,1.0),xlabel="Forcing",ylabel="Response",legend=:topleft)
     println(m)
        d_lambdas=[]
        vs=v_dict[m]
