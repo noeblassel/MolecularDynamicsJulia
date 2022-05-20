@@ -42,13 +42,13 @@ for m in ["COLOR","SINGLE"]
 
   Lambdas[m]=Lambdas[m][perm]
   vs[m]=vs[m][perm]
-  
+
   a=inv(dot(Lambdas[m][1:n_regr],Lambdas[m][1:n_regr]))*dot(Lambdas[m][1:n_regr],vs[m][1:n_regr])#least squares slope fit
   println(a)
   scatter!(single_plot,Lambdas[m],vs[m],markershape=:xcross,label=m,color=:blue,legend=:topleft)
-  plot!(single_plot,x->a*x,0,maximum(Lambdas[m]),linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
+  #plot!(single_plot,x->a*x,0,maximum(Lambdas[m]),linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
   scatter!(joint_plot,Lambdas[m],vs[m],markershape=:xcross,label=m)
-  plot!(joint_plot,x->a*x,0,maximum(Lambdas[m]),linestyle=:dot,label="slope $(round(a,digits=2))")
+  #plot!(joint_plot,x->a*x,0,maximum(Lambdas[m]),linestyle=:dot,label="slope $(round(a,digits=2))")
   savefig(single_plot,"$(m).pdf")
 end
 savefig(joint_plot,"joint.pdf")

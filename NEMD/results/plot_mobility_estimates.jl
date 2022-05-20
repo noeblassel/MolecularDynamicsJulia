@@ -47,9 +47,9 @@ for m in ["COLOR","SINGLE"]
   a=inv(dot(ηs[m][1:n_regr],ηs[m][1:n_regr]))*dot(ηs[m][1:n_regr],Rs[m][1:n_regr])#least squares slope fit
   println(a)
   scatter!(single_plot,ηs[m],Rs[m],markershape=:xcross,label=m,color=:blue,legend=:topleft)
-  plot!(single_plot,x->a*x,0,maximum(ηs[m]),linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
+  #plot!(single_plot,x->a*x,0,maximum(ηs[m]),linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
   scatter!(joint_plot,ηs[m],Rs[m],markershape=:xcross,label=m)
-  plot!(joint_plot,x->a*x,0,maximum(ηs[m]),linestyle=:dot,label="slope $(round(a,digits=2))")
+  #plot!(joint_plot,x->a*x,0,maximum(ηs[m]),linestyle=:dot,label="slope $(round(a,digits=2))")
   savefig(single_plot,"$(m).pdf")
 end
 savefig(joint_plot,"joint.pdf")
