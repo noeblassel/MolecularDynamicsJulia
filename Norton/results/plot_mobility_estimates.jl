@@ -9,13 +9,13 @@ run(`scp $node_color:$path_orig $path_end`)
 run(`scp $node_single:$path_orig $path_end`)
 
 n_regr=5
-n_linear_regime=20
+n_linear_regime=19
 
 file_regex=r"norton_mobility_estimates(.+)_(.+)\.out"
 files=readdir()
 files=[f for f in files if occursin(file_regex,f)]
-vs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[])
-Lambdas=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[])
+vs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
+Lambdas=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 methods=["SINGLE","COLOR"]
 joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 joint_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
