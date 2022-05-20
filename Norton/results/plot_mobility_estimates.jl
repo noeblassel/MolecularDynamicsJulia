@@ -20,7 +20,7 @@ for (i,f)=enumerate(files)
   println("$i/$(length(files))")
   flush(stdout)
   (v,method)=match(file_regex,f)
-  v=parse(Float64,η)
+  v=parse(Float64,v)
   push!(vs[method],v)
   file_handle=open(f,"r")
   n_samps=0
