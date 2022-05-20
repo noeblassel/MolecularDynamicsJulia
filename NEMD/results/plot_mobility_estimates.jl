@@ -27,11 +27,11 @@ for (i,f)=enumerate(files)
   file_handle=open(f,"r")
   n_samps=0
   sum_R=0.0
-  while !eof(f)
+  while !eof(file_handle)
     sum_R+=read(f,Float64)
     n_samps+=1
   end
-  close(f)
+  close(file_handle)
   push!(Rs[method],sum_R/n_samps)
 end
 
