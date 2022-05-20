@@ -21,6 +21,7 @@ Rs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[])
 joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 for (i,f)=enumerate(files)
   println("$i/$(length(files))")
+  flush(stdout)
   (η,method)=match(file_regex,f)
   η=parse(Float64,η)
   push!(ηs[method],η)
@@ -28,7 +29,7 @@ for (i,f)=enumerate(files)
   n_samps=0
   sum_R=0.0
   while !eof(file_handle)
-    sum_R+=read(f,Float64)
+    sum_R+=read(file_handle,Float64)
     n_samps+=1
   end
   close(file_handle)
@@ -40,10 +41,10 @@ for m in ["COLOR","SINGLE"]
   #(m=="COLOR") && (Rs*=1000)
   a=inv(dot(ηs[m],ηs[m]))*dot(ηs[m],Rs[m])#least squares slope fit
   println(a)
-  scatter!(single_plot,ηs,Rs,markershape=:xcross,label=m,color=:blue,legend=:topleft)
-  plot!(single_plot,x->a*x,0,last(ηs),linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
-  scatter!(joint_plot,ηs,Rs,markershape=:xcross,label=m)
-  plot!(joint_plot,x->a*x,0,last(ηs),linestyle=:dot,label="slope $(round(a,digits=2))")
+  scatter!(single_plot,ηs[m],Rs[m],markershape=:xcross,label=m,color=:blue,legend=:topleft)
+  plot!(single_plot,x->a*x,0,maximum(ηs)[m],linestyle=:dot,color=:red,label="slope $(round(a,digits=2))")
+  scatter!(joint_plot,ηs[m],Rs[m],markershape=:xcross,label=m)
+  plot!(joint_plot,x->a*x,0,maximum(ηs[m]),linestyle=:dot,label="slope $(round(a,digits=2))")
   savefig(single_plot,"$(m).pdf")
 end
 savefig(joint_plot,"joint.pdf")
