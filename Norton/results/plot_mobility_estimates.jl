@@ -14,7 +14,6 @@ n_linear_regime=20
 file_regex=r"norton_mobility_estimates(.+)_(.+)\.out"
 files=readdir()
 files=[f for f in files if occursin(file_regex,f)]
-println(length(files))
 vs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[])
 Lambdas=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[])
 methods=["SINGLE","COLOR"]
@@ -55,6 +54,8 @@ for m in ["COLOR","SINGLE"]
   scatter!(joint_plot_linear_regime,Lambdas[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label=m)
   plot!(joint_plot_linear_regime,x->a*x,linestyle=:dot,label="slope $(round(a,digits=2))")
   savefig(single_plot,"$(m).pdf")
+  savefig(single_plot_linear_regime,"$(m)_linear_regime.pdf")
 end
-savefig(joint_plot,"joint.pdf")
+
 savefig(joint_plot,"joint_plot.pdf")
+savefig(joint_plot_linear_regime,"joint_plot_linear_regime.pdf")
