@@ -26,7 +26,7 @@ end
 HamiltonianLogger(T, n_steps::Integer) = HamiltonianLogger(n_steps, T[])
 HamiltonianLogger(n_steps::Integer) = HamiltonianLogger(Float32, n_steps)
 
-function Molly.log_property!(logger::HamiltonianLogger, s::System, neighbors=nothing, step_n::Integer=0)
+function Molly.log_property!(logger::HamiltonianLogger, s::System, neighbors=nothing, step_n::Integer=0;parallel::Bool=true)
     (step_n % logger.log_freq != 0) && return
     push!(logger.energies, Molly.kinetic_energy_noconvert(s) + Molly.potential_energy(s, neighbors))
 end
@@ -41,7 +41,7 @@ end
 KineticEnergyLoggerNoDims(T, log_freq::Integer) = KineticEnergyLoggerNoDims(log_freq, T[])
 KineticEnergyLoggerNoDims(log_freq::Integer) = KineticEnergyLoggerNoDims(Float64, log_freq)
 
-function Molly.log_property!(logger::KineticEnergyLoggerNoDims, s::System, neighbors=nothing, step_n::Integer=0)
+function Molly.log_property!(logger::KineticEnergyLoggerNoDims, s::System, neighbors=nothing, step_n::Integer=0;parallel::Bool=true)
     (step_n % logger.log_freq != 0) && return
     push!(logger.energies, Molly.kinetic_energy_noconvert(s))
 end
@@ -55,7 +55,7 @@ end
 TemperatureLoggerReduced(T, log_freq::Integer) = TemperatureLoggerReduced(log_freq, T[])
 TemperatureLoggerReduced(log_freq::Integer) = TemperatureLoggerReduced(Float64, log_freq)
 
-function Molly.log_property!(logger::TemperatureLoggerReduced, s::System, neighbors=nothing, step_n::Integer=0)
+function Molly.log_property!(logger::TemperatureLoggerReduced, s::System, neighbors=nothing, step_n::Integer=0;parallel::Bool=true)
     (step_n % logger.log_freq != 0) && return
     push!(logger.temperatures, temperature_reduced(s))
 end
@@ -71,7 +71,7 @@ VirialLogger(T, log_freq::Integer) = VirialLogger{T}(log_freq, T[])
 VirialLogger(log_freq::Integer) = VirialLogger(log_freq, Float64[])
 
 
-function Molly.log_property!(logger::VirialLogger, s::System, neighbors=nothing, log_freq::Integer=0)
+function Molly.log_property!(logger::VirialLogger, s::System, neighbors=nothing, log_freq::Integer=0;parallel::Bool=true)
     (step_n % logger.log_freq != 0) && return
     push!(logger.energies, pair_virial(s, neighbors))
 end
@@ -99,7 +99,7 @@ end
 PressureLoggerNVT(T, P, log_freq::Integer) = PressureLoggerNVT(log_freq, T, P[])
 PressureLoggerNVT(T, log_freq::Integer) = PressureLoggerNVT(log_freq, T, Float64[])
 
-function Molly.log_property!(logger::PressureLoggerNVT, s::System, neighbors=nothing, step_n::Integer=0)
+function Molly.log_property!(logger::PressureLoggerNVT, s::System, neighbors=nothing, step_n::Integer=0;parallel::Bool=true)
     if step_n % logger.log_freq == 0
         W = pair_virial(s, neighbors)
         V = s.box_size[1] * s.box_size[2] * s.box_size[3]
@@ -115,7 +115,7 @@ end
 
 SelfDiffusionLogger(initial_coords) = SelfDiffusionLogger{typeof(initial_coords)}(deepcopy(initial_coords), zero(initial_coords),Float64[])
 
-function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer=0)
+function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer=0;parallel::Bool=true)
     logger.self_diffusion_coords .+= unwrap_coords_vec.(logger.last_coords, s.coords, (s.box_size,)) - logger.last_coords
     logger.last_coords .= s.coords
     push!(logger.msds,ustrip(dot(logger.self_diffusion_coords,logger.self_diffusion_coords))/length(logger.self_diffusion_coords))
@@ -136,7 +136,7 @@ end
 GeneralObservableLogger(T::DataType, observable::Function, n_steps::Integer) = GeneralObservableLogger{T}(observable, n_steps, T[])
 GeneralObservableLogger(observable::Function, n_steps::Integer) = GeneralObservableLogger(Float64, observable, n_steps)
 
-function Molly.log_property!(logger::GeneralObservableLogger, s::System, neighbors=nothing, step_n::Integer=0)
+function Molly.log_property!(logger::GeneralObservableLogger, s::System, neighbors=nothing, step_n::Integer=0;parallel::Bool=true)
     (step_n % logger.log_freq != 0) && return
     push!(logger.history, logger.observable(s, neighbors))
 end
@@ -199,7 +199,7 @@ AutoCorrelationLoggerVec(N_atoms::Integer, dim::Integer, T::DataType, observable
 AutoCorrelationLoggerVec(N_atoms::Integer, dim::Integer, observable::Function, n_correlation::Integer) = AutoCorrelationLoggerVec(N_atoms, dim, Float64, observable, n_correlation)
 
 
-function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors=nothing, step_n::Integer=0)
+function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors=nothing, step_n::Integer=0;parallel::Bool=true)
 
     #compute observables
     A = logger.observableA(s, neighbors)
@@ -239,7 +239,7 @@ struct ElapsedTimeLogger
 end
 
 ElapsedTimeLogger()=ElapsedTimeLogger(Dates.now())
-Molly.log_property!(logger::ElapsedTimeLogger,S::System,neighbors=nothing,step_n::Integer=0)=nothing
+Molly.log_property!(logger::ElapsedTimeLogger,S::System,neighbors=nothing,step_n::Integer=0;parallel::Bool=true)=nothing
 
 struct LogLogger
     logger_table::Vector{Tuple{Symbol,String,Int64,Bool,String}} 
@@ -249,7 +249,7 @@ function LogLogger(logger_names::Vector{Symbol},logging_files::Vector{String},lo
     return LogLogger([zip(logger_names,logging_files,logging_freqs,decorate_outputs,write_modes)...])
 end
 
-function Molly.log_property!(logger::LogLogger,s::System,neighbors=nothing,step_n::Integer=0)
+function Molly.log_property!(logger::LogLogger,s::System,neighbors=nothing,step_n::Integer=0;parallel::Bool=true)
     for (name,file,freq,decorate,mode)=logger.logger_table
         if step_n%freq==0
             f=open(file,mode)
@@ -291,7 +291,7 @@ struct StateLogger
     s::System
 end
 
-Molly.log_property!(logger::StateLogger,s::System,neighbors=nothing,step_n::Integer=0)=nothing
+Molly.log_property!(logger::StateLogger,s::System,neighbors=nothing,step_n::Integer=0;parallel::Bool=true)=nothing
 
 function log_to_file!(logger::StateLogger, file::IOStream)
     save_reduced_state(logger.s, file)
@@ -307,7 +307,7 @@ end
 AverageObservableLogger(T::DataType,observable::Function,log_freq::Integer=1)=AverageObservableLogger{T}(observable,log_freq,zero(T),0)
 AverageObservableLogger(observable::Function,log_freq::Integer=1)=AverageObservableLogger(Float64,observable,log_freq)
 
-function Molly.log_property!(logger::AverageObservableLogger,s::System,neighbors=nothing,step_n::Integer=0)
+function Molly.log_property!(logger::AverageObservableLogger,s::System,neighbors=nothing,step_n::Integer=0;parallel::Bool=true)
 
     if step_n % logger.log_freq ==0
         O=logger.observable(s,neighbors)
