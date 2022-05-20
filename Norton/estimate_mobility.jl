@@ -24,14 +24,14 @@ box_size=SVector(L,L,L)
 
 nf = (3.6r_c < L) ? CellListMapNeighborFinder(nb_matrix=trues(N,N),dist_cutoff= 1.2r_c,unit_cell=box_size) : DistanceNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=1.2r_c)
 
-
 atoms=[Atom(index=i,ϵ=1.0,σ=1.0,mass=1.0) for i=1:N]
 coords=place_atoms_on_3D_lattice(Npd,box_size)
 velocities=init_velocities(T,[a.mass for a=atoms],1.0)
 inter=LennardJones(cutoff=ShiftedForceCutoff(r_c),nl_only=true,force_units=NoUnits,energy_units=NoUnits)
 
-forcing = (forcing_type== "COLOR") ? ColorDriftNEMD(N,1.0,3) : SingleDriftNEMD(N,1,1.0)
+method_dict=Dict("COLOR"=>ColorDriftNEMD,"SINGLE"=>OneDriftNEMD,"TWO"=>TwoDriftNEMD)
 
+forcing = method_dict[forcing_type](N,1.0)
 ff=forcing.force_field
 
 R(s::System,neighbors)=v-dot(ff,accelerations(s,neighbors)) #ff is always of norm 1
