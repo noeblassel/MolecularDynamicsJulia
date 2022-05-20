@@ -14,7 +14,7 @@ n_linear_regime=20
 file_regex=r"norton_mobility_estimates(.+)_(.+)\.out"
 files=readdir()
 files=[f for f in files if occursin(file_regex,f)]
-
+println(length(files))
 vs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[])
 Lambdas=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[])
 methods=["SINGLE","COLOR"]
