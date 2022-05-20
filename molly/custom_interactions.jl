@@ -44,7 +44,7 @@ function ColorDriftNEMD(N_atoms::Integer,η::Real,D::Int64)
     for ix=2:2:length(ff)
         ff[ix]=-η*F*norm_cst
     end
-
+    shuffle!(ff)
     return ColorDriftNEMD{D,Float64}(N_atoms,η,F,ff)
 
 end

@@ -35,7 +35,7 @@ forcing = (forcing_type== "COLOR") ? ColorDriftNEMD(N,η,3) : SingleDriftNEMD(N,
 
 
 ff=forcing.force_field
-R= (forcing_type== "COLOR") ? MobilityObservable(ff) : (s::System,neighbors=nothing) -> s.velocities[1][1]
+R= MobilityObservable(f)
 
 n_steps_eq=Int64(floor(t_eq/dt))
 n_steps_sim=Int64(floor(t_sim/dt))
