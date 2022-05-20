@@ -12,6 +12,8 @@ export
     MALA_HMC,
     NortonTest,
     NortonHomogeneousSplitting,
+    NortonOneDriftSplitting,
+    NortonTwoDriftSplitting,
     NortonColorDriftSplitting
 
 log_barker(α::Float64) = (α > 0) ? (-α - log(1 + exp(-α))) : (-log(1 + exp(α)))
@@ -701,9 +703,19 @@ function NortonHomogeneousSplitting(; dt, γ, T,v,F, splitting, rseed=round(UInt
     NortonHomogeneousSplitting(dt, γ, β,v,F, rseed, rng, splitting)
 end
 
+
+function OneDriftSplitting(;N,dt,γ,T,v,splitting,rseed=round(UInt32,time()), rng=MersenneTwister(rseed))
+    one_drift=OneDriftNEMD(N,1.0).force_field
+    return NortonHomogeneousSplitting(;N,dt,γ,T,v,splitting,rseed=round(UInt32,time()), rng=MersenneTwister(rseed))
+end
 function NortonColorDriftSplitting(;N,dt,γ,T,v,splitting,rseed=round(UInt32,time()), rng=MersenneTwister(rseed))
-    F=[SVector((-1.0)^(i+1),0.0,0.0) for i=1:N]
-    return NortonHomogeneousSplitting(dt=dt,γ=γ,T=T,v=v,F=F*inv(sqrt(N)),splitting=splitting,rseed=rseed,rng=rng)#normalize F
+    color_drift=ColorDriftNEMD(N,1.0).force_field
+    return NortonHomogeneousSplitting(dt=dt,γ=γ,T=T,v=v,F=color_drift,splitting=splitting,rseed=rseed,rng=rng)
+end
+
+function NortonTwoDriftSplitting(;N,dt,γ,T,v,splitting,rseed=round(UInt32,time()), rng=MersenneTwister(rseed))
+    two_drift=TwoDriftNEMD(N,1.0).force_field
+    return NortonHomogeneousSplitting(dt=dt,γ=γ,T=T,v=v,F=two_drift,splitting=splitting,rseed=rseed,rng=rng)
 end
 
 
