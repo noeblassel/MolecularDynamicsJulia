@@ -9,7 +9,7 @@ for node in [15,16]
 end
 
 n_regr=5
-n_linear_regime=19
+n_linear_regime=10
 
 file_regex=r"mobility_estimates(.+)_(.+)\.out"
 files=readdir()
