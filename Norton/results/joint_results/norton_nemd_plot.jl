@@ -64,19 +64,19 @@ for m in methods
   ηs[m]=ηs[m][perm_nemd]
   Rs[m]=Rs[m][perm_nemd]
 
-  scatter!(single_plot,ηs[m],Rs[m],markershape=:xcross,label="$(m)_T",legend=:topleft)
-  scatter!(single_plot_linear_regime,ηs[m][1:n_linear_regime],Rs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_T",legend=:topleft)
-  scatter!(joint_plot,ηs[m],Rs[m],markershape=:xcross,label="$(m)_T")
-  scatter!(joint_plot_linear_regime,ηs[m][1:n_linear_regime],Rs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_T")
+  scatter!(single_plot,ηs[m],Rs[m],markershape=:xcross,label="$(m)_T",markersize=2)
+  scatter!(single_plot_linear_regime,ηs[m][1:n_linear_regime],Rs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_T",legend=:topleft,markersize=2)
+  scatter!(joint_plot,ηs[m],Rs[m],markershape=:xcross,label="$(m)_T",markersize=2)
+  scatter!(joint_plot_linear_regime,ηs[m][1:n_linear_regime],Rs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_T",markersize=2)
 
   perm_norton=sortperm(dΛs[m])
   dΛs[m]=dΛs[m][perm_norton]
   vs[m]=vs[m][perm_norton]
   
-  scatter!(single_plot,dΛs[m],vs[m],markershape=:xcross,label="$(m)_N",legend=:topleft)
-  scatter!(single_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_N",legend=:topleft)
-  scatter!(joint_plot,dΛs[m],vs[m],markershape=:xcross,label="$(m)_N")
-  scatter!(joint_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_N")
+  scatter!(single_plot,dΛs[m],vs[m],markershape=:xcross,label="$(m)_N",markersize=2)
+  scatter!(single_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_N",markersize=2)
+  scatter!(joint_plot,dΛs[m],vs[m],markershape=:xcross,label="$(m)_N",markersize=2)
+  scatter!(joint_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_N",markersize=2)
 
   savefig(single_plot,"$(m).pdf")
   savefig(single_plot_linear_regime,"$(m)_linear_regime.pdf")
