@@ -16,7 +16,7 @@ files=readdir()
 files=[f for f in files if occursin(file_regex,f)]
 vs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 Lambdas=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
-methods=["SINGLE","COLOR"]
+methods=["SINGLE","TWO","COLOR"]
 joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 joint_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 
@@ -37,7 +37,7 @@ for (i,f)=enumerate(files)
   push!(Lambdas[method],sum_lambda/n_samps)
 end
 
-for m in ["COLOR","SINGLE"]
+for m in methods
   single_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
   single_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
   perm=sortperm(Lambdas[m])
