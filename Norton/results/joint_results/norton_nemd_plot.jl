@@ -4,7 +4,7 @@ using Plots,LinearAlgebra
 path_nemd="/libre/blasseln/MolecularDynamicsJulia/NEMD/"
 path_norton="/libre/blasseln/MolecularDynamicsJulia/Norton/"
 
-n_linear_regime=10
+n_linear_regime=20
 
 nemd_regex=r"mobility_estimates(.+)_(.+)\.out"
 norton_regex=r"norton_mobility_estimates(.+)_(.+)\.out"
