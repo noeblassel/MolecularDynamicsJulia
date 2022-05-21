@@ -14,7 +14,7 @@ n_linear_regime=19
 file_regex=r"mobility_estimates(.+)_(.+)\.out"
 files=readdir()
 files=[f for f in files if occursin(file_regex,f)]
-η s=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
+ηs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 Rs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 methods=["SINGLE","COLOR","TWO"]
 joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
