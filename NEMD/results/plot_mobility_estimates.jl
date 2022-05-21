@@ -3,10 +3,10 @@ using Plots,LinearAlgebra
 
 path_orig="/libre/blasseln/MolecularDynamicsJulia/NEMD/*.out"
 path_end="."
-node_color="clustern15"
-node_single="clustern16"
-run(`scp $node_color:$path_orig $path_end`)
-run(`scp $node_single:$path_orig $path_end`)
+
+for node in [15,16]
+  run(`scp clustern$node:$path_orig $path_end`)
+end
 
 n_regr=5
 n_linear_regime=19
