@@ -30,8 +30,8 @@ coords=place_atoms_on_3D_lattice(Npd,box_size)
 velocities=init_velocities(T,[a.mass for a=atoms],1.0)
 inter=LennardJones(cutoff=ShiftedForceCutoff(r_c),nl_only=true,force_units=NoUnits,energy_units=NoUnits)
 #(forcing_type == "COLOR") && (η*=inv(N))
-
-forcing = (forcing_type== "COLOR") ? ColorDriftNEMD(N,η,3) : SingleDriftNEMD(N,1,η)
+f_dict=Dict("COLOR"=>ColorDriftNEMD(N,η),"TWO"=>TwoDriftNEMD(N,η),"SINGLE"=>OneDriftNEMD(N,η))
+forcing = f_dict[forcing_type]
 
 
 ff=forcing.force_field
