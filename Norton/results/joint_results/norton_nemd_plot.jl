@@ -1,8 +1,8 @@
 using Plots,LinearAlgebra
 #TODO add error bars using block averaging
 
-path_nemd="/libre/blasseln/MolecularDynamicsJulia/NEMD/"
-path_norton="/libre/blasseln/MolecularDynamicsJulia/Norton/"
+path_nemd="/libre/blasseln/MolecularDynamicsJulia/NEMD/results"
+path_norton="/libre/blasseln/MolecularDynamicsJulia/Norton/results"
 
 n_linear_regime=20
 
@@ -23,12 +23,12 @@ joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 joint_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 
 for (i,f)=enumerate(files_nemd)
-  println("$i/$(length(files))")
+  println("$i/$(length(files_nemd))")
   flush(stdout)
   (η,method)=match(file_regex,f)
   η=parse(Float64,η)
   push!(ηs[method],η)
-  file_handle=open(f,"r")
+  file_handle=open(path_nemd*f,"r")
   n_samps=0
   sum_R=0.0
   while !eof(file_handle)
@@ -40,12 +40,12 @@ for (i,f)=enumerate(files_nemd)
 end
 
 for (i,f)=enumerate(files_norton)
-    println("$i/$(length(files))")
+    println("$i/$(length(files_norton))")
     flush(stdout)
     (v,method)=match(file_regex,f)
     v=parse(Float64,v)
     push!(vs[method],v)
-    file_handle=open(f,"r")
+    file_handle=open(path_norton*f,"r")
     n_samps=0
     sum_lambda=0.0
     while !eof(file_handle)
