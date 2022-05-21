@@ -1,8 +1,8 @@
 using Plots,LinearAlgebra
 #TODO add error bars using block averaging
 
-path_nemd="/libre/blasseln/MolecularDynamicsJulia/NEMD/results"
-path_norton="/libre/blasseln/MolecularDynamicsJulia/Norton/results"
+path_nemd="/libre/blasseln/MolecularDynamicsJulia/NEMD/results/"
+path_norton="/libre/blasseln/MolecularDynamicsJulia/Norton/results/"
 
 n_linear_regime=20
 
