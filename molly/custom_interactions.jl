@@ -26,7 +26,7 @@ function TwoDriftNEMD(N::Integer,η::Real;D::Integer=3,T::DataType=Float64)
     ff[1]=SVector{D,T}(vcat(one(T),zeros(T,D-1)))
     ff[2]=SVector{D,T}(vcat(-one(T),zeros(T,D-1)))
     normalize!(ff)
-    #shuffle!(ff)
+    shuffle!(ff)
     return NonGradientForceNEMD{D,T}(N,η,ff)
 end
 
