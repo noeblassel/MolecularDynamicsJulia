@@ -51,7 +51,7 @@ for (i,f)=enumerate(files_nemd)
   end
   close(file_handle)
 
-  vars_nemd[method]=inv(η^2)*asymptotic_var(data)
+  push!(vars_nemd[method],inv(η^2)*asymptotic_var(data))
 end
 
 for m in methods
