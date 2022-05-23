@@ -11,18 +11,23 @@ function asymptotic_var(v::Vector{Float64})
     N=length(data)
     K=N
     max_var=0
+    vars=Float64[]
         while K>2
             new_var=var(data)*N*inv(K)
-            (new_var<max_var) && break
+            push!(vars,new_var)
+            #(new_var<max_var) && break
             max_var=new_var
             K >>=1
             data=[0.5*(data[i]+data[i+1]) for i=1:2:K-1]
         end
-    return max_var
+    return vars
 end
 
 path_nemd="/libre/blasseln/MolecularDynamicsJulia/NEMD/results/"
-path_norton="/libre/blasseln/MolecularDynamicsJulia/Norton/results/"
+
+if !isdir("vars")
+  mkdir("vars")
+end
 
 n_linear_regime=10
 
@@ -50,10 +55,15 @@ for (i,f)=enumerate(files_nemd)
     push!(data,read(file_handle,Float64))
   end
   close(file_handle)
-  push!(vars_nemd[method],asymptotic_var(data))
+  vars=asymptotic_var(data)
+  N=length(vars)
+  block_sizes=[2^(i-1) for i=1:N]
+  plot(block_sizes,vars)
+  savefig("vars/$(method)_$(η).png")
+
 end
 
-for m in methods
+"""for m in methods
   single_plot=plot(xlabel="Forcing",ylabel="Asymptotic variance",legend=:topleft)
   single_plot_linear_regime=plot(xlabel="Forcing",ylabel="Asymptotic Variance",legend=:topleft)
   perm_nemd=sortperm(ηs[m])
@@ -71,4 +81,4 @@ for m in methods
 end
 
 savefig(joint_plot,"vars_joint_plot.pdf")
-savefig(joint_plot_linear_regime,"vars_joint_plot_linear_regime.pdf")
+savefig(joint_plot_linear_regime,"vars_joint_plot_linear_regime.pdf")"""
