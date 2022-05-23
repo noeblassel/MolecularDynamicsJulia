@@ -58,7 +58,7 @@ for (i,f)=enumerate(files_nemd)
   vars=asymptotic_var(data)
   N=length(vars)
   block_sizes=[2^(i-1) for i=1:N]
-  plot(block_sizes,vars)
+  plot(vars)
   savefig("vars/$(method)_$(η).png")
 
 end
