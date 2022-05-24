@@ -15,7 +15,7 @@ function asymptotic_var(v::Vector{Float64})
         while K>1000
             max_var=max(max_var,varm(data,0.0)*N*inv(K))
             K >>=1
-            data=[0.5*(data[i]+data[i+1]) for i=1:2:K-1]
+            data=(data[1:2:end]+data[2:2:end])/2
         end
     return max_var
 end
@@ -47,8 +47,8 @@ n_steps_norton=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 methods=["SINGLE","COLOR","TWO"]
 joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 joint_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
-plot_asympt_var=plot(xlabel="Forcing",ylabel="Asymptotic_variance",legend=:topleft,xaxis=:log,yaxis=:log)
-plot_asympt_var_linear_regime=plot(xlabel="Forcing",ylabel="Asymptotic_variance",legend=:topleft,xaxis=:log,yaxis=:log)
+plot_asympt_var=plot(xlabel="Forcing",ylabel="Asymptotic_variance",legend=:topright,xaxis=:log,yaxis=:log)
+plot_asympt_var_linear_regime=plot(xlabel="Forcing",ylabel="Asymptotic_variance",legend=:topright,xaxis=:log,yaxis=:log)
 plot_nsteps=plot(xlabel="Forcing",ylabel="n_steps")
 
 for (i,f)=enumerate(files_nemd)
@@ -67,9 +67,9 @@ for (i,f)=enumerate(files_nemd)
   end
   close(file_handle)
   σ2=asymptotic_var(data_pts)
-  push!(Rs[method],mean(data_pts)*inv(η)) #finite difference linear response estimator
+  push!(Rs[method],mean(data_pts)) #finite difference linear response estimator
   push!(n_steps_nemd[method],length(data_pts))
-  push!(error_bars_nemd[method],sqrt(σ2/length(data_pts))/η)
+  push!(error_bars_nemd[method],sqrt(σ2/length(data_pts)))
   push!(asymptotic_vars_nemd[method],σ2/η^2)
 end
 
@@ -90,10 +90,10 @@ for (i,f)=enumerate(files_norton)
 
     σ2_ergodic_mean=asymptotic_var(data_pts .- γ*v)
     denom=mean(data_pts)
-    push!(dΛs[method],v/denom) #norton linear response estimator
+    push!(dΛs[method],denom) #norton linear response estimator
     push!(n_steps_norton[method],length(data_pts))
     σ2=v^2*σ2_ergodic_mean/denom^4 # delta method
-    push!(error_bars_norton[method],sqrt(σ2/length(data_pts)))
+    push!(error_bars_norton[method],sqrt(σ2_ergodic_mean/length(data_pts)))
     push!(asymptotic_vars_norton[method],σ2)
   end
 
@@ -125,8 +125,8 @@ for m in methods
   
   scatter!(single_plot,dΛs[m],vs[m],markershape=:xcross,label="$(m)_N",markersize=2)
   scatter!(single_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_N",markersize=2)
-  scatter!(joint_plot,dΛs[m],vs[m],markershape=:xcross,label="$(m)_N",markersize=2)
-  scatter!(joint_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_N",markersize=2)
+  scatter!(joint_plot,dΛs[m],vs[m],markershape=:xcross,label="$(m)_N",markersize=2,xerror=error_bars_norton[m],msc=:auto)
+  scatter!(joint_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:xcross,label="$(m)_N",markersize=2,xerror=error_bars_norton[m])
   scatter!(plot_asympt_var,dΛs[m],asymptotic_vars_norton[m],markershape=:xcross,markersize=2,label="$(m)_N")
   scatter!(plot_asympt_var_linear_regime,dΛs[m][1:n_linear_regime],asymptotic_vars_norton[m][1:n_linear_regime],markershape=:xcross,markersize=2,label="$(m)_N")
   scatter!(plot_nsteps,dΛs[m],n_steps_norton[m],markershape=:xcross,markersize=2,label="$(m)_N")
