@@ -105,8 +105,8 @@ for m in methods
   ηs[m]=ηs[m][perm_nemd]
   Rs[m]=Rs[m][perm_nemd]
   n_steps_nemd[m]=n_steps_nemd[m][perm_nemd]
-  error_bars_nemd[m]=error_bars_nemd[m][perm]
-  asymptotic_vars_nemd[m]=asymptotic_vars_nemd[m][perm]
+  error_bars_nemd[m]=error_bars_nemd[m][perm_nemd]
+  asymptotic_vars_nemd[m]=asymptotic_vars_nemd[m][perm_nemd]
 
   scatter!(single_plot,ηs[m],Rs[m],markershape=:xcross,label="$(m)_T",yerror=error_bars_nemd[m],markersize=2,msc=:auto)
   scatter!(single_plot_linear_regime,ηs[m][1:n_linear_regime],Rs[m][1:n_linear_regime],yerror=error_bars_nemd[m][1:n_linear_regime],markershape=:xcross,label="$(m)_T",markersize=2,msc=:auto)
