@@ -88,8 +88,8 @@ for (i,f)=enumerate(files_norton)
 
     close(file_handle)
 
-    σ2_ergodic_mean=asymptotic_var(data_pts)
-    denom=γ*v+mean(data_pts)
+    σ2_ergodic_mean=asymptotic_var(data_pts .- γ*v)
+    denom=mean(data_pts)
     push!(dΛs[method],v/denom) #norton linear response estimator
     push!(n_steps_norton[method],length(data_pts))
     σ2=v^2*σ2_ergodic_mean/denom^4 # delta method
