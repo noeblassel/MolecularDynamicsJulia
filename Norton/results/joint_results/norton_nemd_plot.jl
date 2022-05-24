@@ -104,7 +104,7 @@ for m in methods
 
   ηs[m]=ηs[m][perm_nemd]
   Rs[m]=Rs[m][perm_nemd]
-  n_steps_nemd[m]=n_steps_nemd[perm_nemd]
+  n_steps_nemd[m]=n_steps_nemd[m][perm_nemd]
   error_bars_nemd[m]=error_bars_nemd[m][perm]
   asymptotic_vars_nemd[m]=asymptotic_vars_nemd[m][perm]
 
