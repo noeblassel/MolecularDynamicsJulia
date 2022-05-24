@@ -32,6 +32,9 @@ norton_regex=r"norton_mobility_estimates(.+)_(.+)\.out"
 files_nemd=[f for f in readdir(path_nemd) if occursin(nemd_regex,f)]
 files_norton=[f for f in readdir(path_norton) if occursin(norton_regex,f)]
 
+
+
+
 ηs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 Rs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 asymptotic_vars_nemd=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
@@ -51,6 +54,8 @@ plot_asympt_var=plot(xlabel="Forcing",ylabel="Asymptotic_variance",legend=:topri
 plot_asympt_var_linear_regime=plot(xlabel="Forcing",ylabel="Asymptotic_variance",legend=:topright,xaxis=:log,yaxis=:log)
 plot_nsteps=plot(xlabel="Forcing",ylabel="n_steps")
 
+nemd_file=open("nemd_data.txt","w")
+println(nemd_file,"Forcing Response AV_ergodic_mean AV_linear_response N_samples")
 for (i,f)=enumerate(files_nemd)
   println("$i/$(length(files_nemd))")
   flush(stdout)
@@ -67,12 +72,18 @@ for (i,f)=enumerate(files_nemd)
   end
   close(file_handle)
   σ2=asymptotic_var(data_pts)
-  push!(Rs[method],mean(data_pts)) #finite difference linear response estimator
+  avg=mean(data_pts)
+  push!(Rs[method],avg)
   push!(n_steps_nemd[method],length(data_pts))
-  push!(error_bars_nemd[method],sqrt(σ2/length(data_pts)))
-  push!(asymptotic_vars_nemd[method],σ2/η^2)
-end
+  push!(error_bars_nemd[method],sqrt(σ2/length(data_pts))) #error bar on the average response
+  push!(asymptotic_vars_nemd[method],σ2/η^2) #asymptotic variance of the transport coefficient estimator
 
+  println(nemd_file,"$(η) $(avg) $(σ2) $(σ2/η^2) $(length(data_pts))")
+end
+close(nemd_file)
+
+norton_file=open("norton_data.txt","w")
+println(norton_file,"Forcing Response AV_ergodic_mean AV_linear_response N_samples")
 for (i,f)=enumerate(files_norton)
     println("$i/$(length(files_norton))")
     flush(stdout)
@@ -88,14 +99,17 @@ for (i,f)=enumerate(files_norton)
 
     close(file_handle)
 
-    σ2_ergodic_mean=asymptotic_var(data_pts .- γ*v)
-    denom=mean(data_pts)
-    push!(dΛs[method],denom) #norton linear response estimator
+    σ2_ergodic_mean=asymptotic_var(data_pts)
+    avg=mean(data_pts)
+    push!(dΛs[method],avg)
     push!(n_steps_norton[method],length(data_pts))
-    σ2=v^2*σ2_ergodic_mean/denom^4 # delta method
+    σ2=v^2*σ2_ergodic_mean/avg^4 # delta method for variance of 
     push!(error_bars_norton[method],sqrt(σ2_ergodic_mean/length(data_pts)))
     push!(asymptotic_vars_norton[method],σ2)
+
+    println(norton_file,"$(avg) $(v) $(σ2_ergodic_mean) $(σ2) $(length(data_pts))")
   end
+close(norton_file)
 
 for m in methods
   single_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
@@ -139,3 +153,6 @@ savefig(joint_plot_linear_regime,"joint_plot_linear_regime.pdf")
 savefig(plot_nsteps,"nsteps_plot.pdf")
 savefig(plot_asympt_var,"asymptotic_vars.pdf")
 savefig(plot_asympt_var_linear_regime,"asymptotic_vars_linear_regime.pdf")
+
+close(norton_file)
+close(nemd_file)
