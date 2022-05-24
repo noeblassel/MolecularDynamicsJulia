@@ -70,7 +70,7 @@ for (i,f)=enumerate(files_nemd)
   push!(Rs[method],mean(data_pts)*inv(η)) #finite difference linear response estimator
   push!(n_steps_nemd[method],length(data_pts))
   push!(error_bars_nemd[method],sqrt(σ2/length(data_pts))/η)
-  push!(asymptotic_vars_nemd,σ2/η^2)
+  push!(asymptotic_vars_nemd[method],σ2/η^2)
 end
 
 for (i,f)=enumerate(files_norton)
@@ -94,7 +94,7 @@ for (i,f)=enumerate(files_norton)
     push!(n_steps_norton[method],length(data_pts))
     σ2=v^2*σ2_ergodic_mean/denom^4 # delta method
     push!(error_bars_norton[method],sqrt(σ2/length(data_pts)))
-    push!(asymptotic_vars_norton,σ2)
+    push!(asymptotic_vars_norton[method],σ2)
   end
 
 for m in methods
