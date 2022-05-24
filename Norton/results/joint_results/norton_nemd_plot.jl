@@ -138,9 +138,9 @@ for m in methods
   scatter!(single_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m][1:n_linear_regime],msc=:auto)
   scatter!(joint_plot,dΛs[m],vs[m],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m],msc=:auto)
   scatter!(joint_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m][1:n_linear_regime],msc=:auto)
-  scatter!(plot_asympt_var,dΛs[m],asymptotic_vars_norton[m],markershape=:vline,markersize=2,label="$(m)_N")
-  scatter!(plot_asympt_var_linear_regime,dΛs[m][1:n_linear_regime],asymptotic_vars_norton[m][1:n_linear_regime],markershape=:vline,markersize=2,label="$(m)_N")
-  scatter!(plot_nsteps,dΛs[m],n_steps_norton[m],markershape=:vline,markersize=2,label="$(m)_N")
+  scatter!(plot_asympt_var,dΛs[m],asymptotic_vars_norton[m],markershape=:xcross,markersize=2,label="$(m)_N")
+  scatter!(plot_asympt_var_linear_regime,dΛs[m][1:n_linear_regime],asymptotic_vars_norton[m][1:n_linear_regime],markershape=:xcross,markersize=2,label="$(m)_N")
+  scatter!(plot_nsteps,dΛs[m],n_steps_norton[m],markershape=:xcross,markersize=2,label="$(m)_N")
   savefig(single_plot,"$(m).pdf")
   savefig(single_plot_linear_regime,"$(m)_linear_regime.pdf")
 end
