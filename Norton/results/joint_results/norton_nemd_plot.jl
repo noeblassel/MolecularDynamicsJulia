@@ -14,7 +14,6 @@ function asymptotic_var(v::Vector{Float64})
     max_var=0.0
         while K>1000
             max_var=max(max_var,varm(data,0.0)*N*inv(K))
-            max_var=new_var
             K >>=1
             data=[0.5*(data[i]+data[i+1]) for i=1:2:K-1]
         end
