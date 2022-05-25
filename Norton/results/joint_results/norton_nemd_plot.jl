@@ -145,6 +145,8 @@ for m in methods
   savefig(single_plot_linear_regime,"$(m)_linear_regime.pdf")
 end
 
+plot!(plot_asympt_var,x->x^-2,linestyle=:dot,color=:red,label="order 2 line")
+plot!(plot_asympt_var_linear_regime,x->x^-2,linestyle=:dot,color=:red,label="order 2 line")
 savefig(joint_plot,"joint_plot.pdf")
 savefig(joint_plot_linear_regime,"joint_plot_linear_regime.pdf")
 savefig(plot_nsteps,"nsteps_plot.pdf")
