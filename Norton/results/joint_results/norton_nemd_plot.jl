@@ -119,13 +119,13 @@ for m in methods
   error_bars_nemd[m]=error_bars_nemd[m][perm_nemd]
   asymptotic_vars_nemd[m]=asymptotic_vars_nemd[m][perm_nemd]
 
-  scatter!(single_plot,ηs[m],Rs[m],markershape=:hline,label="$(m)_T",yerror=error_bars_nemd[m],markersize=2,msc=:auto)
-  scatter!(single_plot_linear_regime,ηs[m][1:n_linear_regime],Rs[m][1:n_linear_regime],yerror=error_bars_nemd[m][1:n_linear_regime],markershape=:hline,label="$(m)_T",markersize=2,msc=:auto)
-  scatter!(joint_plot,ηs[m],Rs[m],markershape=:hline,yerror=error_bars_nemd[m],msc=:auto,label="$(m)_T",markersize=2)
-  scatter!(joint_plot_linear_regime,ηs[m][1:n_linear_regime],Rs[m][1:n_linear_regime],markershape=:hline,label="$(m)_T",markersize=2,yerror=error_bars_nemd[m][1:n_linear_regime],msc=:auto)
-  scatter!(plot_asympt_var,ηs[m],asymptotic_vars_nemd[m],markershape=:hline,markersize=2,label="$(m)_T")
-  scatter!(plot_asympt_var_linear_regime,ηs[m][1:n_linear_regime],asymptotic_vars_nemd[m][1:n_linear_regime],markershape=:hline,markersize=2,label="$(m)_T")
-  scatter!(plot_nsteps,ηs[m],n_steps_nemd[m],markershape=:hline,markersize=2,label="$(m)_T")
+  scatter!(single_plot,ηs[m],Rs[m],markershape=:hline,label="$(m)_T",yerror=error_bars_nemd[m],markersize=1,msc=:auto,msw=0.5)
+  scatter!(single_plot_linear_regime,ηs[m][1:n_linear_regime],Rs[m][1:n_linear_regime],yerror=error_bars_nemd[m][1:n_linear_regime],markershape=:hline,label="$(m)_T",markersize=2,msc=:auto,msw=0.5)
+  scatter!(joint_plot,ηs[m],Rs[m],markershape=:hline,yerror=error_bars_nemd[m],msc=:auto,label="$(m)_T",markersize=2,msw=0.5)
+  scatter!(joint_plot_linear_regime,ηs[m][1:n_linear_regime],Rs[m][1:n_linear_regime],markershape=:hline,label="$(m)_T",markersize=2,yerror=error_bars_nemd[m][1:n_linear_regime],msc=:auto,msw=0.5)
+  scatter!(plot_asympt_var,ηs[m],asymptotic_vars_nemd[m],markershape=:xcross,markersize=2,label="$(m)_T",msw=0.5)
+  scatter!(plot_asympt_var_linear_regime,ηs[m][1:n_linear_regime],asymptotic_vars_nemd[m][1:n_linear_regime],markershape=:xcross,markersize=2,label="$(m)_T",msw=0.5)
+  scatter!(plot_nsteps,ηs[m],n_steps_nemd[m],markershape=:xcross,markersize=2,label="$(m)_T",msw=0.5)
 
   perm_norton=sortperm(dΛs[m])
   dΛs[m]=dΛs[m][perm_norton]
@@ -134,13 +134,13 @@ for m in methods
   error_bars_norton[m]=error_bars_norton[m][perm_norton]
   asymptotic_vars_norton[m]=asymptotic_vars_norton[m][perm_norton]
   
-  scatter!(single_plot,dΛs[m],vs[m],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m],msc=:auto)
-  scatter!(single_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m][1:n_linear_regime],msc=:auto)
-  scatter!(joint_plot,dΛs[m],vs[m],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m],msc=:auto)
-  scatter!(joint_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m][1:n_linear_regime],msc=:auto)
-  scatter!(plot_asympt_var,dΛs[m],asymptotic_vars_norton[m],markershape=:xcross,markersize=2,label="$(m)_N")
-  scatter!(plot_asympt_var_linear_regime,dΛs[m][1:n_linear_regime],asymptotic_vars_norton[m][1:n_linear_regime],markershape=:xcross,markersize=2,label="$(m)_N")
-  scatter!(plot_nsteps,dΛs[m],n_steps_norton[m],markershape=:xcross,markersize=2,label="$(m)_N")
+  scatter!(single_plot,dΛs[m],vs[m],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m],msc=:auto,msw=0.5)
+  scatter!(single_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m][1:n_linear_regime],msc=:auto,msw=0.5)
+  scatter!(joint_plot,dΛs[m],vs[m],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m],msc=:auto,msw=0.5)
+  scatter!(joint_plot_linear_regime,dΛs[m][1:n_linear_regime],vs[m][1:n_linear_regime],markershape=:vline,label="$(m)_N",markersize=2,xerror=error_bars_norton[m][1:n_linear_regime],msc=:auto,msw=0.5)
+  scatter!(plot_asympt_var,dΛs[m],asymptotic_vars_norton[m],markershape=:xcross,markersize=2,label="$(m)_N",msw=0.5)
+  scatter!(plot_asympt_var_linear_regime,dΛs[m][1:n_linear_regime],asymptotic_vars_norton[m][1:n_linear_regime],markershape=:xcross,markersize=2,label="$(m)_N",msw=0.5)
+  scatter!(plot_nsteps,dΛs[m],n_steps_norton[m],markershape=:xcross,markersize=2,label="$(m)_N",msw=0.5)
   savefig(single_plot,"$(m).pdf")
   savefig(single_plot_linear_regime,"$(m)_linear_regime.pdf")
 end
