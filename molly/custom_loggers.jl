@@ -116,7 +116,7 @@ end
 SelfDiffusionLogger(initial_coords) = SelfDiffusionLogger{typeof(initial_coords)}(deepcopy(initial_coords), zero(initial_coords),Float64[])
 
 function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer=0;parallel::Bool=true)
-    logger.self_diffusion_coords .+= unwrap_coords_vec.(logger.last_coords, s.coords, (s.box_size,)) - logger.last_coords
+    logger.self_diffusion_coords += unwrap_coords_vec.(logger.last_coords, s.coords, (s.box_size,)) - logger.last_coords
     logger.last_coords .= s.coords
     push!(logger.msds,ustrip(dot(logger.self_diffusion_coords,logger.self_diffusion_coords))/length(logger.self_diffusion_coords))
 end
@@ -155,8 +155,8 @@ mutable struct TimeCorrelationLogger{T_A,T_sq_A}
 
     n_correlation::Integer
 
-    history_A::Vector{T_A}
-    history_B::Vector{T_A}
+    history_A::CircularBuffer{T_A}
+    history_B::CircularBuffer{T_A}
 
     sum_offset_products::Vector{T_sq_A}
 
@@ -170,7 +170,6 @@ mutable struct TimeCorrelationLogger{T_A,T_sq_A}
 
 end
 
-
 function TimeCorrelationLogger(TA::DataType, observableA::Function, observableB::Function, observable_length::Integer,n_correlation::Integer)
     ini_sum_A= (observable_length>1) ? zeros(TA,observable_length) : zero(TA)
     ini_sum_B= zero(ini_sum_A)
@@ -181,7 +180,7 @@ function TimeCorrelationLogger(TA::DataType, observableA::Function, observableB:
     T_sum_A=typeof(ini_sum_A)
     T_sum_sq_A=typeof(ini_sum_sq_A)
 
-    return TimeCorrelationLogger{T_sum_A,T_sum_sq_A}(observableA, observableB, n_correlation, T_sum_A[], T_sum_A[], zeros(T_sum_sq_A, n_correlation), 0, ini_sum_A, ini_sum_B, ini_sum_sq_A, ini_sum_sq_B)
+    return TimeCorrelationLogger{T_sum_A,T_sum_sq_A}(observableA, observableB, n_correlation, CircularBuffer{T_sum_A}(n_correlation), CircularBuffer{T_sum_A}(n_correlation), zeros(T_sum_sq_A, n_correlation), 0, ini_sum_A, ini_sum_B, ini_sum_sq_A, ini_sum_sq_B)
 
 end
 
@@ -193,8 +192,8 @@ TimeCorrelationLoggerVec(N_atoms::Integer, dim::Integer, T::DataType, observable
 TimeCorrelationLoggerVec(N_atoms::Integer, dim::Integer, observableA::Function, observableB::Function, n_correlation::Integer) = TimeCorrelationLoggerVec(N_atoms, dim, Float64, observableA, observableB, n_correlation)
 
 ## Convenience constructors for autocorrelations
-AutoCorrelationLogger(T::DataType, observable::Function, n_correlation::Integer) = TimeCorrelationLogger(T, observable, observable,observable_length, 1,n_correlation)
-AutoCorrelationLogger(observable::Function, n_correlation::Integer) = TimeCorrelationLogger(Float64, observable, n_correlation)
+AutoCorrelationLogger(T::DataType, observable::Function, n_correlation::Integer) = TimeCorrelationLogger(T, observable, observable, 1,n_correlation)
+AutoCorrelationLogger(observable::Function, n_correlation::Integer) = AutoCorrelationLogger(Float64, observable, n_correlation)
 AutoCorrelationLoggerVec(N_atoms::Integer, dim::Integer, T::DataType, observable::Function, n_correlation::Integer) = TimeCorrelationLoggerVec(N_atoms, dim, T,observable, observable, n_correlation)
 AutoCorrelationLoggerVec(N_atoms::Integer, dim::Integer, observable::Function, n_correlation::Integer) = AutoCorrelationLoggerVec(N_atoms, dim, Float64, observable, n_correlation)
 
@@ -207,8 +206,7 @@ function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors
 
     logger.n_timesteps += 1
 
-    #update history lists
-    (logger.n_timesteps > logger.n_correlation) && (popfirst!(logger.history_A); popfirst!(logger.history_B))
+    #update history lists -- values of A and B older than n_correlation steps are overwritten (see DataStructures.jl CircularBuffer)
 
     push!(logger.history_A, A)
     push!(logger.history_B, B)
@@ -220,14 +218,10 @@ function Molly.log_property!(logger::TimeCorrelationLogger, s::System, neighbors
     logger.sum_sq_A += dot(A, A)
     logger.sum_sq_B += dot(B, B)
 
-
     B1 = first(logger.history_B)
 
-    for (i, Ai) = enumerate(logger.history_A)
-        n_samples = logger.n_timesteps - i + 1
-        if n_samples > 0
-            logger.sum_offset_products[i] += dot(Ai, B1)
-        end
+    for i = 1:min(logger.n_correlation,logger.n_timesteps)
+        logger.sum_offset_products[i] += dot(logger.history_A[i], B1)
     end
 
 end
