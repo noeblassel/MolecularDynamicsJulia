@@ -4,7 +4,7 @@ using Plots,LinearAlgebra
 path_orig="/libre/blasseln/MolecularDynamicsJulia/Norton/*.out"
 path_end="."
 
-for node in [15,16,19,23]
+for node in [16,19,23]
   run(`scp clustern$node:$path_orig $path_end`)
 end
 
@@ -16,7 +16,7 @@ files=readdir()
 files=[f for f in files if occursin(file_regex,f)]
 vs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 Lambdas=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
-methods=["SINGLE","TWO","COLOR"]
+methods=["SINGLE","COLOR"]
 joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 joint_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 

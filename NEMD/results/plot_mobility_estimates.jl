@@ -16,7 +16,7 @@ files=readdir()
 files=[f for f in files if occursin(file_regex,f)]
 ηs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 Rs=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
-methods=["SINGLE","COLOR","TWO"]
+methods=["SINGLE","COLOR"]
 joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 joint_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 

@@ -25,7 +25,7 @@ path_nemd="/libre/blasseln/MolecularDynamicsJulia/NEMD/results/"
 path_norton="/libre/blasseln/MolecularDynamicsJulia/Norton/results/"
 
 n_linear_regime=10
-n_sd_error_bar=2
+n_sd_error_bar=1
 nemd_regex=r"mobility_estimates(.+)_(.+)\.out"
 norton_regex=r"norton_mobility_estimates(.+)_(.+)\.out"
 
@@ -44,11 +44,11 @@ asymptotic_vars_norton=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float6
 error_bars_norton=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 n_steps_norton=Dict("COLOR"=>Float64[],"SINGLE"=>Float64[],"TWO"=>Float64[])
 
-methods=["SINGLE","COLOR","TWO"]
+methods=["SINGLE","COLOR"]
 joint_plot=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
 joint_plot_linear_regime=plot(xlabel="Forcing",ylabel="Response",legend=:topleft)
-plot_asympt_var=plot(xlabel="Forcing",ylabel="Asymptotic_variance",legend=:topright,xaxis=:log,yaxis=:log)
-plot_asympt_var_linear_regime=plot(xlabel="Forcing",ylabel="Asymptotic_variance",legend=:topright,xaxis=:log,yaxis=:log)
+plot_asympt_var=plot(xlabel="Forcing",ylabel="Asymptotic variance",legend=:topright,xaxis=:log,yaxis=:log)
+plot_asympt_var_linear_regime=plot(xlabel="Forcing",ylabel="Asymptotic variance",legend=:topright,xaxis=:log,yaxis=:log)
 plot_nsteps=plot(xlabel="Forcing",ylabel="n_steps",xaxis=:log)
 
 nemd_file=open("nemd_data.txt","w")
@@ -145,8 +145,8 @@ for m in methods
   savefig(single_plot_linear_regime,"$(m)_linear_regime.pdf")
 end
 
-plot!(plot_asympt_var,x->x^-2,linestyle=:dot,color=:red,label="order 2 line")
-plot!(plot_asympt_var_linear_regime,x->x^-2,linestyle=:dot,color=:red,label="order 2 line")
+plot!(plot_asympt_var,x->x^-2,linestyle=:dot,color=:red,label="slope=-2")
+plot!(plot_asympt_var_linear_regime,x->x^-2,linestyle=:dot,color=:red,label="slope=-2")
 savefig(joint_plot,"joint_plot.pdf")
 savefig(joint_plot_linear_regime,"joint_plot_linear_regime.pdf")
 savefig(plot_nsteps,"nsteps_plot.pdf")
