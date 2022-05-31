@@ -14,7 +14,8 @@ export
     AutoCorrelationLoggerVec,
     ElapsedTimeLogger,
     LogLogger,
-    AverageObservableLogger
+    AverageObservableLogger,
+    AverageObservableVecLogger
 
 ###Total energy logger
 
@@ -299,6 +300,7 @@ mutable struct AverageObservableLogger{T}
 end
 
 AverageObservableLogger(T::DataType,observable::Function,log_freq::Integer=1)=AverageObservableLogger{T}(observable,log_freq,zero(T),0)
+AverageObservableVecLogger(observable::Function,observable_length::Integer,T::DataType=Float64,log_freq::Integer=1)=AverageObservableLogger{Vector{T}}(observable,log_freq,zeros(T,observable_length),0)
 AverageObservableLogger(observable::Function,log_freq::Integer=1)=AverageObservableLogger(Float64,observable,log_freq)
 
 function Molly.log_property!(logger::AverageObservableLogger,s::System,neighbors=nothing,step_n::Integer=0;parallel::Bool=true)

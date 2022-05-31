@@ -4,6 +4,7 @@ module MollyExtend
 
     using Dates
     using ProgressMeter
+    using DataStructures
     using Reexport
    # using Plots
 

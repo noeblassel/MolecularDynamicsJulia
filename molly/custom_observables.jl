@@ -3,7 +3,8 @@ export
     pressure,
     temperature_reduced,
     long_range_virial_correction,
-    MobilityObservable
+    MobilityObservable,
+    TransverseVelocityProfile
 
 function pair_virial(s::System, neighbors = nothing, lrc = false)
 
@@ -127,5 +128,22 @@ end
 
 function MobilityObservable(ff::Vector)
     R(s::System,neighbors=nothing)=dot(ff,s.velocities)
+    return R
+end
+
+
+"""Returns a longitudinal (x-direction) velocity profile as described in https://arxiv.org/abs/1106.0633, for the purpose of shear viscosity estimations.
+It is intended to be used in combination with a ConstantForceProfile general interaction, which applies a constant force profile in the x-direction which is a function of the y-coordinate (see custom_interactions.jl for more details)."""
+function TransverseVelocityProfile(;n_bins::Integer,L::T,velocity_type::DataType=Float64) where {T}
+    function R(sys::System,neighbors=nothing)
+        bins=zeros(n_bins)
+        N=length(sys)
+        Ly=sys.box_size[2]
+        for i=1:N
+            bin_ix=1+floor(Int64,sys.coords[i][2]*n_bins/Ly)
+            bins[bin_ix]+=first(sys.velocities[i])
+        end
+        return n_bins*bins/N
+    end
     return R
 end
