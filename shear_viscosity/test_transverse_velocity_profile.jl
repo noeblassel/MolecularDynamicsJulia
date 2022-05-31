@@ -38,7 +38,7 @@ simulator=LangevinSplitting(dt = dt, γ = γ, T = T,splitting="BAOAB")
 loggers = Dict(:vp=>AverageObservableVecLogger(TransverseVelocityProfile(n_bins=n_bins,L=L),n_bins))
 
 n_eq_steps=5000
-n_steps=20000
+n_steps=200000
 
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,), general_inters=(ff,),box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
@@ -52,7 +52,7 @@ println("equilibriated")
 
 for i=1:20
     println(i)
-    simulate!(sys,simulator,n_eq_steps)
+    simulate!(sys,simulator,n_steps)
     vp_logger=sys.loggers[:vp]
     profile=vp_logger.sum/(vp_logger.n_samples*ξ)
     y_range=range(0,L,n_bins)
