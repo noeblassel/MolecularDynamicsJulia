@@ -2,7 +2,9 @@ include("../molly/MollyExtend.jl")
 
 using Plots, .MollyExtend
 
-Npd=16
+
+method=ARGS[1]
+Npd=10
 
 ρ = 0.7
 T = 1.0
@@ -10,7 +12,7 @@ T = 1.0
 r_a = 2.5
 r_c = 4.0
 
-Npd = 10
+Npd = 16
 N = Npd^3
 γ=1.0
 dt=5e-3
@@ -32,8 +34,11 @@ else
     global nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
 end
 
+inter_dict=Dict("SINUSOIDAL"=>SinusoidalForceProfile,"LINEAR"=>PiecewiseLinearForceProfile,"CONSTANT"=>PiecewiseConstantForceProfile)
+f_dict=Dict("SINUSOIDAL"=>(y-> sin(2π*y/L)),"CONSTANT"=>(y -> (y<L/2) ? -1 : 1),"LINEAR"=>(y -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L))
+
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
-ff=SinusoidalForceProfile(ξ=ξ,L=L)
+ff=inter_dict[method](ξ=ξ,L=L)
 simulator=LangevinSplitting(dt = dt, γ = γ, T = T,splitting="BAOAB")
 loggers = Dict(:vp=>AverageObservableVecLogger(TransverseVelocityProfile(n_bins=n_bins,L=L),n_bins))
 
@@ -56,7 +61,7 @@ for i=1:20
     vp_logger=sys.loggers[:vp]
     profile=vp_logger.sum/(vp_logger.n_samples*ξ)
     y_range=range(0,L,n_bins)
-    plot(profile,y_range,label="computed profile",xlabel="x velocity",ylabel="y coordinate",color=:red)
-    plot!(sin.(2π*y_range/L),y_range,label="force profile",linestyle=:dot,color=:blue)
-    savefig("sinusoidal$i.pdf")
+    plot(y_range,profile,label="velocity profile",xlabel="y_coordinate",ylabel="x velocity",color=:red)
+    plot!(f_dict[method],0,L,linestyle=:dot,color=:blue,label="")
+    savefig("$(method)_$i.pdf")
 end
