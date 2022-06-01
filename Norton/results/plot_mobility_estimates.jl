@@ -4,7 +4,7 @@ using Plots,LinearAlgebra
 path_orig="/libre/blasseln/MolecularDynamicsJulia/Norton/*.out"
 path_end="."
 
-for node in [17,19,23]
+for node in [17,19]
   run(`scp clustern$node:$path_orig $path_end`)
 end
 
