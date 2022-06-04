@@ -14,7 +14,7 @@ r_c = 4.0
 Npd = 10
 N = Npd^3
 γ=1.0
-dt=5e-3
+dt=1e-3
 
 L = (N / ρ)^(1 // 3)
 
@@ -34,17 +34,15 @@ end
 
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
-inter_dict=Dict("SINUSOIDAL"=>SinusoidalForceProfile,"LINEAR"=>PiecewiseLinearForceProfile,"CONSTANT"=>PiecewiseConstantForceProfile)
 f_dict=Dict("SINUSOIDAL"=>(y-> sin(2π*y/L)),"CONSTANT"=>(y -> (y<L/2) ? -1 : 1),"LINEAR"=>(y -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L))
 
-ff=inter_dict[method](ξ=10.0,L=L)
-simulator=LangevinSplitting(dt = dt, γ = γ, T = T,splitting="BAOAB")
+simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=10.0,F=f_dict[method])
 loggers = Dict(:coords => CoordinateLogger(Float64, 1))
 
 n_eq_steps=5000
 n_steps=5000
 
-sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,), general_inters=(ff,),box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
+sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,),box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
 simulate!(sys,simulator,n_eq_steps)
 empty!(sys.loggers[:coords].coords)
