@@ -73,7 +73,7 @@ simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=v,F=f_dict[method])
 loggers = Dict(:fp=>AverageObservableVecLogger(ForcingProfileNorton(n_bins=n_bins,F=f_dict[method],dF=df_dict[method],γ=γ,v=v),n_bins),:F=>AverageObservableVecLogger(GAverageEstimator(n_bins=n_bins,G=f_dict[method]),n_bins))
 
 n_eq_steps=5000
-n_steps=5000
+n_steps=20000
 
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,),box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
@@ -89,7 +89,7 @@ sys.loggers[:F].n_samples=0
 
 println("equilibriated")
 
-for i=1:20
+for i=1:100
     println(i)
     simulate!(sys,simulator,n_steps)
     fp_logger=sys.loggers[:fp]
@@ -101,6 +101,7 @@ for i=1:20
     F_logger=sys.loggers[:F]
     F_profile=F_logger.sum/F_logger.n_samples
     plot(y_range,(v*F_profile)./f_profile,label="",xlabel="y",ylabel="velocity",color=:red,ylims=(-1,1))
+    plot!(f_dict[method],0,L,label="",linestyle=:dot,color="blue")
     savefig("velocity_$(method)_norton.pdf")
 end
 
