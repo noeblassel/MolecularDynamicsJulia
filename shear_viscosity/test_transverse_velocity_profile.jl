@@ -34,6 +34,8 @@ else
     global nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
 end
 
+function CustomForceProfile(;\xi
+
 inter_dict=Dict("SINUSOIDAL"=>SinusoidalForceProfile,"LINEAR"=>PiecewiseLinearForceProfile,"CONSTANT"=>PiecewiseConstantForceProfile)
 f_dict=Dict("SINUSOIDAL"=>(y-> sin(2π*y/L)),"CONSTANT"=>(y -> (y<L/2) ? -1 : 1),"LINEAR"=>(y -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L))
 
@@ -63,5 +65,5 @@ for i=1:20
     y_range=range(0,L,n_bins)
     plot(y_range,profile,label="velocity profile",xlabel="y_coordinate",ylabel="x velocity",color=:red)
     plot!(f_dict[method],0,L,linestyle=:dot,color=:blue,label="")
-    savefig("$(method)_$i.pdf")
+    savefig("$(method)_thevenin.pdf")
 end

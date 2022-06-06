@@ -827,29 +827,37 @@ function Molly.simulate!(sys::System{D}, sim::NortonShearViscosityTest, n_steps:
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
     α = exp(-sim.γ * sim.dt)
     σ = sqrt((1 - α^2) / sim.β)
+    
+    accels = accelerations(sys, neighbors; parallel=parallel)
+
+    for i = 1:N #A step
+        F_y=sim.F(sys.coords[i][2]) 
+        sys.velocities[i] = SVector{D,Float64}(vcat(sim.v * F_y, sys.velocities[i][2:end]))#reproject on constant response manifold
+    end
 
     for step_n = 1:n_steps
         run_loggers!(sys, neighbors, step_n)
-        accels = accelerations(sys, neighbors; parallel=parallel)
 
         for i = 1:N #B step
-            F_y = sim.F(sys.coords[i][2])
-            sys.velocities[i] = SVector{D,Float64}(vcat(sim.v * F_y, sys.velocities[i][2:end] + (sim.dt / 2) * accels[i][2:end]))
+            sys.velocities[i] = SVector{D,Float64}(vcat(sys.velocities[i][1], sys.velocities[i][2:end] + (sim.dt / 2) * accels[i][2:end]))
         end
 
-        sys.coords += sim.dt * sys.velocities #A step
+        for i = 1:N #A step
+            sys.coords[i] += sim.dt * sys.velocities[i]
+            F_y=sim.F(sys.coords[i][2]) 
+            sys.velocities[i] = SVector{D,Float64}(vcat(sim.v * F_y, sys.velocities[i][2:end]))#reproject on constant response manifold
+        end
+        
         sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
-
         accels = accelerations(sys, neighbors; parallel=parallel)
 
         for i = 1:N #B step
-            F_y = sim.F(sys.coords[i][2])
-            sys.velocities[i] = SVector{D,Float64}(vcat(sim.v * F_y, sys.velocities[i][2:end] + (sim.dt / 2) * accels[i][2:end]))
+            sys.velocities[i] = SVector{D,Float64}(vcat(sys.velocities[i][1], sys.velocities[i][2:end] + (sim.dt / 2) * accels[i][2:end]))
         end
 
         for i = 1:N#O step
             G = randn(sim.rng, Float64, D - 1)
-            sys.velocities[i] = SVector{D,Float64}(vcat(first(sys.velocities[i]), α * sys.velocities[i][2:end] + σ * G))
+            sys.velocities[i] = SVector{D,Float64}(vcat(sys.velocities[i][1], α * sys.velocities[i][2:end] + σ * G))
         end
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
         (isnan(dot(sys.velocities,sys.velocities))) && (println("EXPLOSION at step $step_n !!!");exit(1))
