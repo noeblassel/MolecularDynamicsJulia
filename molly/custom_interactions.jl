@@ -6,7 +6,8 @@ export
     TransverseForceProfile,
     PiecewiseConstantForceProfile,
     PiecewiseLinearForceProfile,
-    SinusoidalForceProfile
+    SinusoidalForceProfile,
+    LowerBoundedSinusoidalForceProfile
 
 struct NonGradientForceNEMD{D,T}
     N::Integer
@@ -68,4 +69,9 @@ end
 function PiecewiseLinearForceProfile(;ξ::Real,L::T) where {T}
     piecewise_linear_force(y::T) = ( y < L / 2 ) ? ustrip(4*(y-L/4)/L) : ustrip(4*(3L/4-y)/L)
     return TransverseForceProfile(ξ,piecewise_linear_force)
+end
+
+function LowerBoundedSinusoidalForceProfile(;ξ::Real,L::T) where {T}
+    lower_bounded_sinusoidal_force(y::T)=2+sin(2π*ustrip(y/L))
+    return TransverseForceProfile(ξ,lower_bounded_sinusoidal_force)
 end

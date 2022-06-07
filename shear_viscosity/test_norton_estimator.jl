@@ -2,31 +2,16 @@ include("../molly/MollyExtend.jl")
 
 using Plots, .MollyExtend
 
-
-function ForcingProfileNorton(;n_bins::Integer,F::Function,dF::Function,γ::Float64,v::Float64,velocity_type::DataType=Float64)
+function ForcingProfileNorton(;n_bins::Integer,G::Function,dG::Function,γ::Float64,v::Float64,velocity_type::DataType=Float64)
     function R(sys::System,neighbors=nothing)
         bins=zeros(velocity_type,n_bins)
         N=length(sys)
         Ly=sys.box_size[2]
         accels=accelerations(sys,neighbors)
         for i=1:N
-            Fy=F(sys.coords[i][2])
+            Gy=G(sys.coords[i][2])
             bin_ix=1+floor(Int64,n_bins*ustrip(sys.coords[i][2]/Ly))
-            bins[bin_ix]+=γ*v+(v*dF(sys.coords[i][2])*sys.velocities[i][2]-accels[i][1])/Fy
-        end
-        return n_bins*bins/N
-    end
-    return R
-end
-
-function GAverageEstimator(;n_bins::Integer,G::Function,velocity_type::DataType=Float64)
-    function R(sys::System,neighbors=nothing)
-        bins=zeros(velocity_type,n_bins)
-        N=length(sys)
-        Ly=sys.box_size[2]
-        for i=1:N
-            bin_ix=1+floor(Int64,n_bins*ustrip(sys.coords[i][2]/Ly))
-            bins[bin_ix]+=G(sys.coords[i][2])
+            bins[bin_ix]+=(v*dG(sys.coords[i][2])*sys.velocities[i][2]-accels[i][1]+γ*v*Gy)
         end
         return n_bins*bins/N
     end
@@ -34,8 +19,7 @@ function GAverageEstimator(;n_bins::Integer,G::Function,velocity_type::DataType=
 end
 
 
-method=ARGS[1]
-Npd=10
+G=ARGS[1]
 
 ρ = 0.7
 T = 1.0
@@ -69,11 +53,11 @@ f_dict=Dict("SINUSOIDAL"=>(y-> sin(2π*y/L)),"CONSTANT"=>(y -> (y<L/2) ? -1 : 1)
 df_dict=Dict("SINUSOIDAL"=>(y-> (2π/L)*cos(2π*y/L)),"CONSTANT"=>(y -> 0),"LINEAR"=>(y -> (y<L/2) ? 4y/L : -4y/L))
 
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
-simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=v,F=f_dict[method])
-loggers = Dict(:fp=>AverageObservableVecLogger(ForcingProfileNorton(n_bins=n_bins,F=f_dict[method],dF=df_dict[method],γ=γ,v=v),n_bins),:F=>AverageObservableVecLogger(GAverageEstimator(n_bins=n_bins,G=f_dict[method]),n_bins))
+simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=v,G=f_dict[G])
+loggers = Dict(:fp=>AverageObservableVecLogger(ForcingProfileNorton(n_bins=n_bins,G=f_dict[G],dG=df_dict[G],γ=γ,v=v),n_bins))
 
 n_eq_steps=5000
-n_steps=20000
+n_steps=5000
 
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,),box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
@@ -82,10 +66,6 @@ simulate!(sys,simulator,n_eq_steps)
 ##reset loggers
 sys.loggers[:fp].sum=zero(sys.loggers[:fp].sum)
 sys.loggers[:fp].n_samples=0
-
-sys.loggers[:F].sum=zero(sys.loggers[:F].sum)
-sys.loggers[:F].n_samples=0
-
 
 println("equilibriated")
 
@@ -96,12 +76,7 @@ for i=1:100
     f_profile=fp_logger.sum/(fp_logger.n_samples)
     y_range=range(0,L,n_bins)
     plot(y_range,f_profile/v,label="",xlabel="y",ylabel="forcing",color=:red)
-    #plot!(f_dict[method],0,L,linestyle=:dot,color=:blue,label="")
-    savefig("forcing_$(method)_norton.pdf")
-    F_logger=sys.loggers[:F]
-    F_profile=F_logger.sum/F_logger.n_samples
-    plot(y_range,(v*F_profile)./f_profile,label="",xlabel="y",ylabel="velocity",color=:red,ylims=(-1,1))
-    plot!(f_dict[method],0,L,label="",linestyle=:dot,color="blue")
-    savefig("velocity_$(method)_norton.pdf")
+    plot!(f_dict[G],0,L,linestyle=:dot,color=:blue,label="")
+    savefig("forcing_$(G)_norton.pdf")
 end
 
