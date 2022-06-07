@@ -77,6 +77,11 @@ for i=1:20
     y_range=range(0,L,n_bins)
     plot(y_range,f_profile/v,label="",xlabel="y",ylabel="forcing",color=:red)
     plot!(f_dict[G],0,L,linestyle=:dot,color=:blue,label="")
-    savefig("forcing_$(G)_norton.pdf")
+    savefig("forcing_$(G)_norton_$(i).pdf")
+    f=open("forcing_norton_$(G).out","w")
+    println(f,"Ly: $L")
+    println(f,"num_bins: $n_bins")
+    println(f,join(f_profile/v," "))
+    close(f)
 end
 

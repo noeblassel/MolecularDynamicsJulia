@@ -59,9 +59,14 @@ for i=1:20
     println(i)
     simulate!(sys,simulator,n_steps)
     vp_logger=sys.loggers[:vp]
-    profile=vp_logger.sum/(vp_logger.n_samples*ξ)
+    profile=vp_logger.sum/vp_logger.n_samples
     y_range=range(0,L,n_bins)
-    plot(y_range,profile,label="velocity profile",xlabel="y_coordinate",ylabel="x velocity",color=:red)
+    plot(y_range,profile/ξ,label="velocity profile",xlabel="y_coordinate",ylabel="x velocity",color=:red)
     plot!(f_dict[method],0,L,linestyle=:dot,color=:blue,label="")
     savefig("$(method)_thevenin.pdf")
+    f=open("velocity_thevenin_$(method).out","w")
+    println(f,"Ly: $L")
+    println(f,"num_bins: $n_bins")
+    println(f,join(profile/ξ," "))
+    close(f)
 end
