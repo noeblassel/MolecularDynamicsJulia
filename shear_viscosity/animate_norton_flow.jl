@@ -34,13 +34,13 @@ end
 
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 
-f_dict=Dict("SINUSOIDAL"=>(y-> sin(2π*y/L)),"CONSTANT"=>(y -> (y<L/2) ? -1 : 1),"LINEAR"=>(y -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L))
+f_dict=Dict("SINUSOIDAL"=>(y::Float64 -> sin(2π*y/L)),"CONSTANT"=>(y::Float64 -> (y<L/2) ? -1 : 1),"LINEAR"=>(y::Float64 -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L))
 
-simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=10.0,F=f_dict[method])
+simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=10.0,G=f_dict[method])
 loggers = Dict(:coords => CoordinateLogger(Float64, 1))
 
-n_eq_steps=5000
-n_steps=5000
+n_eq_steps=1000
+n_steps=500
 
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,),box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
@@ -66,7 +66,7 @@ function animate_system(sys,filename)
         Y=[P[i][j][2] for j=1:N]
         Z=[P[i][j][3] for j=1:N]
         
-        plot(X,Y,Z,seriestype=:scatter,color=map_color.(f_dict[method].(Y)),label="",xlims=(0,l),ylims=(0,l),zlims=(0,l),showaxis=true,ticks=false,camera=(0,90),msw=0,markersize=3)
+        plot(X,Y,seriestype=:scatter,color=map_color.(f_dict[method].(Y)),label="",xlims=(0,l),ylims=(0,l),zlims=(0,l),showaxis=true,ticks=false,camera=(0,90),msw=0,markersize=3)
     end
     mp4(anim,filename,fps=30)
 

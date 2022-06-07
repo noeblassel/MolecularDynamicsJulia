@@ -1,6 +1,6 @@
 include("../molly/MollyExtend.jl")
 
-using Plots, .MollyExtend
+using .MollyExtend
 
 function ForcingProfileNorton(;n_bins::Integer,G::Function,dG::Function,γ::Float64,v::Float64,velocity_type::DataType=Float64)
     function R(sys::System,neighbors=nothing)
@@ -24,40 +24,47 @@ G=ARGS[1]
 ρ = 0.7
 T = 1.0
 
-r_a = 2.5
-r_c = 4.0
+r_c = 3.0
 
-Npd = 16
-N = Npd^3
+Ny = 15
+ratio=5
+N = Ny^3*ratio
 γ=1.0
 dt=5e-3
-v=1.0
-n_bins=100
+v=0.1
+n_bins=300
 
-L = (N / ρ)^(1 // 3)
-box_size = SVector(L, L, L)
+function initialize_coords(ρ::Float64,Ny::Int64,ratio::Int64)
+    L=Ny*(1/ρ)^(1//3)
+    box_size=SVector(L*ratio,L,L)
+    dy=L/Ny
+    coords=dy*reshape([SVector{3,Float64}(x,y,z) for x=0:(Ny*ratio-1),y=0:(Ny-1),z=0:(Ny-1)],Ny^3*ratio)
+    return coords,box_size
+end
 
-coords = place_atoms_on_3D_lattice(Npd,box_size)
+coords, box_size = initialize_coords(ρ,Ny,ratio)
+Ly=box_size[2]
 atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
-velocities = init_velocities(T,[a.mass for a=atoms],1.0)
+velocities = sqrt(T)*[SVector{3}(randn(3)) for i=1:N]
 
 nf = nothing
 
-if 3r_c<L
+if 3r_c<Ly
     global nf = CellListMapNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c, unit_cell = box_size)
 else
     global nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
 end
 
-f_dict=Dict("SINUSOIDAL"=>(y-> sin(2π*y/L)),"CONSTANT"=>(y -> (y<L/2) ? -1 : 1),"LINEAR"=>(y -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L))
-df_dict=Dict("SINUSOIDAL"=>(y-> (2π/L)*cos(2π*y/L)),"CONSTANT"=>(y -> 0),"LINEAR"=>(y -> (y<L/2) ? 4y/L : -4y/L))
+
+f_dict=Dict("SINUSOIDAL"=>(y::Float64 -> sin(2π*y/Ly)),"CONSTANT"=>(y::Float64 -> (y<Ly/2) ? -1 : 1),"LINEAR"=>(y::Float64 -> (y<Ly/2) ? 4*(y-Ly/4)/Ly : 4*(3Ly/4-y)/Ly))
+df_dict=Dict("SINUSOIDAL"=>(y::Float64-> (2π/Ly)*cos(2π*y/Ly)),"CONSTANT"=>(y::Float64 -> 0.0),"LINEAR"=>(y::Float64 -> (y<Ly/2) ? 4y/Ly : -4y/Ly))
 
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=v,G=f_dict[G])
 loggers = Dict(:fp=>AverageObservableVecLogger(ForcingProfileNorton(n_bins=n_bins,G=f_dict[G],dG=df_dict[G],γ=γ,v=v),n_bins))
 
 n_eq_steps=5000
-n_steps=200000
+n_steps=100000
 
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,),box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
@@ -69,19 +76,17 @@ sys.loggers[:fp].n_samples=0
 
 println("equilibriated")
 
-for i=1:20
-    println(i)
+for i=1:100
     simulate!(sys,simulator,n_steps)
     fp_logger=sys.loggers[:fp]
     f_profile=fp_logger.sum/(fp_logger.n_samples)
-    y_range=range(0,L,n_bins)
-    plot(y_range,f_profile/v,label="",xlabel="y",ylabel="forcing",color=:red)
-    plot!(f_dict[G],0,L,linestyle=:dot,color=:blue,label="")
-    savefig("forcing_$(G)_norton_$(i).pdf")
+    y_range=range(0,Ly,n_bins)
+
     f=open("forcing_norton_$(G).out","w")
-    println(f,"Ly: $L")
+    println(f,"Ly: $Ly")
     println(f,"num_bins: $n_bins")
-    println(f,join(f_profile/v," "))
+    println(f,"v: $v")
+    println(f,join(fp_logger.sum," "))
     close(f)
 end
 

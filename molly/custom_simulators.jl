@@ -645,10 +645,10 @@ function Molly.simulate!(sys::System{D}, sim::MALA_HMC, n_steps::Integer; parall
 end
 
 struct NortonTest #simple BAO test in the one drift diagonal mass case
-    dt::Real
-    γ::Real
-    β::Real
-    v::Real
+    dt::Float64
+    γ::Float64
+    β::Float64
+    v::Float64
 
     rseed::UInt32
     rng::AbstractRNG
@@ -805,64 +805,68 @@ function Molly.simulate!(sys::System{D}, sim::NortonHomogeneousSplitting, n_step
     end
 end
 
-struct NortonShearViscosityTest
-    dt::Real
-    γ::Real
-    β::Real
-    v::Real#response intensity
+struct NortonShearViscosityTest{TG}
+    dt::Float64
+    γ::Float64
+    β::Float64
+    v::Float64#response intensity
 
-    G::Function #forcing profile
+    G::TG #forcing profile
     rseed::UInt32
     rng::AbstractRNG
 end
 
-function NortonShearViscosityTest(; dt::Real, γ::Real, T::Real, v::Real, G::Function, rseed=round(UInt32, time()), rng=MersenneTwister(rseed))
+function NortonShearViscosityTest(; dt::Float64, γ::Float64, T::Float64, v::Float64, G::TG, rseed=round(UInt32, time()), rng=MersenneTwister(rseed)) where {TG<:Function}
     β = inv(T)
-    return NortonShearViscosityTest(dt, γ, β, v, G, rseed, rng)
+    return NortonShearViscosityTest{typeof(G)}(dt, γ, β, v, G, rseed, rng)
 end
 
 
 """Norton dynamics integrator for shear viscosity computations. 
 Uses a simple BABO-like scheme where the B and O steps do not affect the longitudinal velocity, which is reprojected onto the constant response manifold after each A step."""
-function Molly.simulate!(sys::System{D}, sim::NortonShearViscosityTest, n_steps::Integer; parallel::Bool=true) where {D}
+function Molly.simulate!(sys::System{D}, sim::NortonShearViscosityTest{TG}, n_steps::Integer; parallel::Bool=true) where {D,TG}
     N = length(sys)
 
     neighbors = find_neighbors(sys, sys.neighbor_finder; parallel=parallel)
     α = exp(-sim.γ * sim.dt)
     σ = sqrt((1 - α^2) / sim.β)
     
-    accels = accelerations(sys, neighbors; parallel=parallel)
+    accels_array = reinterpret(reshape,Float64,accelerations(sys, neighbors; parallel=parallel)) #DxN array
+    transverse_accels=view(accels_array,2:D,:)
 
-    for i = 1:N #Project onto constant response manifold
-        G_y=sim.G(sys.coords[i][2]) 
-        sys.velocities[i]=SVector{D,Float64}(vcat(sim.v * G_y,sys.velocities[i][2:end]))
-    end
+    velocities_array=reinterpret(reshape,Float64,sys.velocities) #DxN array
+    coords_array=reinterpret(reshape,Float64,sys.coords) #DxN array
+
+    transverse_velocities=view(velocities_array,2:D,:)
+
+    x_velocities=view(velocities_array,1,:)
+    y_coords=view(coords_array,2,:)
+
+    x_velocities .= sim.v * sim.G.(y_coords) #project onto constant response manifold
 
     for step_n = 1:n_steps
         run_loggers!(sys, neighbors, step_n)
-
-        for i = 1:N #B step
-            sys.velocities[i] = SVector{D,Float64}(vcat(sys.velocities[i][1],(sys.velocities[i]+accels[i]*sim.dt/2)[2:end]))
-        end
-
-        for i = 1:N #A step
-            sys.coords[i] += sim.dt * sys.velocities[i]
-            G_y=sim.G(sys.coords[i][2]) 
-            sys.velocities[i]=SVector{D,Float64}(vcat(sim.v * G_y,sys.velocities[i][2:end]))#reproject on constant response manifold
-        end
         
-        sys.coords = wrap_coords_vec.(sys.coords, (sys.box_size,))
-        accels = accelerations(sys, neighbors; parallel=parallel)
+        #B step
+        transverse_velocities .+= transverse_accels*sim.dt/2 
 
-        for i = 1:N #B step
-            sys.velocities[i] = SVector{D,Float64}(vcat(sys.velocities[i][1],(sys.velocities[i]+accels[i]*sim.dt/2)[2:end]))
-        end
+        #A step
+        coords_array .+= sim.dt * velocities_array  
+        x_velocities .= sim.v * sim.G.(y_coords) #project onto constant response manifold
+        
+        sys.coords .= wrap_coords_vec.(sys.coords, (sys.box_size,))
 
-        G = randn(sim.rng, Float64, (N,D))
+        #B-step
+        accels_array .= reinterpret(reshape,Float64,accelerations(sys, neighbors; parallel=parallel))
+        transverse_velocities .+= transverse_accels*sim.dt/2
 
-        for i = 1:N#O step
-            sys.velocities[i] = sys.velocities[i] = SVector{D,Float64}(vcat(sys.velocities[i][1],(α*sys.velocities[i]+ σ*G[i,:])[2:end]))
-        end
+        #O-step
+        transverse_velocities .= α*transverse_velocities + σ*randn(sim.rng, Float64, (D-1,N))
+
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
     end
+end
+
+function reperiodize_coords!(coords::TC,box_size::TB) where {TC,TB}
+    reinterpret(reshape,Float64,coords) .= mod1.(reinterpret(reshape,Float64,coords),reinterpret(Float64,box_size))
 end
