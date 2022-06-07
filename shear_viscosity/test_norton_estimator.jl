@@ -2,7 +2,7 @@ include("../molly/MollyExtend.jl")
 
 using .MollyExtend
 
-function ForcingProfileNorton(;n_bins::Integer,G::Function,dG::Function,γ::Float64,v::Float64,velocity_type::DataType=Float64)
+function ForcingProfileNorton(;n_bins::Int64,G::TG,dG::TDG,γ::Float64,v::Float64,velocity_type::DataType=Float64) where {TG,TDG}
     function R(sys::System,neighbors=nothing)
         bins=zeros(velocity_type,n_bins)
         N=length(sys)
@@ -85,6 +85,7 @@ for i=1:100
     f=open("forcing_norton_$(G).out","w")
     println(f,"Ly: $Ly")
     println(f,"num_bins: $n_bins")
+    println(f,"n_samples: $(fp_logger.n_samples)")
     println(f,"v: $v")
     println(f,join(fp_logger.sum," "))
     close(f)
