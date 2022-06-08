@@ -14,7 +14,7 @@ ratio=5
 N = Ny^3*ratio
 γ=1.0
 dt=5e-3
-v=0.1
+ξ=0.1
 n_bins=300
 
 function initialize_coords(ρ::Float64,Ny::Int64,ratio::Int64)
