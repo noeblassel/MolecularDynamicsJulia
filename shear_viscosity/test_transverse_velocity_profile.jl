@@ -66,7 +66,7 @@ for i=1:100
     println(f,"Ly: $Ly")
     println(f,"num_bins: $n_bins")
     println(f,"n_samples: $(vp_logger.n_samples)")
-    println(f,"v: $v")
+    println(f,"ξ: $ξ")
     println(f,join(vp_logger.sum," "))
     close(f)
 end
