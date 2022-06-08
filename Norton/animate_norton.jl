@@ -4,7 +4,7 @@ include("/home/noeblassel/Documents/stage_CERMICS_2022/molly/MollyExtend.jl")
 
 using .MollyExtend
 
-Npd=10
+Npd=6
 
 ρ = 0.7
 T = 1.0
@@ -21,6 +21,8 @@ L = (N / ρ)^(1 // 3)
 
 box_size = SVector(L, L, L)
 
+v=5.0
+
 coords = place_atoms_on_3D_lattice(Npd,box_size)
 atoms = [Atom(σ = 1.0, ϵ = 1.0, mass = 1.0) for i in 1:N]
 velocities = init_velocities(T,[a.mass for a=atoms],1.0)
@@ -33,22 +35,33 @@ else
     global nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
 end
 
+
+ff=TwoDriftNEMD(N,1.0).force_field
+
+R(s::System,neighbors=nothing)=v-dot(ff,accelerations(s,neighbors))
+
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
-simulator=NortonColorDriftSplitting(N=N,dt = dt, γ = γ, T = T, v=50.0,splitting="BAOAB")
-loggers = Dict(:coords => CoordinateLogger(Float64, 1))
+simulator=NortonTwoDriftSplitting(N=N,dt = dt, γ = γ, T = T, v=v,splitting="BAOAB")
+loggers = Dict(:coords => CoordinateLogger(Float64, 1),:lambdas=>GeneralObservableLogger(R,1))
 
 n_eq_steps=5000
-n_steps=20000
+n_steps=5000
 
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,), box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 
 simulate!(sys,simulator,n_eq_steps)
 empty!(sys.loggers[:coords].coords)
+empty!(sys.loggers[:lambdas].history)
 println("equilibriated")
 ts=(1:n_steps)*dt
-dΛ_hist=simulate!(sys,simulator,n_steps)
+simulate!(sys,simulator,n_steps)
+dΛ_hist=sys.loggers[:lambdas].history
 plot(ts,dΛ_hist)
-savefig("norton_fluctuations_color_drift_exag.pdf")
+savefig("norton_fluctuations_color_drift_exag_.pdf")
+
+
+println(sys.velocities[1],sys.velocities[2])
+println(simulator.F[1],simulator.F[2])
 
 function animate_color_drift(sys,filename)
     l,l,l=sys.box_size
@@ -151,4 +164,5 @@ function animate_one_drift(sys,filename;ix=rand(1:length(coords[1])))
     mp4(anim,filename,fps=30)
 
 end
-animate_color_drift(sys,"norton_color_drift_exag.mp4")
+animate_one_drift(sys,"norton_two_drift_exag_1.mp4",ix=1)
+animate_one_drift(sys,"norton_two_drift_exag_2.mp4",ix=1)

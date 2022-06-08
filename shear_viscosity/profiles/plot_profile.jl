@@ -1,3 +1,4 @@
+#!/usr/bin/env julia
 using Plots
 
 run(`./scp_files.sh`)
@@ -5,8 +6,8 @@ methods=["SINUSOIDAL","CONSTANT","LINEAR"]
 prefixes=["velocity_thevenin_","forcing_norton_"]
 suffix=".out"
 
-xlabel_dict=Dict("velocity_thevenin_"=>"velocity","forcing_norton_"=>"forcing")
-F_legend_dict=Dict("velocity_thevenin_"=>"forcing profile","forcing_norton_"=>"velocity profile")
+label_dict=Dict("velocity_thevenin_"=>"velocity","forcing_norton_"=>"forcing")
+label_dict_opp=Dict("velocity_thevenin_"=>"forcing","forcing_norton_"=>"velocity")
 
 for method in methods
     println(method)
@@ -37,8 +38,8 @@ for method in methods
 
             F=f_dict[method].(y_range)
 
-            plot(profile,y_range,xlabel=xlabel_dict[prefix],ylabel="y",label=lowercase(method),color=:blue,legend=:topright)
-            plot!(F,y_range,label=F_legend_dict[prefix],linestyle=:dot,color=:red)
+            plot(profile,y_range,xlabel="reduced magnitude",ylabel="y",label=label_dict[prefix],color=:blue,legend=:topright)
+            plot!(F,y_range,label=label_dict_opp[prefix],linestyle=:dot,color=:red)
 
             savefig(prefix*method*".pdf")
         

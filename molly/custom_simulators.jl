@@ -264,9 +264,9 @@ function Molly.simulate!(sys::System{D},
         @. sys.velocities += accels_t * sim.dt / 2 #B 
 
 
-        dW .= SVector{D}.(eachrow(randn(sim.rng, Float64, (length(sys), D))))
-
-        @. sys.velocities = α * sys.velocities + σ * dW #O
+        dW =randn(sim.rng, Float64, (D,length(sys)))
+        vel_array= reinterpret(reshape,Float64,sys.velocities)
+        vel_array .= α * vel_array + σ * dW #O
 
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
     end
@@ -410,9 +410,7 @@ function Molly.simulate!(sys::System{D}, sim::LangevinSplitting, n_steps::Intege
         run_loggers!(sys, neighbors, step_n)
 
         for (step!, args) = step_arg_pairs
-
             step!(args...)
-
         end
 
         neighbors = find_neighbors(sys, sys.neighbor_finder, neighbors, step_n; parallel=parallel)
@@ -805,7 +803,7 @@ function Molly.simulate!(sys::System{D}, sim::NortonHomogeneousSplitting, n_step
     end
 end
 
-struct NortonShearViscosityTest{TG}
+struct NortonShearViscosityTest{TG,Trng}
     dt::Float64
     γ::Float64
     β::Float64
@@ -813,12 +811,12 @@ struct NortonShearViscosityTest{TG}
 
     G::TG #forcing profile
     rseed::UInt32
-    rng::AbstractRNG
+    rng::Trng
 end
 
 function NortonShearViscosityTest(; dt::Float64, γ::Float64, T::Float64, v::Float64, G::TG, rseed=round(UInt32, time()), rng=MersenneTwister(rseed)) where {TG<:Function}
     β = inv(T)
-    return NortonShearViscosityTest{typeof(G)}(dt, γ, β, v, G, rseed, rng)
+    return NortonShearViscosityTest{typeof(G),typeof(rng)}(dt, γ, β, v, G, rseed, rng)
 end
 
 

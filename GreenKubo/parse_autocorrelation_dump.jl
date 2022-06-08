@@ -1,6 +1,5 @@
-
 dt=1e-3
-T=2.5
+T=0.1
 β=inv(T)
 
 f=open("results/autocorrelation_history.out","r")

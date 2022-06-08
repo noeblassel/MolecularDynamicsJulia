@@ -1,8 +1,6 @@
 include("../molly/MollyExtend.jl")
 
-using Plots, .MollyExtend
-
-G="SINUSOIDAL"
+using .MollyExtend
 
 ρ = 0.7
 T = 1.0
@@ -31,12 +29,11 @@ else
     global nf = TreeNeighborFinder(nb_matrix = trues(N, N), dist_cutoff = r_c)
 end
 
-f_dict=Dict("SINUSOIDAL"=>(y::Float64 -> sin(2π*y/L)),"CONSTANT"=>(y::Float64 -> (y<L/2) ? -1 : 1),"LINEAR"=>(y::Float64 -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L))
-df_dict=Dict("SINUSOIDAL"=>(y::Float64-> (2π/L)*cos(2π*y/L)),"CONSTANT"=>(y::Float64 -> 0.0),"LINEAR"=>(y::Float64 -> (y<L/2) ? 4y/L : -4y/L))
+G(y::Float64)=sin(2π*y/L)
 
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
-simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=v,G=f_dict[G])
+simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=v,G=G)
 
 n_eq_steps=10
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,),box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits)
-@profview simulate!(sys,simulator,n_eq_steps)
+#@profview simulate!(sys,simulator,n_eq_steps)

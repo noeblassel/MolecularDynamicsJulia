@@ -5,7 +5,7 @@ include("../molly/MollyExtend.jl")
 if length(ARGS)!=10
     println("Error parsing arguments.")
     println("Usage: julia test_nist.jl TEMPERATURE ρMIN ρMAX NUMBER_OF_SIMULATIONS ATOMS_PER_DIM EQUILIBRATION_STEPS SAMPLING_STEPS Δt CUTOFF_RADIUS OUTPUT_FILE|STDOUT")
-    exit(1)
+    exit(1) 
 end
     
 T = parse(Float64,ARGS[1])

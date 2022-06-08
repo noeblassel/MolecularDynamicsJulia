@@ -1,18 +1,20 @@
 using Plots, LinearAlgebra, Statistics
 
+
 """Estimates the asymptotic variance for a correlated time-series based on a block-averaging method."""
 function asymptotic_var(v::Vector{Float64})
     data=copy(v)
     avg=mean(v)
     data .-= avg
     N_steps=floor(Int64,log2(length(data)))
-    data=data[1:2^N_steps]#crop series to largest possible power of two
+    data=data[1:2^N_steps]
     L=1
     N=length(data)
     K=N
     max_var=0
-        while K>1000
-            max_var=max(max_var,var(data)*N*inv(K))
+        while K>2
+            new_var=var(data)*N*inv(K)
+            (new_var<max_var) && break
             max_var=new_var
             K >>=1
             data=[0.5*(data[i]+data[i+1]) for i=1:2:K-1]
@@ -21,10 +23,7 @@ function asymptotic_var(v::Vector{Float64})
 end
 
 path_nemd="/libre/blasseln/MolecularDynamicsJulia/NEMD/results/"
-
-if !isdir("vars")
-  mkdir("vars")
-end
+path_norton="/libre/blasseln/MolecularDynamicsJulia/Norton/results/"
 
 n_linear_regime=10
 
@@ -52,15 +51,11 @@ for (i,f)=enumerate(files_nemd)
     push!(data,read(file_handle,Float64))
   end
   close(file_handle)
-  vars=asymptotic_var(data)
-  N=length(vars)
-  block_sizes=[2^(i-1) for i=1:N]
-  plot(vars)
-  savefig("vars/$(method)_$(η).png")
 
+  vars_nemd[method]=inv(η^2)*asymptotic_var(data)
 end
 
-"""for m in methods
+for m in methods
   single_plot=plot(xlabel="Forcing",ylabel="Asymptotic variance",legend=:topleft)
   single_plot_linear_regime=plot(xlabel="Forcing",ylabel="Asymptotic Variance",legend=:topleft)
   perm_nemd=sortperm(ηs[m])
@@ -78,4 +73,4 @@ end
 end
 
 savefig(joint_plot,"vars_joint_plot.pdf")
-savefig(joint_plot_linear_regime,"vars_joint_plot_linear_regime.pdf")"""
+savefig(joint_plot_linear_regime,"vars_joint_plot_linear_regime.pdf")
