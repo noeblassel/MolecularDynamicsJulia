@@ -26,12 +26,12 @@ T = 1.0
 
 r_c = 3.0
 
-Ny = 15
+Ny = 10
 ratio=5
 N = Ny^3*ratio
 γ=1.0
 dt=5e-3
-v=0.1
+v=0.05
 n_bins=300
 
 function initialize_coords(ρ::Float64,Ny::Int64,ratio::Int64)
