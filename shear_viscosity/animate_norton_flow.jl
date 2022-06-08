@@ -39,8 +39,8 @@ f_dict=Dict("SINUSOIDAL"=>(y::Float64 -> sin(2π*y/L)),"CONSTANT"=>(y::Float64 -
 simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=10.0,G=f_dict[method])
 loggers = Dict(:coords => CoordinateLogger(Float64, 1))
 
-n_eq_steps=1000
-n_steps=500
+n_eq_steps=5000
+n_steps=5000
 
 sys = System(atoms = atoms, coords = coords, velocities = velocities, pairwise_inters = (inter,),box_size = box_size, neighbor_finder = nf, force_units = NoUnits, energy_units = NoUnits, loggers = loggers)
 

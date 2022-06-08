@@ -79,8 +79,6 @@ println("equilibriated")
 for i=1:100
     simulate!(sys,simulator,n_steps)
     fp_logger=sys.loggers[:fp]
-    f_profile=fp_logger.sum/(fp_logger.n_samples)
-    y_range=range(0,Ly,n_bins)
 
     f=open("forcing_norton_$(G).out","w")
     println(f,"Ly: $Ly")
