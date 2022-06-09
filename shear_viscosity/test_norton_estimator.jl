@@ -93,7 +93,7 @@ for i=1:100
     println(f,"n_samples: $(fp_logger.n_samples)")
     println(f,"v: $v")
     println(f,join(fp_logger.sum[1:end-1]," "))
-    println("Fourier sum: , $(fp_logger.sum[end])")
+    println(f,"Fourier sum: , $(fp_logger.sum[end])")
     close(f)
 end
 
