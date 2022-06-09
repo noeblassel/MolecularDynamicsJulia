@@ -2,24 +2,31 @@ include("../molly/MollyExtend.jl")
 
 using .MollyExtend
 
-function ForcingProfileNorton(;n_bins::Int64,G::TG,dG::TDG,γ::Float64,v::Float64,velocity_type::DataType=Float64) where {TG,TDG}
+function ForcingProfileNorton(;n_bins::Int64,G::TG,dG::TDG,γ::Float64,v::Float64) where {TG,TDG}
     function R(sys::System,neighbors=nothing)
-        bins=zeros(velocity_type,n_bins)
+        bins=zeros(n_bins+1)#add a bin for Fourier coefficient
         N=length(sys)
         Ly=sys.box_size[2]
         accels=accelerations(sys,neighbors)
         for i=1:N
             Gy=G(sys.coords[i][2])
-            bin_ix=1+floor(Int64,n_bins*ustrip(sys.coords[i][2]/Ly))
-            bins[bin_ix]+=(v*dG(sys.coords[i][2])*sys.velocities[i][2]-accels[i][1]+γ*v*Gy)
+            bin_ix=1+floor(Int64,n_bins*sys.coords[i][2]/Ly)
+            term=(v*dG(sys.coords[i][2])*sys.velocities[i][2]-accels[i][1]+γ*v*Gy)
+            bins[bin_ix]+=term
+            bins[end]+=term*sin(2π*sys.coords[i][2]/Ly)
         end
-        return n_bins*bins/N
+        bins/=N
+        bins[1:end-1]*=n_bins
+        return bins
     end
     return R
 end
 
 
+
+
 G=ARGS[1]
+v=parse(Float64,ARGS[2])
 
 ρ = 0.7
 T = 1.0
@@ -31,7 +38,7 @@ ratio=5
 N = Ny^3*ratio
 γ=1.0
 dt=5e-3
-v=0.07
+
 n_bins=300
 
 function initialize_coords(ρ::Float64,Ny::Int64,ratio::Int64)
@@ -85,7 +92,8 @@ for i=1:100
     println(f,"num_bins: $n_bins")
     println(f,"n_samples: $(fp_logger.n_samples)")
     println(f,"v: $v")
-    println(f,join(fp_logger.sum," "))
+    println(f,join(fp_logger.sum[1:end-1]," "))
+    println("Fourier sum: , $(fp_logger.sum[end])")
     close(f)
 end
 

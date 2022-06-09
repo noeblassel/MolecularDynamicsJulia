@@ -2,8 +2,25 @@ include("../molly/MollyExtend.jl")
 
 using Plots, .MollyExtend
 
+function TransverseVelocityProfile(;n_bins::Int64)
+    function R(sys::System,neighbors=nothing)
+        bins=zeros(velocity_type,n_bins+1)#add bin for Fourier coefficient
+        N=length(sys)
+        Ly=sys.box_size[2]
+        for i=1:N
+            bin_ix=1+floor(Int64,n_bins*sys.coords[i][2]/Ly)
+            bins[bin_ix]+=first(sys.velocities[i])
+            bins[end]+=first(sys.velocities[i])*sin(2π*sys.coords[i][2]/Ly)
+        end
+        bins/=N
+        bins[1:end-1]*=n_bins
+        return bins
+    end
+    return R
+end
 
 F=ARGS[1]
+ξ=parse(Float64,ARGS[2])
 ρ = 0.7
 T = 1.0
 
@@ -14,7 +31,6 @@ ratio=5
 N = Ny^3*ratio
 γ=1.0
 dt=5e-3
-ξ=0.1
 n_bins=300
 
 function initialize_coords(ρ::Float64,Ny::Int64,ratio::Int64)
@@ -67,6 +83,7 @@ for i=1:100
     println(f,"num_bins: $n_bins")
     println(f,"n_samples: $(vp_logger.n_samples)")
     println(f,"ξ: $ξ")
-    println(f,join(vp_logger.sum," "))
+    println(f,join(vp_logger.sum[1:end-1]," "))
+    println("Fourier sum: , $(vp_logger.sum[end])")
     close(f)
 end

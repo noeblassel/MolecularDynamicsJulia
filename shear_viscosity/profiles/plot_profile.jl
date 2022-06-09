@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-using Plots
+using Plots,LinearAlgebra
 
 run(`./scp_files.sh`)
 methods=["SINUSOIDAL","CONSTANT","LINEAR"]
@@ -40,6 +40,11 @@ for method in methods
 
             plot(profile,y_range,xlabel="reduced magnitude",ylabel="y",label=label_dict[prefix],color=:blue,legend=:topright)
             plot!(F,y_range,label=label_dict_opp[prefix],linestyle=:dot,color=:red)
+
+            if method=="SINUSOIDAL"
+                a=inv(dot(F,F))*dot(F,profile) # least squares sinusoidal fit
+                plot!(a*F,y_range,label="fit (a=$(round(a,digits=2)))",linestyle=:dot,color=:green)
+            end
 
             savefig(prefix*method*".pdf")
         
