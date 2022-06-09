@@ -59,7 +59,7 @@ inter_dict=Dict("SINUSOIDAL"=>SinusoidalForceProfile,"LINEAR"=>PiecewiseLinearFo
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 ff=inter_dict[F](ξ=ξ,L=Ly)
 simulator=LangevinSplitting(dt = dt, γ = γ, T = T,splitting="BAOAB")
-loggers = Dict(:vp=>AverageObservableVecLogger(TransverseVelocityProfile(n_bins=n_bins),n_bins))
+loggers = Dict(:vp=>AverageObservableVecLogger(TransverseVelocityProfile(n_bins=n_bins),n_bins+1))
 
 n_eq_steps=5000
 n_steps=100000

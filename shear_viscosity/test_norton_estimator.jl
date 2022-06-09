@@ -68,7 +68,7 @@ df_dict=Dict("SINUSOIDAL"=>(y::Float64-> (2π/Ly)*cos(2π*y/Ly)),"CONSTANT"=>(y:
 
 inter = LennardJones(cutoff = ShiftedForceCutoff(r_c), nl_only = true, force_units = NoUnits, energy_units = NoUnits)
 simulator=NortonShearViscosityTest(dt = dt, γ = γ, T = T,v=v,G=f_dict[G])
-loggers = Dict(:fp=>AverageObservableVecLogger(ForcingProfileNorton(n_bins=n_bins,G=f_dict[G],dG=df_dict[G],γ=γ,v=v),n_bins))
+loggers = Dict(:fp=>AverageObservableVecLogger(ForcingProfileNorton(n_bins=n_bins,G=f_dict[G],dG=df_dict[G],γ=γ,v=v),n_bins+1))
 
 n_eq_steps=5000
 n_steps=100000
