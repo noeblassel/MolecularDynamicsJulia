@@ -4,7 +4,7 @@ using Plots, .MollyExtend
 
 function TransverseVelocityProfile(;n_bins::Int64)
     function R(sys::System,neighbors=nothing)
-        bins=zeros(velocity_type,n_bins+1)#add bin for Fourier coefficient
+        bins=zeros(n_bins+1)#add bin for Fourier coefficient
         N=length(sys)
         Ly=sys.box_size[2]
         for i=1:N
