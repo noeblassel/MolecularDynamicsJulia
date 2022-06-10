@@ -18,7 +18,6 @@ module MollyExtend
     include("./custom_observables.jl")
     include("./custom_simulators.jl")
     include("./custom_interactions.jl")
-    include("./custom_nf.jl")
 
     include("./sim_nve_lj.jl")
     include("./sim_nvt_lj.jl")
