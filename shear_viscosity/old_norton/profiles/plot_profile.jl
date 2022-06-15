@@ -1,5 +1,6 @@
 #!/usr/bin/env julia
-using Plots,LinearAlgebra
+using Plots,LinearAlgebra,Unitful
+include("../../utils/reduced_units.jl")
 
 run(`./scp_files.sh`)
 methods=["SINUSOIDAL","CONSTANT","LINEAR"]
@@ -8,6 +9,9 @@ suffix=".out"
 
 label_dict=Dict("velocity_thevenin_"=>"velocity","forcing_norton_"=>"forcing")
 label_dict_opp=Dict("velocity_thevenin_"=>"forcing","forcing_norton_"=>"velocity")
+
+γ=1.0
+ρ=0.7
 
 for method in methods
     println(method)
@@ -34,6 +38,7 @@ for method in methods
 
             profile=parse.(Float64,split(readline(f)))/(v*n_samples)
 
+
             y_range=(0:n_bins-1)*(Ly/n_bins)
 
             F=f_dict[method].(y_range)
@@ -44,8 +49,27 @@ for method in methods
             if method=="SINUSOIDAL"
                 a=inv(dot(F,F))*dot(F,profile) # least squares sinusoidal fit
                 plot!(a*F,y_range,label="fit (a=$(round(a,digits=2)))",linestyle=:dot,color=:green)
-            end
+                if prefix=="velocity_thevenin_"
+                    η_lsq=get_physical_viscosity(:Ar,ρ*((inv(a)-γ)*(Ly/2π)^2))
+                else
+                    η_lsq=get_physical_viscosity(:Ar,ρ*((a-γ)*(Ly/2π)^2))
+                end
+                println("Estimated viscosity from least squares fit: $η_lsq")
 
+                _,_,_,fourier_coeff=split(readline(f))
+                fourier_coeff=parse(Float64,fourier_coeff)/(v*n_samples)
+                println("Estimated Fourier coefficient: $(fourier_coeff)")
+
+                if prefix=="velocity_thevenin_"
+                    η_fourier=get_physical_viscosity(:Ar,ρ*((inv(2fourier_coeff)-γ)*(Ly/2π)^2))
+                else
+                    η_fourier=get_physical_viscosity(:Ar,ρ*((2fourier_coeff-γ)*(Ly/2π)^2))
+                end
+                println("Estimated viscosity from Fourier analysis : $η_fourier")
+                
+            end
+            
+            close(f)
             savefig(prefix*method*".pdf")
         
         end
