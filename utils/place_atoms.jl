@@ -5,7 +5,7 @@ export
 
 
 function place_atoms_on_3D_lattice(N_per_dim::Integer,box_size)
-    (Lx,Ly,Lz)=box_size
+    (Lx,Ly,Lz)=box_size.side_lengths 
     reshape([SVector(i * Lx/N_per_dim, j * Ly/N_per_dim, k * Lz/N_per_dim) for i = 0:N_per_dim-1, j = 0:N_per_dim-1, k = 0:N_per_dim-1],N_per_dim^3)
 end
 
