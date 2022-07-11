@@ -1,11 +1,11 @@
 using Molly, LinearAlgebra
 
-T=1.0
-ρ=0.7
+T=0.85
+ρ=0.8
 dt=1e-3
 γ=1.0
 t_eq=100.0
-t_corr=2.0
+t_corr=5.0
 Npd=10
 splitting="BAOAB"
 r_c=2.5
@@ -37,7 +37,7 @@ function R(sys,args...;kwargs ...)
     N=length(sys)
     x_velocities=view(reinterpret(reshape,Float64,sys.velocities),1,:)
     y_coords=view(reinterpret(reshape,Float64,sys.coords),2,:)
-    return dot(x_velocities,sin.(2π*y_coords/L))
+    return dot(x_velocities,sin.(2π*y_coords/L))/N
 end
 
 sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0)
