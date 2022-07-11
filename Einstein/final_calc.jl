@@ -59,6 +59,7 @@ for i=1:n_iter_sim
 simulate!(sys,sim,n_steps_eq)
     f=open(output_file,"a")
     print(f,join(sys.loggers.sd.msds,'\n'))
+    println(f)
     close(f)
     empty!(sys.loggers.sd.msds)
 end
