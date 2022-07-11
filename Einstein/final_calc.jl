@@ -53,7 +53,7 @@ norm_cst=inv(sqrt(3N))
 R(sys,args...;kwargs ...)=norm_cst*sys.velocities
 sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0)
 simulate!(sys,sim,n_steps_eq)
-sys=System(atoms=atoms,coords=sys.coords,velocities=sys.velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0,loggers=(sd=SelfDiffusionLogger(sys.coords,100),))
+sys=System(atoms=atoms,coords=sys.coords,velocities=sys.velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0,loggers=(sd=SelfDiffusionLogger(sys.coords,1),))
 
 Ts=dt*collect(Float64,0:n_steps_iter)
 inv_norm2_Ts=inv(dot(Ts,Ts))
