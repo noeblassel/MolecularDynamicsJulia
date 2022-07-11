@@ -34,30 +34,34 @@ sim=LangevinSplitting(dt=dt,temperature=T,friction=γ,splitting="BAOAB",remove_C
 norm_cst=inv(sqrt(3N))
 
 sinus_forcing=(y-> sin(2π*y/L))
-pw_constant_forcing=(y -> (y<L/2) ? -1 : 1)
+pw_constant_forcing=(y -> (y<L/2) ? 1 : -1)
 pw_linear_forcing=(y -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L)
+
 
 function shear_conj_response(forcing)
     function R(sys,args...;kwargs...)
         N=length(sys)
-        x_velocities=view(reinterpret(reshape,Float64,sys.velocities),1,:)
-        y_coords=view(reinterpret(reshape,Float64,sys.coords),2,:)
-        return dot(x_velocities,forcing.(y_coords))/sqrt(N)
+        velocities=[view(reinterpret(reshape,Float64,sys.velocities),i,:) for i=1:3]
+        coords=[view(reinterpret(reshape,Float64,sys.coords),i,:) for i=1:3]
+        ortho_idxs=[(1,2),(1,3),(2,1),(2,3),(3,1),(3,2)]
+        return collect(Float64,dot(velocities[i],forcing.(coords[j]))/sqrt(N) for (i,j)=ortho_idxs)
     end
     return R
 end
 
 function fourier_response(sys,args...;kwargs...)
     N=length(sys)
-    x_velocities=view(reinterpret(reshape,Float64,sys.velocities),1,:)
-    y_coords=view(reinterpret(reshape,Float64,sys.coords),2,:)
-    return dot(x_velocities,exp.(2im*π*y_coords/L))/sqrt(N)
+    velocities=[view(reinterpret(reshape,Float64,sys.velocities),i,:) for i=1:3]
+    coords=[view(reinterpret(reshape,Float64,sys.coords),i,:) for i=1:3]
+    ortho_idxs=[(1,2),(1,3),(2,1),(2,3),(3,1),(3,2)]
+    return collect(ComplexF64,dot(velocities[i],exp.(2im*π*coords[j]/L))/sqrt(N) for (i,j)=ortho_idxs)
 end
+
 (sin_response,const_response,lin_response)=shear_conj_response.([sinus_forcing,pw_constant_forcing,pw_linear_forcing])
 
 sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0)
 simulate!(sys,sim,n_steps_eq)
-sys=System(atoms=atoms,coords=sys.coords,velocities=sys.velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0,loggers=(sinus=TimeCorrelationLogger(sin_response,fourier_response,Float64,ComplexF64,1,l_corr),constant=TimeCorrelationLogger(sin_response,const_response,Float64,ComplexF64,1,l_corr),lin=TimeCorrelationLogger(sin_response,lin_response,Float64,ComplexF64,1,l_corr)))
+sys=System(atoms=atoms,coords=sys.coords,velocities=sys.velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0,loggers=(sinus=TimeCorrelationLogger(sin_response,fourier_response,Float64,ComplexF64,6,l_corr),constant=TimeCorrelationLogger(sin_response,const_response,Float64,ComplexF64,6,l_corr),lin=TimeCorrelationLogger(sin_response,lin_response,Float64,ComplexF64,6,l_corr)))
 
 for i=1:n_iter_sim
 simulate!(sys,sim,n_steps_eq)
