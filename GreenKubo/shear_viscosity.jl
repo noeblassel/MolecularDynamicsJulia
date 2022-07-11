@@ -37,13 +37,13 @@ sinus_forcing=(y-> sin(2π*y/L))
 pw_constant_forcing=(y -> (y<L/2) ? 1 : -1)
 pw_linear_forcing=(y -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L)
 
+ortho_idxs=[(1,2),(1,3),(2,1),(2,3),(3,1),(3,2)]
 
 function shear_conj_response(forcing)
     function R(sys,args...;kwargs...)
         N=length(sys)
         velocities=[view(reinterpret(reshape,Float64,sys.velocities),i,:) for i=1:3]
         coords=[view(reinterpret(reshape,Float64,sys.coords),i,:) for i=1:3]
-        ortho_idxs=[(1,2),(1,3),(2,1),(2,3),(3,1),(3,2)]
         return collect(Float64,dot(velocities[i],forcing.(coords[j]))/sqrt(N) for (i,j)=ortho_idxs)
     end
     return R
@@ -53,7 +53,6 @@ function fourier_response(sys,args...;kwargs...)
     N=length(sys)
     velocities=[view(reinterpret(reshape,Float64,sys.velocities),i,:) for i=1:3]
     coords=[view(reinterpret(reshape,Float64,sys.coords),i,:) for i=1:3]
-    ortho_idxs=[(1,2),(1,3),(2,1),(2,3),(3,1),(3,2)]
     return collect(ComplexF64,dot(velocities[i],exp.(2im*π*coords[j]/L))/sqrt(N) for (i,j)=ortho_idxs)
 end
 
