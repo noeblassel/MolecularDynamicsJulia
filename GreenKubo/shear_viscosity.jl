@@ -39,12 +39,12 @@ pw_linear_forcing=(y -> (y<L/2) ? 4*(y-L/4)/L : 4*(3L/4-y)/L)
 
 ortho_idxs=[(1,2),(1,3),(2,1),(2,3),(3,1),(3,2)]
 
-function shear_conj_response(forcing)
+function shear_conj_response(forcing::T) where {T}
     function R(sys,args...;kwargs...)
         N=length(sys)
         velocities=[view(reinterpret(reshape,Float64,sys.velocities),i,:) for i=1:3]
         coords=[view(reinterpret(reshape,Float64,sys.coords),i,:) for i=1:3]
-        return collect(Float64,dot(velocities[i],forcing.(coords[j]))/sqrt(N) for (i,j)=ortho_idxs)
+        return Float64[dot(velocities[i],forcing.(coords[j]))/sqrt(N) for (i,j)=ortho_idxs]
     end
     return R
 end
@@ -53,7 +53,7 @@ function fourier_response(sys,args...;kwargs...)
     N=length(sys)
     velocities=[view(reinterpret(reshape,Float64,sys.velocities),i,:) for i=1:3]
     coords=[view(reinterpret(reshape,Float64,sys.coords),i,:) for i=1:3]
-    return collect(ComplexF64,dot(velocities[i],exp.(2im*π*coords[j]/L))/sqrt(N) for (i,j)=ortho_idxs)
+    return ComplexF64[dot(velocities[i],exp.(2im*π*coords[j]/L))/sqrt(N) for (i,j)=ortho_idxs]
 end
 
 (sin_response,const_response,lin_response)=shear_conj_response.([sinus_forcing,pw_constant_forcing,pw_linear_forcing])
