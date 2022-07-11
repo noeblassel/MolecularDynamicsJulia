@@ -12,7 +12,7 @@ SelfDiffusionLogger(initial_coords,log_every) = SelfDiffusionLogger{typeof(initi
 function Molly.log_property!(logger::SelfDiffusionLogger, s::System, neighbors=nothing, step_n::Integer=0;parallel::Bool=true)
     logger.self_diffusion_coords += unwrap_coords_vec.(logger.last_coords, s.coords, (s.boundary.side_lengths,)) - logger.last_coords
     logger.last_coords .= s.coords
-    (step_n % log_every == 0) && push!(logger.msds,ustrip(dot(logger.self_diffusion_coords,logger.self_diffusion_coords))/(3*length(logger.self_diffusion_coords)))
+    (step_n % logger.log_every == 0) && push!(logger.msds,ustrip(dot(logger.self_diffusion_coords,logger.self_diffusion_coords))/(3*length(logger.self_diffusion_coords)))
 end
 
 unwrap_coords(c1, c2, side_length)=c2+round((c1-c2)/side_length)*side_length
