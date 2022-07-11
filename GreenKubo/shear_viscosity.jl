@@ -1,12 +1,12 @@
 using Molly, LinearAlgebra
 
-T=0.85
-ρ=0.8
+T=0.8
+ρ=0.7
 dt=1e-3
 γ=1.0
 t_eq=100.0
 t_corr=5.0
-Npd=10
+Npd=16
 splitting="BAOAB"
 r_c=2.5
 output_file="autocorrelations_sv.out"
