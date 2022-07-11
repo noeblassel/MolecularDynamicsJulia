@@ -60,7 +60,7 @@ end
 
 sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0)
 simulate!(sys,sim,n_steps_eq)
-sys=System(atoms=atoms,coords=sys.coords,velocities=sys.velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0,loggers=(sinus=TimeCorrelationLogger(sin_response,fourier_response,Float64,ComplexF64,6,l_corr),constant=TimeCorrelationLogger(sin_response,const_response,Float64,ComplexF64,6,l_corr),lin=TimeCorrelationLogger(sin_response,lin_response,Float64,ComplexF64,6,l_corr)))
+sys=System(atoms=atoms,coords=sys.coords,velocities=sys.velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0,loggers=(sinus=TimeCorrelationLogger(sin_response,fourier_response,Float64,ComplexF64,6,l_corr),constant=TimeCorrelationLogger(const_response,fourier_response,Float64,ComplexF64,6,l_corr),lin=TimeCorrelationLogger(lin_response,fourier_response,Float64,ComplexF64,6,l_corr)))
 
 for i=1:n_iter_sim
 simulate!(sys,sim,n_steps_eq)
