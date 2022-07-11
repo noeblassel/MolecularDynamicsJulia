@@ -23,7 +23,7 @@ T=1.25
 dt=1e-3
 γ=1.0
 t_eq=100.0
-t_corr=2.0
+t_lin=1000.0
 Npd=10
 splitting="BAOAB"
 r_c=2.5
@@ -45,8 +45,8 @@ velocities=[velocity(1.0,T,1.0) for i=1:N]
 inter=LennardJones(cutoff=ShiftedForceCutoff(r_c),nl_only=true,force_units=NoUnits,energy_units=NoUnits)
 
 n_steps_eq=Int64(floor(t_eq/dt))
-l_corr=ceil(Int64,t_corr/dt)
-n_iter_sim=20000
+n_steps_iter=Int64(floor(t_lin/dt))
+n_iter_sim=1000
 
 sim=LangevinSplitting(dt=dt,temperature=T,friction=γ,splitting="BAOAB",remove_CM_motion=false)
 norm_cst=inv(sqrt(3N))
@@ -55,12 +55,16 @@ sys=System(atoms=atoms,coords=coords,velocities=velocities,pairwise_inters=(inte
 simulate!(sys,sim,n_steps_eq)
 sys=System(atoms=atoms,coords=sys.coords,velocities=sys.velocities,pairwise_inters=(inter,),neighbor_finder=nf,boundary=boundary,energy_units=NoUnits,force_units=NoUnits,k=1.0,loggers=(sd=SelfDiffusionLogger(sys.coords,100),))
 
+Ts=dt*collect(Float64,0:n_steps_iter)
+inv_norm2_Ts=inv(dot(Ts,Ts))
 for i=1:n_iter_sim
-simulate!(sys,sim,n_steps_eq)
+    simulate!(sys,sim,n_steps_iter)
+    println(sys.loggers.sd)
     f=open(output_file,"a")
-    print(f,join(sys.loggers.sd.msds,'\n'))
-    println(f)
+    rho=inv_norm2_Ts*dot(Ts,sys.loggers.sd.msds)/2
+    println(f,rho)
     close(f)
     empty!(sys.loggers.sd.msds)
+    sys.loggers.sd.self_diffusion_coords=zero(sys.loggers.sd.self_diffusion_coords)
 end
 
