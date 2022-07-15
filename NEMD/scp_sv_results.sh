@@ -1,3 +1,3 @@
 #!/bin/bash
-scp clustern15:/libre/blasseln/MolecularDynamicsJulia/NEMD/*.out .
-scp clustern16:/libre/blasseln/MolecularDynamicsJulia/NEMD/*.out .
+scp clustern19:/libre/blasseln/MolecularDynamicsJulia/NEMD/*.out .
+scp clustern20:/libre/blasseln/MolecularDynamicsJulia/NEMD/*.out .
