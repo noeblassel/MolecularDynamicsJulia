@@ -18,11 +18,11 @@ function asymptotic_var(v::Vector{Float64})
     return max_var
 end
 
-run(`./scp_sv_results.sh`)
+#run(`./scp_sv_results.sh`)
 etas=[0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
 
 output_file="sv_sinusoidal.dat"
-f_output=open(output_file,w)
+f_output=open(output_file,"w")
 println(f_output,"eta Im(response) Re(response) N_samps AV_im_response AV_re_response")
 
 
