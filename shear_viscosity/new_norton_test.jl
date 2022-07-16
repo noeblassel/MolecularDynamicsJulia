@@ -66,8 +66,9 @@ function simulate_norton!(sys::System{D}, sim::NortonSVIntegrator, n_steps; para
 
         (isnan(FdotG)) && return λ_ham_hist,λ_fd_hist
 
-        v_x_base .= v_x * sim.η / dot(G_y, v_x)
-        v_x .-= (dot(G_y, v_x - v_x_base) / GdotG) * G_y
+        #after A step, state has left the constant response manifold, but we can reproject orthogonally w.r.t. p
+        v_x_base .= v_x * sim.η / dot(G_y, v_x) #particular point on the affine hyperplane (with respect to p) G(q)⋅p=η
+        v_x .-= (dot(G_y, v_x - v_x_base) / GdotG) * G_y #orthogonal projection onto the hyperplane
 
         #B step
         sys.velocities .+= accels * sim.dt / 2
