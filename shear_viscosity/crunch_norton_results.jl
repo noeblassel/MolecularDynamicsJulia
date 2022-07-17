@@ -32,14 +32,14 @@ for method in methods
     println(method)
     for eta in etas 
         println("\t",eta)
-        f=open("fourier_response_$(method)_$(eta).out")
+        f=open("norton_forcing_$(method)_$(eta).out")
         C=reinterpret(Float64,read(f))
         N=length(C)
         m=mean(C)
         σ2=asymptotic_var(C)
         println(f_output,join([eta,m,inv(m*norm),N,σ2,σ2/(norm^2*m^4)]," ")) #get other variance by delta method (see comment below)
         close(f)
-        rm("fourier_response_$(method)_$(eta).out")
+        rm("norton_forcing_$(method)_$(eta).out")
     end
 end
 close(f_output)
