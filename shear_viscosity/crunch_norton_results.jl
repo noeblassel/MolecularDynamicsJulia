@@ -1,6 +1,6 @@
 using Statistics
 
-function asymptotic_var(v::Vector{Float64})
+function asymptotic_var(v)
     data=copy(v)
     avg=mean(v)
     data .-= avg
