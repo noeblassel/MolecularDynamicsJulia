@@ -41,7 +41,7 @@ for method in methods
         close(f)
         rm("norton_forcing_$(method)_$(eta).out")
     end
+    close(f_output)
 end
-close(f_output)
 
 #φ(m)=1/(norm*m) => φ'(m)=-1/(norm * m^2)
