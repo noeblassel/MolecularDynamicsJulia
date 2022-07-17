@@ -20,7 +20,7 @@ end
 
 run(`./scp_sv_results.sh`)
 
-ηs=collect(vcat(collect(0.008:0.008:0.072),collect(0.08:0.08:0.8)))
+etas=collect(vcat(collect(0.008:0.008:0.072),collect(0.08:0.08:0.8)))
 normalizing_csts=Dict("SINUSOIDAL"=>1/2,"CONSTANT"=>2/π,"LINEAR"=>-4/π^2)
 
 methods=["SINUSOIDAL","CONSTANT","LINEAR"]
