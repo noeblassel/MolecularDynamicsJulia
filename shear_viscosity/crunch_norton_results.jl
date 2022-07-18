@@ -28,7 +28,7 @@ for method in methods
     output_file="norton_$method.dat"
     f_output=open(output_file,"w")
     norm=normalizing_csts[method]
-    println(f_output,"eta norton_response est_normalized_response N_samps  AV_response, AV_normalized_response")
+    println(f_output,"eta normalized_eta response N_samps  AV_response, AV_normalized_response")
     println(method)
     for eta in etas 
         println("\t",eta)
@@ -37,7 +37,7 @@ for method in methods
         N=length(C)
         m=mean(C)
         σ2=asymptotic_var(C)
-        println(f_output,join([eta,m,m*norm,N,σ2,σ2*norm^2]," ")) #get other variance by delta method (see comment below)
+        println(f_output,join([eta,abs(eta/norm),abs(m),N,σ2,σ2*norm^2]," ")) #get other variance by delta method (see comment below)
         close(f)
         rm("norton_forcing_$(method)_$(eta).out")
     end
