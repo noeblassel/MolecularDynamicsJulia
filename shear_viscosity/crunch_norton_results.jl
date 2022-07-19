@@ -30,7 +30,7 @@ for method in methods
     println(f_output,"eta normalized_eta response N_samps  AV_response, AV_normalized_response")
     println(method)
     for file in [file for file in readdir() if startswith(file,"norton_forcing_$(method)")]
-        η=first(match(r"norton_forcing_\w+_(.+)\.out").captures)
+        η=first(match(r"norton_forcing_\w+_(.+)\.out",file).captures)
         η=parse(Float64,η)
         println("\t",η)
         f=open(file)
