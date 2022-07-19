@@ -22,6 +22,9 @@ box_size=CubicBoundary(L,L,L)
 
 @assert 2r_c<= L "Cutoff radius too large relative to domain"
 
+max_speed=10.0*(sqrt(T)+η)
+n_steps_neighbors=floor(Int64,0.2*r_c/(dt*max_speed))
+
 
 struct NEMD_longitudinal_forcing{F}
     forcing::F #transverse profile of the forcing
@@ -56,7 +59,7 @@ elseif forcing_type=="CONSTANT"
     forcing=NEMD_longitudinal_forcing(constant_forcing,η)
 end
 
-nf = (3.6r_c < L) ? CellListMapNeighborFinder(nb_matrix=trues(N,N),dist_cutoff= 1.2r_c,unit_cell=box_size) : DistanceNeighborFinder(nb_matrix=trues(N,N),dist_cutoff=1.2r_c)
+nf = (3.6r_c < L) ? CellListMapNeighborFinder(nb_matrix=trues(N,N),n_steps=n_steps_neighbors,dist_cutoff= 1.2r_c,unit_cell=box_size) : DistanceNeighborFinder(nb_matrix=trues(N,N),n_steps=n_steps_neighbors,dist_cutoff=1.2r_c)
 
 atoms=[Atom(index=i,ϵ=1.0,σ=1.0,mass=1.0) for i=1:N]
 coords=place_atoms_on_3D_lattice(Npd,box_size)
