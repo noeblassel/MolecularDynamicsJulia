@@ -19,16 +19,16 @@ function asymptotic_var(v::Vector{Float64})
 end
 
 run(`./scp_sv_results.sh`)
-etas=1.2:0.2:3.2
+etas=4.0:1.0:14.0
 
-output_file="sv_constant.dat"
+output_file="sv_sinusoidal.dat"
 f_output=open(output_file,"w")
 println(f_output,"eta Im(response) Re(response) N_samps AV_im_response AV_re_response")
 
 
 for eta in etas 
     println(eta)
-    f=open("fourier_response_CONSTANT_$(eta).out")
+    f=open("fourier_response_SINUSOIDAL_$(eta).out")
     C=read(f)
     C=reinterpret(ComplexF64,C)
     N=length(C)
@@ -37,7 +37,7 @@ for eta in etas
     v_re=asymptotic_var(real(C))
     println(f_output,join([eta,imag(m),real(m),N,v_im,v_re]," "))
     close(f)
-    rm("fourier_response_CONSTANT_$(eta).out")
+    rm("fourier_response_SINUSOIDAL_$(eta).out")
 end
 
 close(f_output)
