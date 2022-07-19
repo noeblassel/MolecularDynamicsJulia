@@ -29,7 +29,7 @@ for method in methods
     norm=normalizing_csts[method]
     println(f_output,"eta normalized_eta response N_samps  AV_response, AV_normalized_response")
     println(method)
-    for file in [file for file in readdir() if startswith(file,"^norton_forcing_$(method)")]
+    for file in [file for file in readdir() if startswith(file,"norton_forcing_$(method)")]
         η=first(match(r"norton_forcing_\w+_(.+)\.out").captures)
         η=parse(Float64,η)
         println("\t",η)
