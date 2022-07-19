@@ -20,7 +20,6 @@ end
 
 run(`./scp_sv_results.sh`)
 
-etas=collect(vcat(collect(0.008:0.008:0.072),collect(0.08:0.08:0.8)))
 normalizing_csts=Dict("SINUSOIDAL"=>1/2,"CONSTANT"=>2/π,"LINEAR"=>-4/π^2)
 
 methods=["SINUSOIDAL","CONSTANT","LINEAR"]
@@ -30,14 +29,16 @@ for method in methods
     norm=normalizing_csts[method]
     println(f_output,"eta normalized_eta response N_samps  AV_response, AV_normalized_response")
     println(method)
-    for eta in etas 
-        println("\t",eta)
-        f=open("norton_forcing_$(method)_$(eta).out")
+    for file in [file for file in listdir() if startswith(file,"^norton_forcing_$(method)")]
+        η=first(match(r"norton_forcing_\w+_(.+)\.out").captures)
+        η=parse(Float64,η)
+        println("\t",η)
+        f=open(file)
         C=reinterpret(Float64,read(f))
         N=length(C)
         m=mean(C)
         σ2=asymptotic_var(C)
-        println(f_output,join([eta,abs(eta/norm),abs(m),N,σ2,σ2*norm^2]," ")) #get other variance by delta method (see comment below)
+        println(f_output,join([η,abs(η/norm),abs(m),N,σ2,σ2*norm^2]," ")) #get other variance by delta method (see comment below)
         close(f)
         rm("norton_forcing_$(method)_$(eta).out")
     end
