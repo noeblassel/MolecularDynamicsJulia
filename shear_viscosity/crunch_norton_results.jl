@@ -40,7 +40,7 @@ for method in methods
         σ2=asymptotic_var(C)
         println(f_output,join([η,abs(η  /norm),abs(m),N,σ2,σ2*norm^2]," ")) #get other variance by delta method (see comment below)
         close(f)
-        rm("norton_forcing_$(method)_$(eta).out")
+        rm("norton_forcing_$(method)_$(η).out")
     end
     close(f_output)
 end
