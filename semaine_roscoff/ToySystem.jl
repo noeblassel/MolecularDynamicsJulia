@@ -14,8 +14,9 @@ mutable struct ToySystem{D,F,dF,BC,O}
     boundary_condition!::BC
     
     observables::O
-    observables_sums::Vector{SVector{2,Float64}}
+    O_sums::Vector{Float64}
+    sq_O_sums::Vector{Float64}
     clock::Int
 end
 
-ToySystem(q::SVector{D,Float64},p::SVector{D,Float64},V::Function,∇V::Function,bc!::Function,observables) where {D} = ToySystem{D,typeof(V),typeof(∇V),typeof(bc!),typeof(observables)}(q,p,q,V,∇V,bc!,observables,[SVector(0.0,0.0) for i=1:length(observables)],0)
+ToySystem(q::SVector{D,Float64},p::SVector{D,Float64},V::Function,∇V::Function,bc!::Function,observables) where {D} = ToySystem{D,typeof(V),typeof(∇V),typeof(bc!),typeof(observables)}(q,p,q,V,∇V,bc!,observables,zeros(length(observables)),zeros(length(observables)),0)
