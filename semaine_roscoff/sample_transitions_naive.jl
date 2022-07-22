@@ -28,7 +28,8 @@ f=open(output_file,"w")
 println(f,"state next_state transition_time")
 close(f)
 
-for i=1:10000000
+n_transitions=0
+while n_transitions<100000
     last_state=get_state(sys)
     simulate!(sys,sim,check_every)
     state=get_state(sys)
@@ -39,6 +40,7 @@ for i=1:10000000
         println(g,"$last_state $state $t")
         close(g)
         sys.clock=0
+        n_transitions+=1
     end
 end
 
