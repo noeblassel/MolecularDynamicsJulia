@@ -52,7 +52,7 @@ begin
         end
     end
 
-    algo=GenParRepAlgorithm(128,300,300,1,0.1,spawn_replica,branch_replica,get_gr_obs,get_state,output_transition)
+    algo=GenParRepAlgorithm(128,300,900,1,0.1,spawn_replica,branch_replica,get_gr_obs,get_state,output_transition)
     #
     p0=SVector(0.0,0.0)
     q0=rand(centers)
