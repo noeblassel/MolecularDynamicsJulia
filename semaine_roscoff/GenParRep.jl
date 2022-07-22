@@ -67,7 +67,8 @@ function sample_transitions!(master_system,algorithm::GenParRepAlgorithm,simulat
                 if length(dead_replicas_ix)>0 #branch if dead replicas
                     alive_replicas_ix=setdiff(1:algorithm.n_replicas,dead_replicas_ix)
                     for i ∈ dead_replicas_ix
-                        slave_systems[i]=algorithm.branch_replica(slave_systems[rand(alive_replicas_ix)],slave_systems[i])
+                        new_ix=rand(alive_replicas_ix)
+                        slave_systems[i]=algorithm.branch_replica(slave_systems[new_ix],slave_systems[i])
                     end
                 end
 

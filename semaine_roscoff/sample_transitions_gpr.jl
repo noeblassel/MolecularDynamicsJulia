@@ -12,6 +12,9 @@ begin
     output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/transition_samples_gpr.out"
     gr_history_output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/gr_histories_gpr.out"
 
+    output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/transition_samples_gpr.out"
+    gr_history_output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/gr_histories_gpr.out"
+
     dt=0.001
 
     #define methods for GPR algorithm
@@ -59,7 +62,7 @@ begin
         end
     end
 
-    algo=GenParRepAlgorithm(64,10,100,1,0.01,spawn_replica,branch_replica,get_gr_obs,get_state,get_clock,reset_clock!,output_transition)
+    algo=GenParRepAlgorithm(64,10,100,1,0.05,spawn_replica,branch_replica,get_gr_obs,get_state,get_clock,reset_clock!,output_transition)
     #
     p0=SVector(0.0,0.0)
     q0=rand(centers)
