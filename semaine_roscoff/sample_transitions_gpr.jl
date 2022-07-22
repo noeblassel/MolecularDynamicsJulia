@@ -25,12 +25,18 @@ function O(sys)
     end
 end
 
-branch_replica(sys)=ToySystem(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!,[O])
+function branch_replica(sys,rep_sys=nothing)
+    if rep_sys == nothing
+     return ToySystem(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!,[O])
+    else #copy averages
+        return ToySystem{2}(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!,[O],rep_sys.O_sums,rep_sys.sq_O_sums,rep_sys.clock)
+    end
+end
+
 spawn_replica(sys)=ToySystem(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!,[])
 
 function get_gr_obs(sys)
-    obs=sys.observables_sums
-    return [o[1] for o in obs],[o[2] for o in obs]
+    return sys.O_sums,sys.sq_O_sums
 end
 
 get_clock(sys)=sys.clock
