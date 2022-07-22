@@ -35,10 +35,10 @@ for i=1:10000000
     if state!=last_state
         println("transition from state $last_state to state $state")
         g=open(output_file,"a")
-        t=sim.dt*sys.n_steps_simulated
+        t=sim.dt*sys.clock
         println(g,"$last_state $state $t")
         close(g)
-        sys.n_steps_simulated=0
+        sys.clock=0
     end
 end
 
