@@ -77,6 +77,6 @@ begin
     println("*")
     close(f)
 
-    sample_transitions!(sys,algo,sim,10)
+    sample_transitions!(sys,algo,sim,100000)
 end
 
