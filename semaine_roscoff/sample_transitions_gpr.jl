@@ -12,9 +12,6 @@ begin
     output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/transition_samples_gpr.out"
     gr_history_output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/gr_histories_gpr.out"
 
-    output_file="/home/noeblassel/Documents/stage_CERMICS_2022/semaine_roscoff/transition_samples_gpr.out"
-    gr_history_output_file="/home/noeblassel/Documents/stage_CERMICS_2022/semaine_roscoff/gr_histories_gpr.out"
-
     dt=0.001
 
     #define methods for GPR algorithm
