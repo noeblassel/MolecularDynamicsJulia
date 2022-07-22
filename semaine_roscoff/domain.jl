@@ -48,6 +48,19 @@ function bc!(sys)
     end
 end
 
+function get_state(sys,state)
+    state_i=round(Int,sys.q[1]/(L+2R))
+    state_j=round(Int,sys.q[2]/(L+2R))
+    c_x=state_i*(L+2R)
+    c_y=state_j*(L+2R)
+
+    if (sys.q[1]-c_x)^2 + (sys.q[2]-c_y)^2 <= R^2
+        return W*state_i + state_j
+    else
+        return state
+    end
+end
+
 function get_state(sys)
     state_i=round(Int,sys.q[1]/(L+2R))
     state_j=round(Int,sys.q[2]/(L+2R))

@@ -12,6 +12,9 @@ begin
     output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/transition_samples_gpr.out"
     gr_history_output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/gr_histories_gpr.out"
 
+    # output_file="/home/noeblassel/Documents/stage_CERMICS_2022/semaine_roscoff/transition_samples_gpr.out"
+    # gr_history_output_file="/home/noeblassel/Documents/stage_CERMICS_2022/semaine_roscoff/gr_histories_gpr.out"
+    
     dt=0.001
 
     #define methods for GPR algorithm
@@ -52,13 +55,10 @@ begin
         end
     end
 
-    algo=GenParRepAlgorithm(128,300,900,1,0.1,spawn_replica,branch_replica,get_gr_obs,get_state,output_transition)
+    algo=GenParRepAlgorithm(16,300,600,1,0.1,spawn_replica,branch_replica,get_gr_obs,get_state,output_transition)
     #
     p0=SVector(0.0,0.0)
     q0=rand(centers)
-
-    p0=SVector(0.0,0.0)
-    q0=SVector(0.0,0.0)
 
     obsA(sys)=norm(sys.q-C_A)
     obsB(sys)=norm(sys.q-C_B)

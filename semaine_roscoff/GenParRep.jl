@@ -20,9 +20,9 @@ end
 function sample_transitions!(master_system,algorithm::GenParRepAlgorithm,simulator,num_transitions::Int)
     gr_checks_per_state_checks= div(algorithm.n_steps_check,algorithm.n_steps_gr)
     n_transitions = 0
+    current_master_state=algorithm.get_state(master_system)
     
     while n_transitions<num_transitions
-        current_master_state = algorithm.get_state(master_system)
         #println("$n_transitions transitions observed so far, master is in state $current_master_state")
         flemming_viot_clock = 0
         parallel_exit_clock = 0
@@ -38,20 +38,21 @@ function sample_transitions!(master_system,algorithm::GenParRepAlgorithm,simulat
 
         while !equilibriated
             simulate!(master_system,simulator,algorithm.n_steps_check)
-            master_state = algorithm.get_state(master_system)
+            master_state = algorithm.get_state(master_system,current_master_state)
 
             if master_state != current_master_state
                 n_transitions +=1
                 #println("Master particle exits from $current_master_state to $master_state")
                 algorithm.output_transition(current_master_state,master_state,flemming_viot_clock+algorithm.n_steps_check)
                 transitioned = true
+                current_master_state=master_state
                 break
             end
 
             dead_replicas_ix = Int[]
 
             for (i,replica) ∈ enumerate(slave_systems)
-                replica_state=algorithm.get_state(replica)
+                replica_state=algorithm.get_state(replica,current_master_state)
                 
                 if replica_state != master_state #Detect replica exits
                     push!(dead_replicas_ix,i)
@@ -59,17 +60,17 @@ function sample_transitions!(master_system,algorithm::GenParRepAlgorithm,simulat
             end
 
             if length(dead_replicas_ix)>0 #Branching step to kill exited replicas
+                #println("$(length(dead_replicas_ix)) have exited")
                 alive_replicas_ix=setdiff(1:algorithm.n_replicas,dead_replicas_ix)
                 for i ∈ dead_replicas_ix
                     new_ix=rand(alive_replicas_ix) #pick random active particle
-                    #println("Particle $i exits: branching history with particle $new_ix")
                     slave_systems[i]=algorithm.branch_replica(slave_systems[new_ix],slave_systems[i])#replace dead replica by an independent copy of the picked particle
                 end
             end
 
             for substep=1:gr_checks_per_state_checks #Check convergence to QSD via Gelman-Rubin statistic
-                @threads for replica ∈ slave_systems #@threads eventually becomes a more sophisticated architecture
-                    simulate!(replica,simulator,algorithm.n_steps_gr)
+                @threads for i=1:algorithm.n_replicas #@threads eventually becomes a more sophisticated architecture
+                    simulate!(slave_systems[i],simulator,algorithm.n_steps_gr)
                 end
                 flemming_viot_clock += algorithm.n_steps_gr
 
@@ -96,26 +97,39 @@ function sample_transitions!(master_system,algorithm::GenParRepAlgorithm,simulat
             end
 
         end
-        #println("gr history : ", map(first,gr_history))
+        #println("Equilibriated in $flemming_viot_clock steps, going to parallel step")
+        ##println("gr history : ", map(first,gr_history))
         while !transitioned #Replicas have equilibriated
             slave_systems=[algorithm.spawn_replica(replica) for replica ∈ slave_systems]
-            parallel_exit_clock += algorithm.n_steps_check
+            exited_ix=[Int[] for i=1:nthreads()]
+            
             @threads for i=1:algorithm.n_replicas
                 replica=slave_systems[i]
                 simulate!(replica,simulator,algorithm.n_steps_check)
-                replica_state=algorithm.get_state(replica)
+                replica_state=algorithm.get_state(replica,current_master_state)
                 if replica_state != current_master_state
-                    #println("Replica $i has won the race in $parallel_exit_clock steps")
-                    n_exit_steps = flemming_viot_clock + (algorithm.n_replicas-1)*parallel_exit_clock + i
-                    algorithm.output_transition(current_master_state,replica_state,n_exit_steps,gr_history)
-                    master_system=replica
-                    transitioned=true
-                    n_transitions+=1
+                    
+                    push!(exited_ix[threadid()],i)
                     break
                 end
             end
+
+            parallel_exit_clock += algorithm.n_steps_check
+
+            exited_ix=vcat(exited_ix...)
+
+            if length(exited_ix) >0
+                ix = rand(exited_ix)
+                #println("Replica $ix has won the race in $parallel_exit_clock steps")
+                n_exit_steps = flemming_viot_clock + (algorithm.n_replicas-1)*parallel_exit_clock + ix
+                master_system=slave_systems[ix]
+                next_state=get_state(master_system,current_master_state)
+                algorithm.output_transition(current_master_state,next_state,n_exit_steps,gr_history)
+                current_master_state=next_state
+                transitioned=true
+                n_transitions+=1
+            end
         end #while !transitioned
-        #return slave_systems,master_system
     end #while n_transitions<num_transitions
     
 end
