@@ -41,7 +41,7 @@ begin
             println(g,"$last_state $state $t")
             close(g)
             sys.clock=0
-            n_transitions+=1
+            global n_transitions+=1
         end
     end
 end
