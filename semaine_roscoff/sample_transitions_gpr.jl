@@ -12,8 +12,8 @@ begin
     output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/transition_samples_gpr.out"
     gr_history_output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/gr_histories_gpr.out"
 
-    output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/transition_samples_gpr.out"
-    gr_history_output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/gr_histories_gpr.out"
+    output_file="/home/noeblassel/Documents/stage_CERMICS_2022/semaine_roscoff/transition_samples_gpr.out"
+    gr_history_output_file="/home/noeblassel/Documents/stage_CERMICS_2022/semaine_roscoff/gr_histories_gpr.out"
 
     dt=0.001
 
@@ -22,47 +22,40 @@ begin
         i=get_state(sys)
         x,y=divrem(i,W)
         C=SVector(x*(L+2R),y*(L+2R))
-        d=norm(C-sys.q)
-        if d<=R
-            return d
-        else
-            return 0.0
-        end
+        return norm(C-sys.q)
     end
+
+    p_obs(sys)=norm(sys.p)
 
     function branch_replica(sys,rep_sys=nothing)
         if rep_sys == nothing
         return ToySystem(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!,[O])
         else #copy averages
-            return ToySystem(sys.q,sys.p,sys.last_q,sys.V,sys.∇V,sys.boundary_condition!,[O],rep_sys.O_sums,rep_sys.sq_O_sums,rep_sys.clock)
+            return ToySystem(sys.q,sys.p,sys.last_q,sys.V,sys.∇V,sys.boundary_condition!,[O],rep_sys.O_sums,rep_sys.sq_O_sums)
         end
     end
 
-    spawn_replica(sys)=ToySystem(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!)
+    spawn_replica(sys)=ToySystem(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!) #no observable recording
 
     function get_gr_obs(sys)
         return sys.O_sums,sys.sq_O_sums
     end
-
-    get_clock(sys)=sys.clock
-
-    reset_clock!(sys)=(sys.clock=0)
 
     function output_transition(state,next_state,n_steps,gr_history=Vector{Vector{Float64}}[])
         t=n_steps*dt
         f=open(output_file,"a")
         println(f,"$state $next_state $t")
         close(f)
-        println("transition from $state to $next_state")
+        #println("transition from $state to $next_state")
         if length(gr_history)>0
             f=open(gr_history_output_file,"a")
-            println(f,join(map(first,gr_history)," "))
+            println(f,map(first,gr_history))
             println(f,"*")
             close(f)
         end
     end
 
-    algo=GenParRepAlgorithm(64,10,100,1,0.05,spawn_replica,branch_replica,get_gr_obs,get_state,get_clock,reset_clock!,output_transition)
+    algo=GenParRepAlgorithm(16,300,300,1,0.1,spawn_replica,branch_replica,get_gr_obs,get_state,output_transition)
     #
     p0=SVector(0.0,0.0)
     q0=rand(centers)
@@ -87,6 +80,6 @@ begin
     println("*")
     close(f)
 
-    sample_transitions!(sys,algo,sim,100000)
+    sample_transitions!(sys,algo,sim,10)
 end
 

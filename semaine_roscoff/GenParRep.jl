@@ -1,6 +1,6 @@
 using Base.Threads, Statistics
 
-struct GenParRepAlgorithm{SR,BR,GR,CS,GT,RC,OT}
+struct GenParRepAlgorithm{SR,BR,GR,CS,OT}
     n_replicas::Int
 
     n_steps_gr::Int #simulation iterations between checks of GR statistics convergence
@@ -13,8 +13,6 @@ struct GenParRepAlgorithm{SR,BR,GR,CS,GT,RC,OT}
     branch_replica::BR #method to branch a replica for Flemming-Viot
     get_gr_obs::GR #method to get running sum and running sum of squares for Gelman-Rubin observables
     get_state::CS #method to check the state of the system
-    get_clock::GT #method to get the simulation time of a given system
-    reset_clock!::RC #method to reset the clock of a system
     output_transition::OT #method to output a transition event, of the form (old_state, next_state, transition_time)
 
 end
@@ -22,97 +20,102 @@ end
 function sample_transitions!(master_system,algorithm::GenParRepAlgorithm,simulator,num_transitions::Int)
     gr_checks_per_state_checks= div(algorithm.n_steps_check,algorithm.n_steps_gr)
     n_transitions = 0
-    current_master_state = algorithm.get_state(master_system)
-
+    
     while n_transitions<num_transitions
-        algorithm.reset_clock!(master_system)
+        current_master_state = algorithm.get_state(master_system)
+        #println("$n_transitions transitions observed so far, master is in state $current_master_state")
+        flemming_viot_clock = 0
+        parallel_exit_clock = 0
         slave_systems=[algorithm.branch_replica(master_system) for i=1:algorithm.n_replicas] #spawn replicas for Flemming-Viot equilibriation
 
-        gr_history=Vector{Float64}[]
         transitioned = false
+        
+        ### equilibriation step
         equilibriated = false
+        gr_history=Vector{Float64}[]
+        
+        #println("Equilibriating to QSD")
 
-        while !transitioned
+        while !equilibriated
             simulate!(master_system,simulator,algorithm.n_steps_check)
             master_state = algorithm.get_state(master_system)
 
-            if master_state != current_master_state #trigger transition output and break
-                #println("Master particle has exited")
-                n_transitions+=1
-                algorithm.output_transition(master_state,current_master_state,algorithm.get_clock(master_system))
-                transitioned=true
-                current_master_state=master_state
-            elseif !equilibriated #Flemming-Viot
+            if master_state != current_master_state
+                n_transitions +=1
+                #println("Master particle exits from $current_master_state to $master_state")
+                algorithm.output_transition(current_master_state,master_state,flemming_viot_clock+algorithm.n_steps_check)
+                transitioned = true
+                break
+            end
 
-                for substep=1:gr_checks_per_state_checks
-                    @threads for replica ∈ slave_systems #Multithread Flemming-Viot, later should be upgraded to a more sophisticated architecture
-                        simulate!(replica,simulator,algorithm.n_steps_gr)
-                    end
-                end
+            dead_replicas_ix = Int[]
 
-                dead_replicas_ix = Int[]
-
-                Os=[zeros(algorithm.n_gr_observables) for i=1:algorithm.n_replicas]
-                O2s=[zeros(algorithm.n_gr_observables) for i=1:algorithm.n_replicas]
-
-                for (i,replica) ∈ enumerate(slave_systems)
-                    replica_state=algorithm.get_state(replica)
-                    
-                    if replica_state != master_state #kill replica
-                        #println("Replica $i is killed after $n_clock steps")
-                        push!(dead_replicas_ix,i)
-                    end
-                end
+            for (i,replica) ∈ enumerate(slave_systems)
+                replica_state=algorithm.get_state(replica)
                 
-                if length(dead_replicas_ix)>0 #branch if dead replicas
-                    alive_replicas_ix=setdiff(1:algorithm.n_replicas,dead_replicas_ix)
-                    for i ∈ dead_replicas_ix
-                        new_ix=rand(alive_replicas_ix)
-                        slave_systems[i]=algorithm.branch_replica(slave_systems[new_ix],slave_systems[i])
-                    end
+                if replica_state != master_state #Detect replica exits
+                    push!(dead_replicas_ix,i)
                 end
+            end
+
+            if length(dead_replicas_ix)>0 #Branching step to kill exited replicas
+                alive_replicas_ix=setdiff(1:algorithm.n_replicas,dead_replicas_ix)
+                for i ∈ dead_replicas_ix
+                    new_ix=rand(alive_replicas_ix) #pick random active particle
+                    #println("Particle $i exits: branching history with particle $new_ix")
+                    slave_systems[i]=algorithm.branch_replica(slave_systems[new_ix],slave_systems[i])#replace dead replica by an independent copy of the picked particle
+                end
+            end
+
+            for substep=1:gr_checks_per_state_checks #Check convergence to QSD via Gelman-Rubin statistic
+                @threads for replica ∈ slave_systems #@threads eventually becomes a more sophisticated architecture
+                    simulate!(replica,simulator,algorithm.n_steps_gr)
+                end
+                flemming_viot_clock += algorithm.n_steps_gr
 
                 Os=[zeros(algorithm.n_gr_observables) for i=1:algorithm.n_replicas]
                 sq_Os=[zeros(algorithm.n_gr_observables) for i=1:algorithm.n_replicas]
 
                 for (i,replica) ∈ enumerate(slave_systems)
-                    O,sq_O=algorithm.get_gr_obs(replica)
-                    n_clock=algorithm.get_clock(replica)
-                    Os[i] = O/n_clock
-                    sq_Os[i] = sq_O/n_clock
+                    O_i,sq_O_i=algorithm.get_gr_obs(replica)
+                    Os[i] = O_i/flemming_viot_clock
+                    sq_Os[i] = sq_O_i/flemming_viot_clock
                 end
-                #println("Obar: $(first(Obar)), O2bar: $(first(O2bar))")
 
                 Obar = mean(Os)
                 num=mean(sq_Os[i]-2Os[i] .* Obar + Obar .^ 2 for i=1:algorithm.n_replicas)
                 denom=mean(sq_Os[i] - Os[i] .^ 2 for i=1:algorithm.n_replicas)
-                GR = num ./ denom
+                GR = (num ./ denom) .- 1.0
                 push!(gr_history,GR)
-                #println(last(gr_history))
-                #println("num: $num, denom: $denom, GR: $GR")
 
-                if all( gr < 1+algorithm.gr_tol for gr ∈ GR)
+                if all( gr < algorithm.gr_tol for gr ∈ GR)
                     equilibriated = true
+                    break
                 end
 
-            else #Parallel replicas
-                slave_systems=[algorithm.spawn_replica(replica) for replica ∈ slave_systems]
-                @threads for i=1:algorithm.n_replicas
-                    replica=slave_systems[i]
-                    simulate!(replica,simulator,algorithm.n_steps_check)
-                    replica_state=algorithm.get_state(replica)
-                    if replica_state != current_master_state
-                        clock_replica= algorithm.get_clock(replica)
-                        n_transition = (algorithm.n_replicas-1)*clock_replica + i
-                        algorithm.output_transition(current_master_state,replica_state,n_transition,gr_history)
-                        #println(gr_history)
-                        master_system=replica
-                        transitioned=true
-                        n_transitions+=1
-                        current_master_state=replica_state
-                    end
+            end
+
+        end
+        #println("gr history : ", map(first,gr_history))
+        while !transitioned #Replicas have equilibriated
+            slave_systems=[algorithm.spawn_replica(replica) for replica ∈ slave_systems]
+            parallel_exit_clock += algorithm.n_steps_check
+            @threads for i=1:algorithm.n_replicas
+                replica=slave_systems[i]
+                simulate!(replica,simulator,algorithm.n_steps_check)
+                replica_state=algorithm.get_state(replica)
+                if replica_state != current_master_state
+                    #println("Replica $i has won the race in $parallel_exit_clock steps")
+                    n_exit_steps = flemming_viot_clock + (algorithm.n_replicas-1)*parallel_exit_clock + i
+                    algorithm.output_transition(current_master_state,replica_state,n_exit_steps,gr_history)
+                    master_system=replica
+                    transitioned=true
+                    n_transitions+=1
+                    break
                 end
             end
-        end
-    end
+        end #while !transitioned
+        #return slave_systems,master_system
+    end #while n_transitions<num_transitions
+    
 end

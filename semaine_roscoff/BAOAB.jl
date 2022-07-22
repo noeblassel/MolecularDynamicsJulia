@@ -32,7 +32,5 @@ function simulate!(sys::ToySystem{D},sim::BAOABIntegrator,n_steps::Int) where {D
         sys.q+= sim.dt*sys.p/2
         sys.boundary_condition!(sys)
         sys.p -= sim.dt*sys.∇V(sys.q)/2
-
-        sys.clock+=1
     end
 end
