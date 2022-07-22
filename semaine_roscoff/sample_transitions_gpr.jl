@@ -10,6 +10,7 @@ include("domain.jl")
 
 output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/transition_samples_gpr.out"
 gr_history_output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/gr_histories_gpr.out"
+
 dt=0.005
 
 #define methods for GPR algorithm
@@ -29,11 +30,11 @@ function branch_replica(sys,rep_sys=nothing)
     if rep_sys == nothing
      return ToySystem(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!,[O])
     else #copy averages
-        return ToySystem{2}(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!,[O],rep_sys.O_sums,rep_sys.sq_O_sums,rep_sys.clock)
+        return ToySystem(sys.q,sys.p,sys.last_q,sys.V,sys.∇V,sys.boundary_condition!,[O],rep_sys.O_sums,rep_sys.sq_O_sums,rep_sys.clock)
     end
 end
 
-spawn_replica(sys)=ToySystem(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!,[])
+spawn_replica(sys)=ToySystem(sys.q,sys.p,sys.V,sys.∇V,sys.boundary_condition!)
 
 function get_gr_obs(sys)
     return sys.O_sums,sys.sq_O_sums
@@ -71,7 +72,16 @@ obsB(sys)=norm(sys.q-C_B)
 V(q)=0.0
 ∇V(q)=[0.0,0.0]
 
-sys=ToySystem(q0,p0,V,∇V,bc!,[])
+sys=ToySystem(q0,p0,V,∇V,bc!)
 sim=BAOABIntegrator(dt,1.0,2.0)
 
-sample_transitions!(sys,algo,sim,100000)
+f=open(output_file,"w")
+println(f,"state next_state transition_time")
+close(f)
+
+f=open(gr_history_output_file,"w")
+println("*")
+close(f)
+
+sample_transitions!(sys,algo,sim,100)
+
