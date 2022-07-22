@@ -28,9 +28,6 @@ function sample_transitions!(master_system,algorithm::GenParRepAlgorithm,simulat
         algorithm.reset_clock!(master_system)
         slave_systems=[algorithm.branch_replica(master_system) for i=1:algorithm.n_replicas] #spawn replicas for Flemming-Viot equilibriation
 
-        running_O_sum=zeros(algorithm.n_gr_observables) #for Gelman-Rubin
-        running_sq_O_sum=zeros(algorithm.n_gr_observables)
-        n_averaging_steps=0
         gr_history=Vector{Float64}[]
         transitioned = false
         equilibriated = false
@@ -54,57 +51,47 @@ function sample_transitions!(master_system,algorithm::GenParRepAlgorithm,simulat
                 end
 
                 dead_replicas_ix = Int[]
+
                 Os=[zeros(algorithm.n_gr_observables) for i=1:algorithm.n_replicas]
                 O2s=[zeros(algorithm.n_gr_observables) for i=1:algorithm.n_replicas]
 
                 for (i,replica) ∈ enumerate(slave_systems)
-                    O,O2=algorithm.get_gr_obs(replica)
-                    n_clock=algorithm.get_clock(replica)
-
-                    running_O_sum += O
-                    running_sq_O_sum += O2
-
-                    n_averaging_steps += n_clock
                     replica_state=algorithm.get_state(replica)
-
+                    
                     if replica_state != master_state #kill replica
-                        push!(dead_replicas_ix,i)
                         #println("Replica $i is killed after $n_clock steps")
-                    else
-                        Os[i]=O/n_clock
-                        O2s[i]=O2/n_clock
+                        push!(dead_replicas_ix,i)
                     end
-
                 end
-
-                Obar=running_O_sum/n_averaging_steps
-                O2bar=running_sq_O_sum/n_averaging_steps
-                #println("Obar: $(first(Obar)), O2bar: $(first(O2bar))")
-
+                
                 if length(dead_replicas_ix)>0 #branch if dead replicas
                     alive_replicas_ix=setdiff(1:algorithm.n_replicas,dead_replicas_ix)
                     for i ∈ dead_replicas_ix
-                        slave_systems[i]=algorithm.branch_replica(slave_systems[rand(alive_replicas_ix)])
+                        slave_systems[i]=algorithm.branch_replica(slave_systems[rand(alive_replicas_ix)],slave_systems[i])
                     end
-                else #check gr convergence
-                    GR_observables=[algorithm.get_gr_obs(replica) for replica ∈ slave_systems]
-                    O_sums=[C[1] for C ∈ GR_observables]
-                    O2_sums=[C[2] for C ∈ GR_observables]
-                    n_samps=[algorithm.get_clock(replica) for replica ∈ slave_systems]
+                end
 
-                    Os = O_sums ./ n_samps
-                    O2s = O2_sums ./ n_samps
-                    num=mean(O2s[i]-2Os[i] .* Obar + Obar .^ 2 for i=1:algorithm.n_replicas)
-                    denom=mean(O2s[i] - Os[i] .^ 2 for i=1:algorithm.n_replicas)
-                    GR = num ./ denom
-                    push!(gr_history,GR)
-                    #println(last(gr_history))
-                    #println("num: $num, denom: $denom, GR: $GR")
+                Os=[zeros(algorithm.n_gr_observables) for i=1:algorithm.n_replicas]
+                sq_Os=[zeros(algorithm.n_gr_observables) for i=1:algorithm.n_replicas]
 
-                    if all( gr < 1+algorithm.gr_tol for gr ∈ GR)
-                        equilibriated = true
-                    end
+                for (i,replica) ∈ enumerate(slave_systems)
+                    O,sq_O=algorithm.get_gr_obs(replica)
+                    n_clock=algorithm.get_clock(replica)
+                    Os[i] = O/n_clock
+                    sq_Os[i] = sq_O/n_clock
+                end
+                #println("Obar: $(first(Obar)), O2bar: $(first(O2bar))")
 
+                Obar = mean(Os)
+                num=mean(sq_Os[i]-2Os[i] .* Obar + Obar .^ 2 for i=1:algorithm.n_replicas)
+                denom=mean(sq_Os[i] - Os[i] .^ 2 for i=1:algorithm.n_replicas)
+                GR = num ./ denom
+                push!(gr_history,GR)
+                #println(last(gr_history))
+                #println("num: $num, denom: $denom, GR: $GR")
+
+                if all( gr < 1+algorithm.gr_tol for gr ∈ GR)
+                    equilibriated = true
                 end
 
             else #Parallel replicas

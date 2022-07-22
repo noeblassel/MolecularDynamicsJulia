@@ -13,11 +13,14 @@ function simulate!(sys::ToySystem{D},sim::BAOABIntegrator,n_steps::Int) where {D
 
     for i=1:n_steps
         sys.last_q=sys.q
-
-        O=[obs(sys) for obs in sys.observables]
-        sys.O_sums += O
-        sys.sq_O_sums += O .^ 2
         
+        if length(sys.observables) != 0
+            observable=Float64[obs(sys) for obs in sys.observables]
+
+            sys.O_sums += observable
+            sys.sq_O_sums += observable .^ 2
+        end
+
         sys.p -= sim.dt*sys.∇V(sys.q)/2
         sys.q += sim.dt*sys.p/2
 
