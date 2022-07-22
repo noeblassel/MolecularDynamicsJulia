@@ -12,7 +12,7 @@ begin
     output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/transition_samples_gpr.out"
     gr_history_output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/gr_histories_gpr.out"
 
-    dt=0.005
+    dt=0.001
 
     #define methods for GPR algorithm
     function O(sys)
@@ -74,7 +74,7 @@ begin
     ∇V(q)=[0.0,0.0]
 
     sys=ToySystem(q0,p0,V,∇V,bc!)
-    sim=BAOABIntegrator(dt,1.0,2.0)
+    sim=BAOABIntegrator(dt,1.0,4.0)
 
     f=open(output_file,"w")
     println(f,"state next_state transition_time")
@@ -84,6 +84,6 @@ begin
     println("*")
     close(f)
 
-    sample_transitions!(sys,algo,sim,100)
+    sample_transitions!(sys,algo,sim,100000)
 end
 

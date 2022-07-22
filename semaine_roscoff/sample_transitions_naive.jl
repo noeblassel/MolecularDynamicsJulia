@@ -20,7 +20,7 @@ begin
     ∇V(q)=[0.0,0.0]
 
     sys=ToySystem(q0,p0,V,∇V,bc!,[])
-    sim=BAOABIntegrator(0.005,1.0,0.7)
+    sim=BAOABIntegrator(0.001,1.0,4.0)
 
     check_every=100
     last_transition_time=0.0

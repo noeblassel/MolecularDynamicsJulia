@@ -16,7 +16,7 @@ H=3
 
 L=2.0
 R=3.0
-h=0.1
+h=0.05
 
 centers=collect(SVector{2,Float64}[(i*(L+2R),j*(L+2R)) for i=0:W-1,j=0:H-1])
 centers=reshape(centers,W*H)
