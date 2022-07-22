@@ -51,7 +51,7 @@ function output_transition(state,next_state,n_steps,gr_history=Vector{Vector{Flo
     end
 end
 
-algo=GenParRepAlgorithm(16,10,100,1,0.01,spawn_replica,branch_replica,get_gr_obs,get_state,get_clock,reset_clock!,output_transition)
+algo=GenParRepAlgorithm(64,10,100,1,0.01,spawn_replica,branch_replica,get_gr_obs,get_state,get_clock,reset_clock!,output_transition)
 #
 p0=SVector(0.0,0.0)
 q0=rand(centers)
@@ -68,4 +68,4 @@ V(q)=0.0
 sys=ToySystem(q0,p0,V,∇V,bc!,[])
 sim=BAOABIntegrator(dt,1.0,2.0)
 
-sample_transitions!(sys,algo,sim,10)
+sample_transitions!(sys,algo,sim,100000)

@@ -23,7 +23,7 @@ sim=BAOABIntegrator(0.005,1.0,0.7)
 
 check_every=100
 last_transition_time=0.0
-output_file="/home/noeblassel/Documents/stage_CERMICS_2022/semaine_roscoff/transition_samples_naive.out"
+output_file="/libre/blasseln/MolecularDynamicsJulia/semaine_roscoff/transition_samples_naive.out"
 f=open(output_file,"w")
 println(f,"state next_state transition_time")
 close(f)
